@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee History - {{ parent.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .fee-status-paid { color: #28a745; font-weight: bold; }
+    .fee-status-unpaid { color: #dc3545; font-weight: bold; }
+    .fee-amount { font-weight: bold; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page-one">
+    {% include 'includes/sidebar.html' %}
+    
+    <div class="dashboard-content-one">
+        <div class="breadcrumbs-area">
+            <h3>Fee History - {{ parent.full_name }}</h3>
+            <ul>
+                <li><a href="{% url 'dashboard' %}">Home</a></li>
+                <li><a href="{% url 'all_parents' %}">Parents</a></li>
+                <li><a href="{% url 'parent_details' parent.id %}">{{ parent.full_name }}</a></li>
+                <li>Fee History</li>
+            </ul>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card dashboard-card-seven">
+                    <div class="social-media bg-primary rounded-circle">
+                        <i class="fas fa-file-invoice-dollar text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6>Total Due</h6>
+                        <h3>KSh {{ total_due|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card dashboard-card-seven">
+                    <div class="social-media bg-success rounded-circle">
+                        <i class="fas fa-check-circle text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6>Total Paid</h6>
+                        <h3>KSh {{ total_paid|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card dashboard-card-seven">
+                    <div class="social-media bg-warning rounded-circle">
+                        <i class="fas fa-clock text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6>Pending</h6>
+                        <h3>KSh {{ total_pending|floatformat:2 }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-sm-6 col-12">
+                <div class="card dashboard-card-seven">
+                    <div class="social-media bg-info rounded-circle">
+                        <i class="fas fa-users text-white"></i>
+                    </div>
+                    <div class="card-body">
+                        <h6>Children</h6>
+                        <h3>{{ children.count }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card height-auto">
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <form method="get" class="d-flex">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Search fees..." value="{{ search_query }}">
+                            <button type="submit" class="btn btn-primary ml-2">Search</button>
+                        </form>
+                    </div>
+                    <div class="col-md-8 text-right">
+                        <div class="btn-group">
+                            <a href="?status=paid" class="btn btn-outline-success {% if status_filter == 'paid' %}active{% endif %}">
+                                Paid
+                            </a>
+                            <a href="?status=unpaid" class="btn btn-outline-danger {% if status_filter == 'unpaid' %}active{% endif %}">
+                                Unpaid
+                            </a>
+                            <a href="{% url 'parent_fee_history' parent.id %}" class="btn btn-outline-secondary">
+                                Clear
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fees Table -->
+                <div class="table-responsive">
+                    <table class="table display data-table text-nowrap">
+                        <thead>
+                            <tr>
+                                <th>Fee Name</th>
+                                <th>Child</th>
+                                <th>Class</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Due Date</th>
+                                <th>Paid Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fee in fees %}
+                            <tr>
+                                <td>{{ fee.name }}</td>
+                                <td>
+                                    <a href="{% url 'student_details' fee.student.student_id %}">
+                                        {{ fee.student.full_name }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if fee.class_level %}
+                                        {{ fee.class_level.name }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                                <td class="fee-amount">KSh {{ fee.amount }}</td>
+                                <td>
+                                    {% if fee.status == 'paid' %}
+                                        <span class="fee-status-paid">Paid</span>
+                                    {% else %}
+                                        <span class="fee-status-unpaid">Unpaid</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ fee.due_date|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if fee.paid_date %}
+                                        {{ fee.paid_date|date:"d.m.Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'fee_detail' fee.id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if fee.status == 'unpaid' %}
+                                        <a href="{% url 'mark_paid' fee.id %}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-check"></i>
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-4">
+                                    <i class="fas fa-receipt fa-2x text-muted mb-2"></i>
+                                    <p class="text-muted">No fee records found.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if fees.has_other_pages %}
+                <div class="pagination mt-4">
+                    <nav>
+                        <ul class="pagination">
+                            {% if fees.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ fees.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    Previous
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for i in fees.paginator.page_range %}
+                            <li class="page-item {% if fees.number == i %}active{% endif %}">
+                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    {{ i }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                            
+                            {% if fees.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ fees.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                    Next
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
+                <div class="mt-4">
+                    <a href="{% url 'parent_details' parent.id %}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left"></i> Back to Parent Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

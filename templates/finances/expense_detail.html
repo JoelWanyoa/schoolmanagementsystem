@@ -1,0 +1,498 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Expense Details - {{ expense.name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Accounts</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'expense_management' %}">Expense Management</a>
+                    </li>
+                    <li>Expense Details</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Expense Details Area Start Here -->
+            <div class="row">
+                <!-- Main Expense Information -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Expense Details</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'edit_expense' expense.id %}">
+                                            <i class="fas fa-edit text-dark-pastel-green"></i> Edit Expense
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'expense_management' %}">
+                                            <i class="fas fa-list text-dark-pastel-green"></i> Back to List
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="{% url 'delete_expense' expense.id %}">
+                                            <i class="fas fa-trash text-orange-red"></i> Delete Expense
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Expense Summary -->
+                            <div class="expense-summary mb-4">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-item">
+                                            <label>Expense Name:</label>
+                                            <span class="value">{{ expense.name }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Expense ID:</label>
+                                            <span class="value">{{ expense.expense_id }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Expense Type:</label>
+                                            <span class="value">
+                                                <span class="badge badge-primary">{{ expense.get_expense_type_display }}</span>
+                                            </span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Amount:</label>
+                                            <span class="value font-weight-bold text-success h4">Kes. {{ expense.amount|floatformat:2 }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-item">
+                                            <label>Status:</label>
+                                            <span class="value">
+                                                <span class="badge badge-{{ expense.status_class }} badge-lg">
+                                                    {{ expense.get_status_display }}
+                                                </span>
+                                            </span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Date:</label>
+                                            <span class="value">{{ expense.date|date:"F d, Y" }}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Created By:</label>
+                                            <span class="value">
+                                                {% if expense.created_by.get_full_name %}
+                                                    {{ expense.created_by.get_full_name }}
+                                                {% else %}
+                                                    {{ expense.created_by.username }}
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Last Updated:</label>
+                                            <span class="value">{{ expense.updated_at|date:"M d, Y H:i" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            {% if expense.description %}
+                            <div class="description-section mb-4">
+                                <h5 class="section-title">Description</h5>
+                                <div class="description-content">
+                                    <p class="text-justify">{{ expense.description|linebreaks }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Contact Information -->
+                            {% if expense.phone or expense.email %}
+                            <div class="contact-section mb-4">
+                                <h5 class="section-title">Contact Information</h5>
+                                <div class="row">
+                                    {% if expense.phone %}
+                                    <div class="col-md-6">
+                                        <div class="contact-item">
+                                            <i class="fas fa-phone text-primary"></i>
+                                            <strong>Phone:</strong>
+                                            <a href="tel:{{ expense.phone }}">{{ expense.phone }}</a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if expense.email %}
+                                    <div class="col-md-6">
+                                        <div class="contact-item">
+                                            <i class="fas fa-envelope text-primary"></i>
+                                            <strong>Email:</strong>
+                                            <a href="mailto:{{ expense.email }}">{{ expense.email }}</a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar - Actions and Metadata -->
+                <div class="col-lg-4">
+                    <!-- Quick Actions -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Quick Actions</h5>
+                            <div class="action-buttons">
+                                <a href="{% url 'edit_expense' expense.id %}" class="btn btn-primary btn-block mb-2">
+                                    <i class="fas fa-edit"></i> Edit Expense
+                                </a>
+                                <a href="{% url 'delete_expense' expense.id %}" class="btn btn-danger btn-block mb-2">
+                                    <i class="fas fa-trash"></i> Delete Expense
+                                </a>
+                                <a href="{% url 'expense_management' %}" class="btn btn-secondary btn-block mb-2">
+                                    <i class="fas fa-arrow-left"></i> Back to List
+                                </a>
+                                <button class="btn btn-info btn-block mb-2" onclick="window.print()">
+                                    <i class="fas fa-print"></i> Print Details
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Metadata -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Expense Metadata</h5>
+                            <div class="metadata-list">
+                                <div class="metadata-item">
+                                    <strong>Created:</strong>
+                                    <span>{{ expense.created_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="metadata-item">
+                                    <strong>Last Updated:</strong>
+                                    <span>{{ expense.updated_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="metadata-item">
+                                    <strong>Created By:</strong>
+                                    <span>
+                                        {% if expense.created_by.get_full_name %}
+                                            {{ expense.created_by.get_full_name }}
+                                        {% else %}
+                                            {{ expense.created_by.username }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="metadata-item">
+                                    <strong>Database ID:</strong>
+                                    <span class="text-muted">#{{ expense.id }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Information -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Status Information</h5>
+                            <div class="status-info">
+                                <div class="status-indicator {{ expense.status_class }}">
+                                    <i class="fas fa-circle"></i>
+                                    {{ expense.get_status_display }}
+                                </div>
+                                {% if expense.status == 'pending' %}
+                                <p class="small text-muted mt-2">
+                                    This expense is pending approval or payment.
+                                </p>
+                                {% elif expense.status == 'paid' %}
+                                <p class="small text-muted mt-2">
+                                    This expense has been paid and processed.
+                                </p>
+                                {% elif expense.status == 'due' %}
+                                <p class="small text-muted mt-2">
+                                    This expense is overdue and requires attention.
+                                </p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="navigation-buttons">
+                        <a href="{% url 'expense_management' %}" class="btn btn-light">
+                            <i class="fas fa-arrow-left"></i> Back to Expense List
+                        </a>
+                        <div class="float-right">
+                            <a href="{% url 'edit_expense' expense.id %}" class="btn btn-primary">
+                                <i class="fas fa-edit"></i> Edit Expense
+                            </a>
+                            <a href="{% url 'financial_overview' %}" class="btn btn-info">
+                                <i class="fas fa-chart-bar"></i> Financial Overview
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section-title {
+        color: #333;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .info-item:last-child {
+        border-bottom: none;
+    }
+
+    .info-item label {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 0;
+        min-width: 140px;
+        font-size: 0.9rem;
+    }
+
+    .info-item .value {
+        text-align: right;
+        flex-grow: 1;
+        color: #333;
+        font-size: 0.95rem;
+    }
+
+    .badge-lg {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+        border-radius: 15px;
+    }
+
+    .description-content {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        border-left: 4px solid #4e73df;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .contact-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        font-size: 0.95rem;
+    }
+
+    .contact-item i {
+        width: 20px;
+        text-align: center;
+    }
+
+    .metadata-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.9rem;
+    }
+
+    .metadata-item:last-child {
+        border-bottom: none;
+    }
+
+    .metadata-item strong {
+        color: #555;
+        min-width: 120px;
+    }
+
+    .status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .status-indicator.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .status-indicator.warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+    }
+
+    .status-indicator.danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .status-indicator.secondary {
+        background-color: #e2e3e5;
+        color: #383d41;
+        border: 1px solid #d6d8db;
+    }
+
+    .action-buttons .btn {
+        text-align: left;
+        padding: 12px 20px;
+        font-size: 0.95rem;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .navigation-buttons {
+        padding: 25px 0;
+        border-top: 1px solid #e0e0e0;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .navigation-buttons .btn {
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .navigation-buttons .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+
+    .card-body {
+        padding: 25px;
+    }
+
+    .heading-layout1 {
+        border-bottom: 1px solid #f0f0f0;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+    }
+
+    .item-title h3 {
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 0;
+    }
+
+    @media (max-width: 768px) {
+        .info-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .info-item .value {
+            text-align: left;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .navigation-buttons .float-right {
+            float: none !important;
+            margin-top: 15px;
+        }
+
+        .navigation-buttons .btn {
+            width: 100%;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .action-buttons .btn {
+            text-align: center;
+        }
+
+        .contact-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+    }
+
+    @media print {
+        .dropdown,
+        .navigation-buttons,
+        .action-buttons {
+            display: none !important;
+        }
+
+        .card {
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+        }
+
+        .btn {
+            display: none !important;
+        }
+    }
+
+    /* Custom badge colors to match your theme */
+    .badge-primary {
+        background-color: #4e73df;
+    }
+
+    .badge-success {
+        background-color: #1cc88a;
+    }
+
+    .badge-warning {
+        background-color: #f6c23e;
+    }
+
+    .badge-danger {
+        background-color: #e74a3b;
+    }
+
+    .badge-secondary {
+        background-color: #858796;
+    }
+</style>
+{% endblock %}

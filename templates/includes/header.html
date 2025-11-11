@@ -1,0 +1,114 @@
+{% load static %}
+<div class="navbar navbar-expand-md header-menu-one bg-light">
+    <div class="nav-bar-header-one">
+        <div class="header-logo">
+            <a href="{% url 'dashboard' %}">
+                <img src="{% static 'img/logo3.png' %}" width="190" alt="logo">
+            </a>
+        </div>
+        <div class="toggle-button sidebar-toggle">
+            <button type="button" class="item-link">
+                <span class="btn-icon-wrap">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
+        </div>
+    </div>
+    
+    <div class="d-md-none mobile-nav-bar">
+        <button class="navbar-toggler pulse-animation" type="button" data-toggle="collapse" 
+                data-target="#mobile-navbar" aria-expanded="false">
+            <i class="far fa-arrow-alt-circle-down"></i>
+        </button>
+        <button type="button" class="navbar-toggler sidebar-toggle-mobile">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+    
+    <div class="header-main-menu collapse navbar-collapse" id="mobile-navbar">
+        <ul class="navbar-nav">
+            <li class="navbar-item header-search-bar">
+                <div class="input-group stylish-input-group">
+                    <span class="input-group-addon">
+                        <button type="submit">
+                            <span class="flaticon-search" aria-hidden="true"></span>
+                        </button>
+                    </span>
+                    <input type="text" class="form-control" placeholder="Find Something . . .">
+                </div>
+            </li>
+        </ul>
+        
+        <ul class="navbar-nav">
+            <li class="navbar-item dropdown header-admin">
+                <a class="navbar-nav-link dropdown-toggle" href="#" role="button" 
+                   data-toggle="dropdown" aria-expanded="false">
+                    <div class="admin-title">
+                        <h5 class="item-title">{{ request.user.get_full_name|default:request.user.username }}</h5>
+                        <span>
+                            {% if request.user.is_superuser or request.user.is_staff %}
+                                Admin
+                            {% elif request.user.teacher %}
+                                Teacher
+                            {% elif request.user.student %}
+                                Student
+                            {% elif request.user.parent %}
+                                Parent
+                            {% else %}
+                                User
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="admin-img">
+                        {% if request.user.teacher and request.user.teacher.photo %}
+                            <img src="{{ request.user.teacher.photo.url }}" alt="Teacher">
+                        {% elif request.user.student and request.user.student.photo %}
+                            <img src="{{ request.user.student.photo.url }}" alt="Student">
+                        {% elif request.user.parent and request.user.parent.photo %}
+                            <img src="{{ request.user.parent.photo.url }}" alt="Parent">
+                        {% else %}
+                            <img src="{% static 'img/figure/admin.jpg' %}" alt="User">
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <div class="item-header">
+                        <h6 class="item-title">{{ request.user.get_full_name|default:request.user.username }}</h6>
+                        <span class="badge badge-primary">
+                            {% if request.user.is_superuser or request.user.is_staff %}
+                                Administrator
+                            {% elif request.user.teacher %}
+                                Teacher
+                            {% elif request.user.student %}
+                                Student
+                            {% elif request.user.parent %}
+                                Parent
+                            {% else %}
+                                User
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="item-content">
+                        <ul class="settings-list">
+                            {% if request.user.teacher %}
+                                <li><a href="{% url 'teacher_details' request.user.teacher.teacher_id %}"><i class="flaticon-user"></i>My Profile</a></li>
+                            {% elif request.user.student %}
+                                <li><a href="{% url 'student_details' request.user.student.student_id %}"><i class="flaticon-user"></i>My Profile</a></li>
+                            {% elif request.user.parent %}
+                                <li><a href="#"><i class="flaticon-user"></i>My Profile</a></li>
+                            {% else %}
+                                <li><a href="#"><i class="flaticon-user"></i>My Profile</a></li>
+                            {% endif %}
+                            
+                            <li><a href="{% url 'messaging' %}"><i class="flaticon-chat-comment-oval-speech-bubble-with-text-lines"></i>Messages</a></li>
+                            <li><a href="{% url 'account_settings' %}"><i class="flaticon-gear-loading"></i>Account Settings</a></li>
+                            <li><a href="{% url 'logout' %}"><i class="flaticon-turn-off"></i>Log Out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+</div>

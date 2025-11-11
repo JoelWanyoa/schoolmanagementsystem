@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Link Children - {{ parent.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-box {
+        position: sticky;
+        top: 0;
+        background: white;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+        z-index: 10;
+    }
+    
+    .child-option {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .child-option:hover {
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .child-option.has-parent {
+        background-color: #fff3cd;
+        border-color: #ffeaa7;
+    }
+    
+    .child-option.has-parent .student-info {
+        opacity: 0.6;
+    }
+    
+    .parent-info {
+        background: #e7f3ff;
+        border-radius: 5px;
+        padding: 8px 12px;
+        margin-top: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .selection-info {
+        background: #d4edda;
+        border-radius: 5px;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+    }
+    
+    .student-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .batch-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px;
+        border-top: 1px solid #dee2e6;
+        margin-top: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page-one">
+    {% include 'includes/sidebar.html' %}
+    
+    <div class="dashboard-content-one">
+        <div class="breadcrumbs-area">
+            <h3>Link Children to {{ parent.full_name }}</h3>
+            <ul>
+                <li><a href="{% url 'dashboard' %}">Home</a></li>
+                <li><a href="{% url 'all_parents' %}">Parents</a></li>
+                <li><a href="{% url 'parent_details' parent.id %}">{{ parent.full_name }}</a></li>
+                <li>Link Children</li>
+            </ul>
+        </div>
+
+        <div class="card height-auto">
+            <div class="card-body">
+                <form method="post" id="linkChildrenForm">
+                    {% csrf_token %}
+                    
+                    {% if available_students %}
+                    <!-- Search and Filter Section -->
+                    <div class="search-box">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="text" id="studentSearch" class="form-control" 
+                                           placeholder="Search students by name, ID, or class...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select id="classFilter" class="form-control">
+                                        <option value="">All Classes</option>
+                                        {% for class in classes %}
+                                        <option value="{{ class.name }}">{{ class.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <select id="statusFilter" class="form-control">
+                                        <option value="all">All Students</option>
+                                        <option value="available">Available Only</option>
+                                        <option value="has_parent">Has Parent</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Batch Actions -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" id="selectAll">
+                                        <i class="fas fa-check-square"></i> Select All Available
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAll">
+                                        <i class="fas fa-times-circle"></i> Deselect All
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <div class="selection-info" id="selectionInfo" style="display: none;">
+                                    <strong><span id="selectedCount">0</span> student(s) selected</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Students List -->
+                    <div class="form-group">
+                        <label>Select Children to Link</label>
+                        <div class="children-list" style="max-height: 500px; overflow-y: auto;">
+                            {% for student in available_students %}
+                            {% with existing_parents=student.parents.all %}
+                            <div class="child-option {% if existing_parents %}has-parent{% endif %}" 
+                                 data-name="{{ student.full_name|lower }}" 
+                                 data-id="{{ student.student_id|lower }}"
+                                 data-class="{% if student.current_class %}{{ student.current_class.name|lower }}{% endif %}"
+                                 data-status="{% if existing_parents %}has_parent{% else %}available{% endif %}">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input student-checkbox" 
+                                           name="students" value="{{ student.id }}" 
+                                           id="student_{{ student.id }}"
+                                           {% if existing_parents %}disabled{% endif %}>
+                                    <label class="custom-control-label d-block" for="student_{{ student.id }}">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-1">
+                                                {% if student.photo %}
+                                                <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                                     class="student-avatar">
+                                                {% else %}
+                                                <img src="{% static 'img/figure/student2.png' %}" alt="{{ student.full_name }}"
+                                                     class="student-avatar">
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-3 student-info">
+                                                <strong>{{ student.full_name }}</strong>
+                                                {% if existing_parents %}
+                                                <br>
+                                                <small class="text-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                    Already has parent(s)
+                                                </small>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-2 student-info">
+                                                <span class="text-muted">ID: {{ student.student_id }}</span>
+                                            </div>
+                                            <div class="col-md-2 student-info">
+                                                <span class="badge badge-primary">
+                                                    {% if student.current_class %}
+                                                        {{ student.current_class.name }}
+                                                    {% else %}
+                                                        Not assigned
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-2 student-info">
+                                                <span class="badge badge-info">
+                                                    Roll: {{ student.roll_number|default:"N/A" }}
+                                                </span>
+                                            </div>
+                                            <div class="col-md-2">
+                                                {% if existing_parents %}
+                                                <span class="badge badge-warning">
+                                                    <i class="fas fa-link"></i> Linked
+                                                </span>
+                                                {% else %}
+                                                <span class="badge badge-success">
+                                                    <i class="fas fa-unlink"></i> Available
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Show existing parents if any -->
+                                        {% if existing_parents %}
+                                        <div class="parent-info">
+                                            <strong>Current Parent(s):</strong>
+                                            {% for parent in existing_parents %}
+                                            <span class="badge badge-light mr-1">
+                                                {{ parent.full_name }}
+                                                {% if parent.phone %}({{ parent.phone }}){% endif %}
+                                            </span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Selected Count and Actions -->
+                    <div class="batch-actions">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="selection-info">
+                                    <strong><span id="finalSelectedCount">0</span> student(s) selected for linking</strong>
+                                    <br>
+                                    <small class="text-muted" id="selectionDetails">
+                                        Click "Link Selected Children" to complete the process
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-right">
+                                <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                                    <i class="fas fa-link"></i> Link Selected Children
+                                </button>
+                                <a href="{% url 'parent_details' parent.id %}" class="btn btn-secondary btn-lg">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4 class="text-success">All Students Linked</h4>
+                        <p class="text-muted">All active students are already linked to this parent or other parents.</p>
+                        <a href="{% url 'parent_details' parent.id %}" class="btn btn-primary mr-2">
+                            Return to Parent Details
+                        </a>
+                        <a href="{% url 'add_student_to_parent' parent.id %}" class="btn btn-success">
+                            <i class="fas fa-user-plus"></i> Add New Student
+                        </a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Get all classes from the available students
+        const classes = new Set();
+        $('.child-option').each(function() {
+            const classVal = $(this).data('class');
+            if (classVal) {
+                classes.add(classVal.charAt(0).toUpperCase() + classVal.slice(1));
+            }
+        });
+        
+        // Update class filter dropdown
+        const classFilter = $('#classFilter');
+        classes.forEach(className => {
+            if (className && className !== 'Not assigned') {
+                classFilter.append(`<option value="${className}">${className}</option>`);
+            }
+        });
+
+        // Search functionality
+        $('#studentSearch').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            filterStudents();
+        });
+
+        // Class filter functionality
+        $('#classFilter').on('change', function() {
+            filterStudents();
+        });
+
+        // Status filter functionality
+        $('#statusFilter').on('change', function() {
+            filterStudents();
+        });
+
+        // Select all available students
+        $('#selectAll').on('click', function() {
+            $('.student-checkbox:not(:disabled)').prop('checked', true);
+            updateSelectionCount();
+        });
+
+        // Deselect all students
+        $('#deselectAll').on('click', function() {
+            $('.student-checkbox').prop('checked', false);
+            updateSelectionCount();
+        });
+
+        // Update selection count when checkboxes change
+        $('.student-checkbox').on('change', function() {
+            updateSelectionCount();
+        });
+
+        // Form submission validation
+        $('#linkChildrenForm').on('submit', function(e) {
+            const selectedCount = $('.student-checkbox:checked').length;
+            
+            if (selectedCount === 0) {
+                e.preventDefault();
+                alert('Please select at least one student to link.');
+                return false;
+            }
+            
+            // Show confirmation for students with existing parents
+            const studentsWithParents = $('.student-checkbox:checked').closest('.has-parent');
+            if (studentsWithParents.length > 0) {
+                e.preventDefault();
+                if (!confirm(`Warning: ${studentsWithParents.length} selected student(s) already have parents. They will be linked to multiple parents. Continue?`)) {
+                    return false;
+                }
+                return true;
+            }
+        });
+
+        // Filter students based on search and filters
+        function filterStudents() {
+            const searchTerm = $('#studentSearch').val().toLowerCase();
+            const classFilterVal = $('#classFilter').val().toLowerCase();
+            const statusFilterVal = $('#statusFilter').val();
+            
+            $('.child-option').each(function() {
+                const studentName = $(this).data('name');
+                const studentId = $(this).data('id');
+                const studentClass = $(this).data('class');
+                const studentStatus = $(this).data('status');
+                
+                const matchesSearch = !searchTerm || 
+                    studentName.includes(searchTerm) || 
+                    studentId.includes(searchTerm);
+                
+                const matchesClass = !classFilterVal || 
+                    (studentClass && studentClass.includes(classFilterVal));
+                
+                const matchesStatus = statusFilterVal === 'all' || 
+                    studentStatus === statusFilterVal;
+                
+                if (matchesSearch && matchesClass && matchesStatus) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        }
+
+        // Update selection count
+        function updateSelectionCount() {
+            const selectedCount = $('.student-checkbox:checked').length;
+            const availableCount = $('.student-checkbox:not(:disabled)').length;
+            const withParentsCount = $('.student-checkbox:checked').closest('.has-parent').length;
+            
+            $('#selectedCount').text(selectedCount);
+            $('#finalSelectedCount').text(selectedCount);
+            
+            if (selectedCount > 0) {
+                $('#selectionInfo').show();
+                let details = '';
+                if (withParentsCount > 0) {
+                    details = `${withParentsCount} student(s) already have parents and will be linked to multiple parents.`;
+                } else {
+                    details = 'All selected students are available for linking.';
+                }
+                $('#selectionDetails').text(details);
+            } else {
+                $('#selectionInfo').hide();
+            }
+        }
+
+        // Initialize selection count
+        updateSelectionCount();
+        
+        // Add keyboard shortcuts
+        $(document).on('keydown', function(e) {
+            // Ctrl/Cmd + A to select all available
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                e.preventDefault();
+                $('#selectAll').click();
+            }
+            
+            // Escape to deselect all
+            if (e.key === 'Escape') {
+                $('#deselectAll').click();
+            }
+        });
+
+        // Quick select by clicking anywhere on the card (except the checkbox itself)
+        $('.child-option:not(.has-parent)').on('click', function(e) {
+            if (!$(e.target).is('input') && !$(e.target).is('label')) {
+                const checkbox = $(this).find('.student-checkbox');
+                checkbox.prop('checked', !checkbox.prop('checked'));
+                updateSelectionCount();
+            }
+        });
+    });
+</script>
+{% endblock %}

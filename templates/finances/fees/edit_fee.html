@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Fee - {{ fee.student.first_name }} {{ fee.student.last_name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Accounts</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="#">Accounts</a>
+                    </li>
+                    <li>
+                        <a href="#">Fees</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_fees' %}">Fees Collection</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'fee_detail' fee.id %}">Fee Details</a>
+                    </li>
+                    <li>Edit Fee</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Edit Fee Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Edit Fee</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'fee_detail' fee.id %}">
+                                    <i class="fas fa-eye text-dark-pastel-green"></i> View Details
+                                </a>
+                                <a class="dropdown-item" href="{% url 'all_fees' %}">
+                                    <i class="fas fa-list text-dark-pastel-green"></i> Back to List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Messages -->
+                    {% if messages %}
+                    <div class="alert-container">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form class="new-added-form" method="POST" novalidate id="feeForm">
+                        {% csrf_token %}
+                        
+                        <!-- Hidden fields for student and class_level -->
+                        {{ form.student }}
+                        {{ form.class_level }}
+
+                        <!-- Display Form Errors -->
+                        {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <h6>Please fix the following errors:</h6>
+                            <ul class="mb-0">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <!-- Student Information (Readonly) -->
+                            <div class="col-12 form-group">
+                                <div class="student-info-card card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Student Information</h6>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <strong>Name:</strong> {{ fee.student.first_name }} {{ fee.student.last_name }}
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>ID:</strong> {{ fee.student.student_id }}
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Class:</strong> 
+                                                {% if fee.student.current_class %}
+                                                    {{ fee.student.current_class.name }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-3">
+                                                <strong>Section:</strong> 
+                                                {% if fee.student.current_section %}
+                                                    {{ fee.student.current_section.name }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Name Field -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Fee Type Field -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>{{ form.fee_type.label }}</label>
+                                {{ form.fee_type }}
+                                {% if form.fee_type.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.fee_type.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Amount Field -->
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.amount.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status Field -->
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.status.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Due Date Field -->
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>{{ form.due_date.label }}</label>
+                                {{ form.due_date }}
+                                {% if form.due_date.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.due_date.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Paid Date Field -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>{{ form.paid_date.label }}</label>
+                                {{ form.paid_date }}
+                                <small class="form-text text-muted">Leave empty if not paid yet. Auto-filled when status is set to "Paid".</small>
+                                {% if form.paid_date.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.paid_date.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Academic Year Field -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>{{ form.academic_year.label }}</label>
+                                {{ form.academic_year }}
+                                {% if form.academic_year.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.academic_year.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description Field -->
+                            <div class="col-12 form-group">
+                                <label>{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.description.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Form Buttons -->
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    <i class="fas fa-save"></i> Update Fee
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                                <a href="{% url 'fee_detail' fee.id %}" class="btn-fill-lg bg-light btn-hover-dark">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Edit Fee Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.student-info-card {
+    border-left: 4px solid #4e73df;
+}
+.student-info-card .card-body {
+    padding: 15px;
+}
+.alert-container {
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-set paid date when status changes to paid
+    $('#id_status').on('change', function() {
+        if ($(this).val() === 'paid') {
+            var today = new Date().toISOString().split('T')[0];
+            $('#id_paid_date').val(today);
+        } else if ($(this).val() === 'unpaid') {
+            $('#id_paid_date').val('');
+        }
+    });
+
+    // Initialize select2 if available
+    if ($.fn.select2) {
+        $('select').select2();
+    }
+
+    // Auto-update description when fee type changes
+    $('#id_fee_type').on('change', function() {
+        updateDescription();
+    });
+
+    // Function to update description based on form fields
+    function updateDescription() {
+        var feeType = $('#id_fee_type').val();
+        var feeTypeText = $('#id_fee_type option:selected').text();
+        var studentName = '{{ fee.student.first_name }} {{ fee.student.last_name }}';
+        var studentId = '{{ fee.student.student_id }}';
+        var className = '{% if fee.student.current_class %}{{ fee.student.current_class.name }}{% else %}Not assigned{% endif %}';
+        var sectionName = '{% if fee.student.current_section %}{{ fee.student.current_section.name }}{% else %}{% endif %}';
+        
+        // Only update if description is empty or contains the old fee type pattern
+        var currentDescription = $('#id_description').val();
+        var shouldUpdate = !currentDescription || 
+                          currentDescription.includes('Tuition Fee') ||
+                          currentDescription.includes('Exam Fee') ||
+                          currentDescription.includes('Transport Fee') ||
+                          currentDescription.includes('Hostel Fee') ||
+                          currentDescription.includes('Library Fee') ||
+                          currentDescription.includes('Sports Fee') ||
+                          currentDescription.includes('Activity Fee') ||
+                          currentDescription.includes('Lab Fee') ||
+                          currentDescription.includes('Other Fee');
+        
+        if (feeType && shouldUpdate) {
+            var sectionInfo = sectionName ? ` - ${sectionName}` : '';
+            var newDescription = `${feeTypeText} for ${studentName} (${studentId}) - ${className}${sectionInfo}`;
+            $('#id_description').val(newDescription);
+        }
+    }
+
+    // Also update description when name field changes (if user manually changes it)
+    $('#id_name').on('blur', function() {
+        // If name was changed manually, don't auto-update description
+        // This allows manual descriptions to be preserved
+    });
+
+    // Form submission - ensure hidden fields are set
+    $('#feeForm').on('submit', function() {
+        // Ensure student field is set
+        if (!$('#id_student').val()) {
+            $('#id_student').val('{{ fee.student.id }}');
+        }
+        // Ensure class_level field is set
+        if (!$('#id_class_level').val() && '{{ fee.student.current_class.id }}') {
+            $('#id_class_level').val('{{ fee.student.current_class.id }}');
+        }
+    });
+
+    // Initialize description on page load
+    updateDescription();
+});
+</script>
+{% endblock %}

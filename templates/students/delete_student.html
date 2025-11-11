@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Student - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Delete Student</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li><a href="{% url 'student_details' student.student_id %}">{{ student.first_name }} {{ student.last_name }}</a></li>
+                    <li>Delete Student</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Confirm Deletion</h3>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <h4 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Warning!</h4>
+                        <p>You are about to delete the following student:</p>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}<br>
+                            <strong>Student ID:</strong> {{ student.student_id }}<br>
+                            <strong>Class:</strong> {{ student.current_class.name|default:"Not assigned" }}
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle"></i> 
+                        This action will deactivate the student account. The student will no longer appear in active lists but can be restored later.
+                    </div>
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-danger btn-lg mr-3">
+                                <i class="fas fa-trash"></i> Confirm Delete
+                            </button>
+                            <a href="{% url 'student_details' student.student_id %}" class="btn btn-secondary btn-lg">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

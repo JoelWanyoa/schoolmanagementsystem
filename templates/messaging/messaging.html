@@ -1,0 +1,2088 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Messaging - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Messaging</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Messaging</li>
+                </ul>
+            </div>
+
+            <!-- Display Messages -->
+            <div id="ajaxMessages">
+                {% if messages %}
+                <div id="messageList">
+                    {% for message in messages %}
+                        <div class="message">
+                            <!-- existing message content -->
+                            {% if message.file %}
+                                <div class="file-attachment">
+                                    <i class="fas fa-paperclip"></i>
+                                    <a href="{% url 'download_message_file' message.id %}" target="_blank">
+                                        {{ message.file.name|cut:"message_files/" }}
+                                    </a>
+                                    <small>({{ message.file.size|filesizeformat }})</small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="row gutters-20">
+                <!-- Messages List -->
+                <div class="col-xl-5 col-lg-5">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Conversations</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="markAllRead">
+                                            <i class="fas fa-check-double text-success"></i> Mark All Read
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="refreshConversations">
+                                            <i class="fas fa-sync-alt text-info"></i> Refresh
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Search Box -->
+                            <div class="search-box mb-3">
+                                <i class="fas fa-search"></i>
+                                <input type="text" class="form-control" id="messageSearch" placeholder="Search conversations...">
+                            </div>
+
+                            <!-- Conversations List -->
+                            <div class="conversations-list" id="conversationsContainer">
+                                {% if conversations %}
+                                    {% for conversation in conversations %}
+                                    <div class="conversation-item {% if conversation.unread_count > 0 %}unread{% endif %}" 
+                                         data-user-id="{{ conversation.user.id }}"
+                                         data-user-type="{{ conversation.user_type }}"
+                                         data-search="{{ conversation.user.get_full_name|default:conversation.user.username }} {{ conversation.latest_message.content }}">
+                                        <div class="conversation-avatar">
+                                            {% if conversation.user.teacher and conversation.user.teacher.photo %}
+                                                <img src="{{ conversation.user.teacher.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
+                                            {% elif conversation.user.student and conversation.user.student.photo %}
+                                                <img src="{{ conversation.user.student.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
+                                            {% elif conversation.user.parent and conversation.user.parent.photo %}
+                                                <img src="{{ conversation.user.parent.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
+                                            {% else %}
+                                                {% with full_name=conversation.user.get_full_name|default:conversation.user.username %}
+                                                <div class="avatar-initials {{ conversation.user_type|lower }}-bg" title="{{ full_name }}">
+                                                    {{ full_name|get_initials }}
+                                                </div>
+                                                {% endwith %}
+                                            {% endif %}
+                                            {% if conversation.is_online %}
+                                            <span class="online-indicator" title="Online"></span>
+                                            {% else %}
+                                            <span class="offline-indicator" title="Offline"></span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="conversation-content">
+                                            <div class="conversation-header">
+                                                <h5 class="conversation-name">{{ conversation.user.get_full_name|default:conversation.user.username }}</h5>
+                                                <span class="conversation-time">
+                                                    {% if conversation.latest_message %}
+                                                        {{ conversation.latest_message.sent_date|timesince }} ago
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                            <p class="conversation-preview">
+                                                {% if conversation.latest_message %}
+                                                    {% if conversation.latest_message.file %}
+                                                        <i class="fas fa-paperclip mr-1"></i> 
+                                                        {% if conversation.latest_message.file.name %}
+                                                            {{ conversation.latest_message.file.name|cut:"message_files/"|truncatechars:20 }}
+                                                        {% else %}
+                                                            File attached
+                                                        {% endif %}
+                                                    {% else %}
+                                                        {{ conversation.latest_message.content|truncatewords:12 }}
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="no-messages">No messages yet</span>
+                                                {% endif %}
+                                            </p>
+                                            <div class="conversation-footer">
+                                                <span class="conversation-badge {{ conversation.user_type|lower }}">
+                                                    {{ conversation.user_type }}
+                                                </span>
+                                                {% if conversation.unread_count > 0 %}
+                                                <span class="unread-count">{{ conversation.unread_count }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-conversations">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-comments"></i>
+                                        </div>
+                                        <h5>No Conversations</h5>
+                                        <p>Start a new conversation by sending a message.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Thread & Compose -->
+                <div class="col-xl-7 col-lg-7">
+                    <!-- Message Thread -->
+                    <div class="card height-auto mb-4" id="messageThreadCard">
+                        <div class="card-body">
+                            <div class="message-thread-header">
+                                <div class="thread-info">
+                                    <div class="thread-avatar mx-2">
+                                        <div class="avatar-initials default-bg" id="threadAvatarInitials">
+                                            <span class="fas fa-sms"></span>
+                                        </div>
+                                    </div>
+                                    <div class="thread-details">
+                                        <h4 id="threadParticipant">Select a conversation</h4>
+                                        <span class="thread-status" id="threadStatus">Choose a conversation to start messaging</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- New Message Button - Only shows when NO conversation is selected -->
+                                <div class="thread-actions" id="newMessageAction">
+                                    <button class="btn-new-message-circle" id="newMessageBtn" title="New Message">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Conversation Actions - Only shows when a conversation IS selected -->
+                                <div class="thread-actions" id="conversationActions" style="display: none;">
+                                    <button class="btn btn-icon" title="User Info" id="userInfoBtn">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                    <button class="btn btn-icon" title="Clear Chat" id="clearChatBtn">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="message-thread" id="messageThread">
+                                <div class="empty-thread">
+                                    <div class="empty-thread-icon">
+                                        <i class="fas fa-comment-dots"></i>
+                                    </div>
+                                    <h5>No Conversation Selected</h5>
+                                    <p>Select a conversation from the list to view messages</p>
+                                </div>
+                                
+                                <div class="message-container" id="messageContainer" style="display: none;">
+                                    <!-- Messages will be loaded here via AJAX -->
+                                </div>
+                            </div>
+
+                            <!-- Message Input -->
+                            <div class="message-input-container" id="messageInputContainer" style="display: none;">
+                                <div class="message-input-actions">
+                                    <!-- File Attachment -->
+                                    <div class="file-attachment-wrapper">
+                                        <input type="file" id="fileInput" multiple style="display: none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                                        <button class="btn btn-icon" title="Attach File" id="attachFileBtn">
+                                            <i class="fas fa-paperclip"></i>
+                                        </button>
+                                        <div class="file-preview-container" id="filePreviewContainer" style="display: none;"></div>
+                                    </div>
+                                    
+                                    <!-- Emoji Picker -->
+                                    <div class="emoji-picker-wrapper">
+                                        <button class="btn btn-icon" title="Add Emoji" id="emojiBtn">
+                                            <i class="fas fa-smile"></i>
+                                        </button>
+                                        <div class="emoji-picker" id="emojiPicker" style="display: none;">
+                                            <div class="emoji-categories">
+                                                <button class="emoji-category-btn active" data-category="smileys">😀</button>
+                                                <button class="emoji-category-btn" data-category="people">👋</button>
+                                                <button class="emoji-category-btn" data-category="nature">🐶</button>
+                                                <button class="emoji-category-btn" data-category="food">🍎</button>
+                                                <button class="emoji-category-btn" data-category="activities">⚽</button>
+                                                <button class="emoji-category-btn" data-category="objects">💡</button>
+                                                <button class="emoji-category-btn" data-category="symbols">❤️</button>
+                                                <button class="emoji-category-btn" data-category="flags">🎌</button>
+                                            </div>
+                                            <div class="emoji-grid" id="emojiGrid">
+                                                <!-- Emojis will be populated by JavaScript -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="message-input">
+                                    <textarea class="form-control" id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                                    <div class="message-char-count">
+                                        <span id="currentCharCount">0</span>/1000
+                                    </div>
+                                </div>
+                                <div class="message-send">
+                                    <button class="btn btn-send" id="sendMessageBtn" title="Send Message">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Message Modal -->
+<div class="modal fade" id="newMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Message</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="newMessageForm" method="POST" action="{% url 'messaging' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Select Recipient</label>
+                        <select class="form-control" name="receiver" required>
+                            <option value="">Choose a recipient</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">
+                                {{ user.get_full_name|default:user.username }} 
+                                ({% if user.teacher %}Teacher{% elif user.student %}Student{% elif user.parent %}Parent{% elif user.is_staff %}Staff{% else %}User{% endif %})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Message Subject</label>
+                        <input type="text" class="form-control" name="subject" placeholder="Enter message subject">
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea class="form-control" name="content" rows="6" placeholder="Type your message here..." required></textarea>
+                        <div class="char-counter">
+                            <span id="messageCharCount">0</span>/1000 characters
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Attach Files (Optional)</label>
+                        <input type="file" class="form-control" name="attachments" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                        <small class="form-text text-muted">You can attach multiple files. Maximum file size: 10MB each.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- File Preview Modal -->
+<div class="modal fade" id="filePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="filePreviewTitle">File Preview</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center" id="filePreviewContent">
+                <!-- File preview will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <a href="#" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="downloadFileBtn" download>
+                    <i class="fas fa-download"></i> Download
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // CSRF token setup for AJAX
+    // CSRF token setup for AJAX
+function getCSRFToken() {
+    // Try to get from cookie first
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, 10) === 'csrftoken=') {
+                cookieValue = decodeURIComponent(cookie.substring(10));
+                break;
+            }
+        }
+    }
+    
+    // If not found in cookie, try to get from form input
+    if (!cookieValue) {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput) {
+            cookieValue = csrfInput.value;
+        }
+    }
+    
+    return cookieValue;
+}
+    
+    // Show message function
+    function showMessage(message, type = 'success') {
+        const alertClass = type === 'error' ? 'danger' : type;
+        const messageHtml = `
+            <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}!</strong> ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        
+        $('#ajaxMessages').html(messageHtml);
+        
+        setTimeout(() => {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+    
+    // Function to get initials from full name (first and last name)
+    function getInitials(fullName) {
+        if (!fullName) return 'U';
+        
+        const names = fullName.trim().split(' ');
+        if (names.length === 1) {
+            return names[0].charAt(0).toUpperCase();
+        } else {
+            return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
+        }
+    }
+    
+    // Function to get avatar color based on user type
+    function getAvatarColor(userType) {
+        const colorMap = {
+            'TEACHER': 'teacher-bg',
+            'STUDENT': 'student-bg', 
+            'PARENT': 'parent-bg',
+            'STAFF': 'staff-bg',
+            'USER': 'user-bg'
+        };
+        return colorMap[userType] || 'default-bg';
+    }
+    
+    // Function to update thread avatar
+    function updateThreadAvatar(userType, userName = '', isOnline = false) {
+        const threadAvatarInitials = $('#threadAvatarInitials');
+        const threadStatus = $('#threadStatus');
+        
+        const initials = userName ? getInitials(userName) : 'U';
+        const bgColor = getAvatarColor(userType);
+        const statusText = isOnline ? 'Online' : 'Offline';
+        const statusClass = isOnline ? 'online' : 'offline';
+        
+        threadAvatarInitials.text(initials).attr('class', `avatar-initials ${bgColor}`);
+        threadStatus.text(statusText).attr('class', `thread-status ${statusClass}`);
+    }
+    
+    // Format message time to be more readable
+    function formatMessageTime(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) {
+            return 'Just now';
+        } else if (diffMins < 60) {
+            return `${diffMins}m ago`;
+        } else if (diffHours < 24) {
+            return `${diffHours}h ago`;
+        } else if (diffDays < 7) {
+            return `${diffDays}d ago`;
+        } else {
+            return date.toLocaleDateString();
+        }
+    }
+    
+    // Function to get file icon based on file type
+    function getFileIcon(fileType) {
+        if (fileType.startsWith('image/')) return 'far fa-image';
+        if (fileType.startsWith('video/')) return 'far fa-file-video';
+        if (fileType.includes('pdf')) return 'far fa-file-pdf';
+        if (fileType.includes('word') || fileType.includes('document')) return 'far fa-file-word';
+        if (fileType.includes('excel') || fileType.includes('spreadsheet')) return 'far fa-file-excel';
+        if (fileType.includes('powerpoint') || fileType.includes('presentation')) return 'far fa-file-powerpoint';
+        if (fileType.includes('zip') || fileType.includes('compressed')) return 'far fa-file-archive';
+        return 'far fa-file';
+    }
+    
+    // Function to format file size
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    // Function to toggle action buttons based on conversation state
+    function toggleActionButtons(hasConversation) {
+        const newMessageAction = $('#newMessageAction');
+        const conversationActions = $('#conversationActions');
+        
+        if (hasConversation) {
+            // Hide new message button, show conversation actions
+            newMessageAction.hide();
+            conversationActions.show();
+        } else {
+            // Show new message button, hide conversation actions
+            newMessageAction.show();
+            conversationActions.hide();
+        }
+    }
+    
+    let currentConversationUserId = null;
+    let currentOtherUser = null;
+    let attachedFiles = [];
+    
+    // Emoji data
+    const emojiData = {
+        'smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳'],
+        'people': ['👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍', '👎', '👊', '✊', '🤛', '🤜', '👏', '🙌', '👐', '🤲', '🤝'],
+        'nature': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐻‍❄️', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗'],
+        'food': ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶️', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔'],
+        'activities': ['⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🎿', '⛷️', '🏂', '🪂', '🏋️', '🤼', '🤸', '⛹️', '🤾', '🚴', '🧗', '🚵', '🏇'],
+        'objects': ['💡', '🔦', '🏮', '🪔', '📔', '📕', '📖', '📗', '📘', '📙', '📚', '📓', '📒', '📃', '📜', '📄', '📰', '🗞️', '📑', '🔖', '🏷️', '💰', '🪙', '💴', '💵', '💶', '💷', '💸', '🪙', '💳'],
+        'symbols': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐'],
+        'flags': ['🎌', '🏴', '🏁', '🚩', '🏳️', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪']
+    };
+    
+    $(document).ready(function() {
+        // Initialize - no conversation selected
+        toggleActionButtons(false);
+        
+        // Initialize emoji picker
+        initializeEmojiPicker();
+        
+        // File attachment functionality
+        $('#attachFileBtn').on('click', function() {
+            $('#fileInput').click();
+        });
+        
+        $('#fileInput').on('change', function(e) {
+            handleFileSelection(e.target.files);
+        });
+        
+        // Emoji picker functionality
+        $('#emojiBtn').on('click', function() {
+            $('#emojiPicker').toggle();
+        });
+        
+        // Close emoji picker when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.emoji-picker-wrapper').length) {
+                $('#emojiPicker').hide();
+            }
+        });
+        
+        // Conversation selection
+        $('.conversation-item').on('click', function() {
+            $('.conversation-item').removeClass('active');
+            $(this).addClass('active');
+            
+            const userId = $(this).data('user-id');
+            const participantName = $(this).find('.conversation-name').text();
+            const userType = $(this).data('user-type') || 'USER';
+            const isOnline = $(this).find('.online-indicator').length > 0;
+            
+            currentConversationUserId = userId;
+            
+            // Hide new message button, show conversation actions
+            toggleActionButtons(true);
+            
+            // Update thread header with appropriate avatar
+            updateThreadAvatar(userType, participantName, isOnline);
+            $('#threadParticipant').text(participantName);
+            $('#threadStatus').text('Loading conversation...');
+            
+            // Show loading state
+            $('.empty-thread').hide();
+            $('#messageContainer').html(`
+                <div class="loading-messages">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                    </div>
+                    <p>Loading messages...</p>
+                </div>
+            `).show();
+            $('#messageInputContainer').hide();
+            
+            // Load conversation messages via AJAX
+            $.ajax({
+                url: "{% url 'get_conversation_messages' 0 %}".replace('0', userId),
+                type: 'GET',
+                success: function(response) {
+                    if (response.success) {
+                        currentOtherUser = response.other_user;
+                        displayMessages(response.messages, response.other_user);
+                        $('#messageInputContainer').show();
+                        
+                        // Update avatar and status based on actual user data from response
+                        updateThreadAvatar(response.other_user.type, response.other_user.name, isOnline);
+                        
+                        // Mark as read in UI
+                        $(`.conversation-item[data-user-id="${userId}"]`).removeClass('unread');
+                        $(`.conversation-item[data-user-id="${userId}"] .unread-count`).remove();
+                    } else {
+                        showMessage('Error loading conversation: ' + response.error, 'error');
+                        $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
+                    }
+                },
+                error: function(xhr) {
+                    showMessage('Error loading conversation: ' + xhr.statusText, 'error');
+                    $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
+                }
+            });
+        });
+    
+        // Display messages in the thread
+        function displayMessages(messages, otherUser) {
+            const messageContainer = $('#messageContainer');
+            messageContainer.empty();
+            
+            if (messages.length === 0) {
+                messageContainer.html(`
+                    <div class="no-messages-found">
+                        <div class="no-messages-icon">
+                            <i class="fas fa-comments fa-3x"></i>
+                        </div>
+                        <h4>No messages yet</h4>
+                        <p>Start the conversation by sending a message!</p>
+                    </div>
+                `);
+                return;
+            }
+            
+            let lastDate = null;
+            
+            messages.forEach(message => {
+                const messageDate = new Date(message.sent_date);
+                const currentDate = messageDate.toDateString();
+                
+                // Add date separator if date changed
+                if (lastDate !== currentDate) {
+                    const dateSeparator = `
+                        <div class="date-separator">
+                            <span class="date-text">${messageDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                    `;
+                    messageContainer.append(dateSeparator);
+                    lastDate = currentDate;
+                }
+                
+                const messageTime = formatMessageTime(message.sent_date);
+                const isOutgoing = message.is_outgoing;
+                
+                // Determine avatar - use initials for both users
+                const senderInitials = getInitials(message.sender_name);
+                const avatarBgColor = isOutgoing ? 'outgoing-bg' : getAvatarColor(otherUser.type);
+                const currentUserInitials = getInitials('{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}');
+                
+                // Build message content with attachments
+                // Build message content with attachments
+let messageContent = '';
+
+// Check for file attachment (from AJAX response)
+if (message.file_info) {
+    messageContent += `<div class="message-attachments">`;
+    messageContent += `
+        <div class="message-attachment">
+            ${renderAttachment(message.file_info, isOutgoing)}
+        </div>
+    `;
+    messageContent += `</div>`;
+}
+
+// Also check for attachments array (for backward compatibility)
+if (message.attachments && message.attachments.length > 0) {
+    messageContent += `<div class="message-attachments">`;
+    message.attachments.forEach(attachment => {
+        messageContent += `
+            <div class="message-attachment">
+                ${renderAttachment(attachment, isOutgoing)}
+            </div>
+        `;
+    });
+    messageContent += `</div>`;
+}
+
+if (message.content) {
+    messageContent += `<div class="message-text">${message.content}</div>`;
+}
+                
+                const messageHtml = `
+                    <div class="message ${isOutgoing ? 'outgoing' : 'incoming'} ${message.is_read ? 'read' : 'unread'}">
+                        ${!isOutgoing ? `
+                        <div class="message-avatar">
+                            <div class="avatar-initials ${avatarBgColor}" title="${message.sender_name}">
+                                ${senderInitials}
+                            </div>
+                        </div>
+                        ` : ''}
+                        <div class="message-content">
+                            ${!isOutgoing ? `
+                            <div class="message-header">
+                                <span class="message-sender">${message.sender_name}</span>
+                                <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
+                            </div>
+                            ` : `
+                            <div class="message-header">
+                                <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
+                            </div>
+                            `}
+                            <div class="message-bubble">
+                                ${messageContent}
+                            </div>
+                            <div class="message-status">
+                                <i class="fas fa-check-double ${message.is_read ? 'seen' : ''}"></i>
+                            </div>
+                        </div>
+                        ${isOutgoing ? `
+                        <div class="message-avatar">
+                            <div class="avatar-initials ${avatarBgColor}" title="You">
+                                ${currentUserInitials}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                messageContainer.append(messageHtml);
+            });
+            
+            // Scroll to bottom
+            setTimeout(() => {
+                $('#messageThread').scrollTop($('#messageThread')[0].scrollHeight);
+            }, 100);
+        }
+        
+        // Render attachment in message
+        function renderAttachment(attachment, isOutgoing) {
+            const fileType = attachment.file_type || 'unknown';
+            const fileName = attachment.file_name || 'Unknown file';
+            const fileUrl = attachment.file_url || '#';
+            const fileSize = attachment.file_size ? formatFileSize(attachment.file_size) : 'Unknown size';
+            const fileIcon = getFileIcon(fileType);
+            
+            return `
+                <div class="attachment-file ${isOutgoing ? 'outgoing-attachment' : 'incoming-attachment'}">
+                    <div class="attachment-icon">
+                        <i class="${fileIcon}"></i>
+                    </div>
+                    <div class="attachment-info">
+                        <span class="attachment-name">${fileName}</span>
+                        <span class="attachment-size">${fileSize}</span>
+                    </div>
+                    <div class="attachment-actions">
+                        <button class="btn-download" onclick="downloadFile('${fileUrl}', '${fileName}')" title="Download">
+                            <i class="fas fa-download"></i>
+                        </button>
+                        ${fileType.startsWith('image/') || fileType.startsWith('video/') ? `
+                        <button class="btn-preview" onclick="previewFile('${fileUrl}', '${fileName}', '${fileType}')" title="Preview">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Handle file selection
+        function handleFileSelection(files) {
+            const filePreviewContainer = $('#filePreviewContainer');
+            filePreviewContainer.empty();
+            attachedFiles = [];
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                    showMessage(`File "${file.name}" is too large. Maximum size is 10MB.`, 'error');
+                    continue;
+                }
+                
+                attachedFiles.push(file);
+                const fileIcon = getFileIcon(file.type);
+                const fileSize = formatFileSize(file.size);
+                
+                const filePreview = `
+                    <div class="file-preview-item" data-file-index="${attachedFiles.length - 1}">
+                        <div class="file-preview-icon">
+                            <i class="${fileIcon}"></i>
+                        </div>
+                        <div class="file-preview-info">
+                            <span class="file-preview-name">${file.name}</span>
+                            <span class="file-preview-size">${fileSize}</span>
+                        </div>
+                        <button class="file-preview-remove" onclick="removeAttachedFile(${attachedFiles.length - 1})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                filePreviewContainer.append(filePreview);
+            }
+            
+            if (attachedFiles.length > 0) {
+                filePreviewContainer.show();
+            } else {
+                filePreviewContainer.hide();
+            }
+        }
+        
+        // Initialize emoji picker
+        function initializeEmojiPicker() {
+            const emojiGrid = $('#emojiGrid');
+            const categoryButtons = $('.emoji-category-btn');
+            
+            // Load default category
+            loadEmojiCategory('smileys');
+            
+            // Category button click handlers
+            categoryButtons.on('click', function() {
+                const category = $(this).data('category');
+                categoryButtons.removeClass('active');
+                $(this).addClass('active');
+                loadEmojiCategory(category);
+            });
+            
+            // Load emojis for a category
+            function loadEmojiCategory(category) {
+                emojiGrid.empty();
+                const emojis = emojiData[category] || [];
+                
+                emojis.forEach(emoji => {
+                    const emojiButton = $(`
+                        <button class="emoji-btn" data-emoji="${emoji}">
+                            ${emoji}
+                        </button>
+                    `);
+                    
+                    emojiButton.on('click', function() {
+                        const messageInput = $('#messageInput');
+                        const currentValue = messageInput.val();
+                        messageInput.val(currentValue + emoji);
+                        messageInput.focus();
+                        $('#emojiPicker').hide();
+                    });
+                    
+                    emojiGrid.append(emojiButton);
+                });
+            }
+        }
+    
+        // New Message Button
+        $('#newMessageBtn').on('click', function() {
+            $('#newMessageModal').modal('show');
+        });
+    
+        // Send message from thread
+        // Send message from thread
+$('#sendMessageBtn').on('click', function() {
+    const message = $('#messageInput').val().trim();
+    if ((message || attachedFiles.length > 0) && currentConversationUserId) {
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append('receiver_id', currentConversationUserId);
+        formData.append('content', message);
+        formData.append('csrfmiddlewaretoken', getCSRFToken());
+        
+        // Append files - use 'file' (singular) to match Django view
+        attachedFiles.forEach((file, index) => {
+            formData.append('file', file); // Changed from 'attachments' to 'file'
+        });
+        
+        // Add outgoing message to thread immediately
+        const messageTime = 'Just now';
+        const userInitials = getInitials('{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}');
+        
+        let messageContent = '';
+        if (message) {
+            messageContent += `<div class="message-text">${message}</div>`;
+        }
+        
+        if (attachedFiles.length > 0) {
+            messageContent += `<div class="message-attachments">`;
+            attachedFiles.forEach(file => {
+                const fileIcon = getFileIcon(file.type);
+                const fileSize = formatFileSize(file.size);
+                messageContent += `
+                    <div class="message-attachment">
+                        <div class="attachment-file outgoing-attachment">
+                            <div class="attachment-icon">
+                                <i class="${fileIcon}"></i>
+                            </div>
+                            <div class="attachment-info">
+                                <span class="attachment-name">${file.name}</span>
+                                <span class="attachment-size">${fileSize}</span>
+                            </div>
+                            <div class="attachment-actions">
+                                <i class="fas fa-clock sending"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            messageContent += `</div>`;
+        }
+        
+        const messageHtml = `
+            <div class="message outgoing new-message sending">
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-time">${messageTime}</span>
+                    </div>
+                    <div class="message-bubble">
+                        ${messageContent}
+                    </div>
+                    <div class="message-status">
+                        <i class="fas fa-clock sending"></i>
+                    </div>
+                </div>
+                <div class="message-avatar">
+                    <div class="avatar-initials outgoing-bg" title="You">
+                        ${userInitials}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('#messageContainer').append(messageHtml);
+        $('#messageInput').val('');
+        $('#currentCharCount').text('0');
+        $('#filePreviewContainer').hide().empty();
+        attachedFiles = [];
+        
+        // Reset textarea height
+        $('#messageInput').css('height', 'auto');
+        
+        // Scroll to bottom
+        $('#messageThread').scrollTop($('#messageThread')[0].scrollHeight);
+        
+        // Send message via AJAX with files
+        $.ajax({
+            url: "{% url 'send_message_ajax' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCSRFToken() // Add CSRF token in headers too
+            },
+            success: function(response) {
+                console.log('AJAX Success:', response);
+                if (response.success) {
+                    // Update the temporary message with actual data
+                    const sentMessage = $('.new-message.sending');
+                    sentMessage.removeClass('sending new-message');
+                    
+                    // Update status icon
+                    sentMessage.find('.fa-clock').removeClass('fa-clock sending').addClass('fa-check-double seen');
+                    
+                    // Update time with actual server time if available
+                    if (response.sent_date) {
+                        sentMessage.find('.message-time').text(formatMessageTime(response.sent_date));
+                    }
+                    
+                    // If there's a file, update the attachment with actual URL
+                    if (response.file_info) {
+                        const attachment = sentMessage.find('.attachment-file');
+                        attachment.find('.attachment-actions').html(`
+                            <button class="btn-download" onclick="downloadFile('${response.file_info.url}', '${response.file_info.name}')" title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            ${response.file_info.file_type.startsWith('image/') || response.file_info.file_type.startsWith('video/') ? `
+                            <button class="btn-preview" onclick="previewFile('${response.file_info.url}', '${response.file_info.name}', '${response.file_info.file_type}')" title="Preview">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ` : ''}
+                        `);
+                    }
+                    
+                    // Refresh conversation list preview
+                    refreshConversationList();
+                } else {
+                    showMessage('Error sending message: ' + response.error, 'error');
+                    $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', xhr.responseText); // Debug log
+                let errorMessage = 'Error sending message';
+                try {
+                    const errorData = JSON.parse(xhr.responseText);
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    errorMessage = xhr.statusText || errorMessage;
+                }
+                showMessage(errorMessage, 'error');
+                $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
+            }
+        });
+    } else if (!currentConversationUserId) {
+        showMessage('Please select a conversation first', 'warning');
+    } else if (!message && attachedFiles.length === 0) {
+        showMessage('Please enter a message or attach a file', 'warning');
+        $('#messageInput').focus();
+    }
+});
+    
+        // Refresh conversations list
+        function refreshConversations() {
+            window.location.reload(); // Simple refresh for now
+        }
+    
+        // Enter key to send message
+        $('#messageInput').on('keypress', function(e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                $('#sendMessageBtn').click();
+            }
+        });
+    
+        // Auto-resize textarea
+        $('#messageInput').on('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            
+            // Update character count
+            const currentLength = $(this).val().length;
+            $('#currentCharCount').text(currentLength);
+            
+            if (currentLength > 900) {
+                $('#currentCharCount').parent().addClass('char-warning');
+            } else {
+                $('#currentCharCount').parent().removeClass('char-warning');
+            }
+        });
+    
+        // Search conversations
+        $('#messageSearch').on('keyup', function() {
+            const searchText = $(this).val().toLowerCase();
+            $('.conversation-item').each(function() {
+                const conversationText = $(this).data('search').toLowerCase();
+                if (conversationText.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    
+        // Character counter for new message form
+        $('#newMessageForm textarea[name="content"]').on('input', function() {
+            const currentLength = $(this).val().length;
+            $('#messageCharCount').text(currentLength);
+            
+            if (currentLength > 800) {
+                $('#messageCharCount').parent().addClass('char-warning');
+            } else {
+                $('#messageCharCount').parent().removeClass('char-warning');
+            }
+        });
+    
+        // Refresh conversations
+        $('#refreshConversations').on('click', function(e) {
+            e.preventDefault();
+            refreshConversations();
+        });
+    
+        // Mark all as read
+        $('#markAllRead').on('click', function(e) {
+            e.preventDefault();
+            // Simple implementation - just update UI
+            $('.conversation-item').removeClass('unread');
+            $('.unread-count').remove();
+            showMessage('All conversations marked as read', 'success');
+        });
+    
+        // User info button
+        $('#userInfoBtn').on('click', function() {
+            if (currentOtherUser) {
+                showMessage(`User: ${currentOtherUser.name} | Type: ${currentOtherUser.type}`, 'info');
+            } else {
+                showMessage('No conversation selected', 'warning');
+            }
+        });
+    
+        // Clear chat button
+        $('#clearChatBtn').on('click', function() {
+            if (currentConversationUserId) {
+                if (confirm('Are you sure you want to clear this conversation? This action cannot be undone.')) {
+                    showMessage('Clear chat feature coming soon!', 'info');
+                }
+            } else {
+                showMessage('No conversation selected', 'warning');
+            }
+        });
+        
+        // Clear conversation selection (when clicking elsewhere or using escape)
+        function clearConversationSelection() {
+            $('.conversation-item').removeClass('active');
+            currentConversationUserId = null;
+            currentOtherUser = null;
+            
+            // Reset thread header
+            $('#threadParticipant').text('Select a conversation');
+            $('#threadStatus').text('Choose a conversation to start messaging');
+            updateThreadAvatar('USER', '', false);
+            
+            // Hide message container, show empty state
+            $('.empty-thread').show();
+            $('#messageContainer').hide();
+            $('#messageInputContainer').hide();
+            
+            // Show new message button, hide conversation actions
+            toggleActionButtons(false);
+        }
+        
+        // Escape key to clear selection
+        $(document).on('keyup', function(e) {
+            if (e.key === 'Escape' && currentConversationUserId) {
+                clearConversationSelection();
+            }
+        });
+    });
+    
+    // Global functions for file handling
+    window.removeAttachedFile = function(index) {
+        attachedFiles.splice(index, 1);
+        $(`.file-preview-item[data-file-index="${index}"]`).remove();
+        
+        // Update indices for remaining files
+        $('.file-preview-item').each(function(i) {
+            $(this).attr('data-file-index', i);
+            $(this).find('.file-preview-remove').attr('onclick', `removeAttachedFile(${i})`);
+        });
+        
+        if (attachedFiles.length === 0) {
+            $('#filePreviewContainer').hide();
+        }
+    };
+    
+    window.downloadFile = function(fileUrl, fileName) {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+    
+    window.previewFile = function(fileUrl, fileName, fileType) {
+        const modalContent = $('#filePreviewContent');
+        const downloadBtn = $('#downloadFileBtn');
+        const modalTitle = $('#filePreviewTitle');
+        
+        modalTitle.text(`Preview: ${fileName}`);
+        downloadBtn.attr('href', fileUrl);
+        downloadBtn.attr('download', fileName);
+        
+        if (fileType.startsWith('image/')) {
+            modalContent.html(`<img src="${fileUrl}" alt="${fileName}" class="img-fluid" style="max-height: 70vh;">`);
+        } else if (fileType.startsWith('video/')) {
+            modalContent.html(`
+                <video controls class="img-fluid" style="max-height: 70vh;">
+                    <source src="${fileUrl}" type="${fileType}">
+                    Your browser does not support the video tag.
+                </video>
+            `);
+        } else {
+            modalContent.html(`
+                <div class="text-center">
+                    <i class="fas fa-file fa-5x text-muted mb-3"></i>
+                    <p>Preview not available for this file type.</p>
+                    <p>Please download the file to view it.</p>
+                </div>
+            `);
+        }
+        
+        $('#filePreviewModal').modal('show');
+    };
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --secondary: #6c757d;
+        --success: #28a745;
+        --danger: #e74c3c;
+        --warning: #f39c12;
+        --info: #3498db;
+        --light: #f8f9fa;
+        --dark: #2c3e50;
+        --border-radius: 12px;
+        --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        --transition: all 0.3s ease;
+        --message-max-width: 75%;
+    }
+    
+    .message-thread-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 20px;
+    }
+
+    .thread-info {
+        display: flex;
+        align-items: center;
+    }
+    
+    .thread-avatar {
+        margin-right: 15px;
+    }
+    
+    .thread-details h4 {
+        margin: 0 0 6px 0;
+        color: var(--dark);
+        font-weight: 600;
+        font-size: 18px;
+    }
+    
+    .thread-status {
+        font-size: 14px;
+        font-weight: 500;
+    }
+        
+    .thread-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-left: auto;
+    }
+    
+    .btn-new-message-circle {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4361ee, #6a11cb);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    
+    .btn-new-message-circle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
+    }
+    
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 1px solid #e9ecef;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--secondary);
+        transition: var(--transition);
+        font-size: 16px;
+    }
+    
+    .btn-icon:hover {
+        background-color: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        transform: translateY(-1px);
+    }
+
+    /* File Attachment Styles */
+    .file-attachment-wrapper {
+        position: relative;
+    }
+    
+    .file-preview-container {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: var(--border-radius);
+        padding: 10px;
+        margin-bottom: 10px;
+        min-width: 250px;
+        max-width: 300px;
+        box-shadow: var(--box-shadow);
+        z-index: 1000;
+    }
+    
+    .file-preview-item {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        margin-bottom: 5px;
+        transition: var(--transition);
+    }
+    
+    .file-preview-item:hover {
+        background: #e9ecef;
+    }
+    
+    .file-preview-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .file-preview-icon {
+        margin-right: 10px;
+        font-size: 16px;
+        color: var(--primary);
+    }
+    
+    .file-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .file-preview-name {
+        display: block;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .file-preview-size {
+        font-size: 11px;
+        color: var(--secondary);
+    }
+    
+    .file-preview-remove {
+        background: none;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: var(--transition);
+    }
+    
+    .file-preview-remove:hover {
+        background: var(--danger);
+        color: white;
+    }
+
+    /* Emoji Picker Styles */
+    .emoji-picker-wrapper {
+        position: relative;
+    }
+    
+    .emoji-picker {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: var(--border-radius);
+        padding: 15px;
+        margin-bottom: 10px;
+        width: 300px;
+        max-height: 350px;
+        box-shadow: var(--box-shadow);
+        z-index: 1000;
+    }
+    
+    .emoji-categories {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .emoji-category-btn {
+        background: none;
+        border: none;
+        font-size: 18px;
+        padding: 5px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .emoji-category-btn:hover,
+    .emoji-category-btn.active {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .emoji-grid {
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 5px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    .emoji-btn {
+        background: none;
+        border: none;
+        font-size: 20px;
+        padding: 5px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    
+    .emoji-btn:hover {
+        background: #f8f9fa;
+        transform: scale(1.2);
+    }
+
+    /* Message Attachments */
+    .message-attachments {
+        margin-bottom: 8px;
+    }
+    
+    .message-attachment {
+        margin-bottom: 8px;
+    }
+    
+    .attachment-file {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        transition: var(--transition);
+    }
+    
+    .outgoing-attachment {
+        background: rgba(255, 255, 255, 0.9);
+    }
+    
+    .incoming-attachment {
+        background: rgba(248, 249, 250, 0.9);
+    }
+    
+    .attachment-file:hover {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .attachment-icon {
+        margin-right: 12px;
+        font-size: 20px;
+        color: var(--primary);
+    }
+    
+    .attachment-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .attachment-name {
+        display: block;
+        font-weight: 500;
+        color: var(--dark);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .attachment-size {
+        font-size: 11px;
+        color: var(--secondary);
+    }
+    
+    .attachment-actions {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .btn-download,
+    .btn-preview {
+        background: none;
+        border: none;
+        color: var(--primary);
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 4px;
+        transition: var(--transition);
+        font-size: 12px;
+    }
+    
+    .btn-download:hover,
+    .btn-preview:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    /* Improved Typography */
+    .conversation-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--dark);
+        line-height: 1.3;
+    }
+    
+    .conversation-preview {
+        font-size: 14px;
+        line-height: 1.4;
+        color: #666;
+        margin: 4px 0 6px 0;
+    }
+    
+    .conversation-preview .no-messages {
+        color: #999;
+        font-style: italic;
+    }
+    
+    /* Message Thread Improvements */
+    .message-thread {
+        height: 500px;
+        overflow-y: auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+    }
+    
+    .message {
+        display: flex;
+        margin-bottom: 16px;
+        animation: fadeInUp 0.3s ease;
+        align-items: flex-start;
+    }
+    
+    .message.outgoing {
+        justify-content: flex-end;
+    }
+    
+    .message.incoming {
+        justify-content: flex-start;
+    }
+    
+    .message-content {
+        max-width: var(--message-max-width);
+        min-width: 120px;
+    }
+    
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        padding: 0 8px;
+    }
+    
+    .message-sender {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dark);
+    }
+    
+    .message-time {
+        font-size: 11px;
+        color: #888;
+        font-weight: 500;
+    }
+    
+    .message-bubble {
+        padding: 12px 16px;
+        border-radius: 18px;
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .message.incoming .message-bubble {
+        background: white;
+        border-bottom-left-radius: 6px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .message.outgoing .message-bubble {
+        background: linear-gradient(135deg, var(--primary), #6a11cb);
+        color: white;
+        border-bottom-right-radius: 6px;
+    }
+    
+    .message-text {
+        font-size: 14px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+    
+    .message.outgoing .message-text {
+        color: white;
+    }
+    
+    .message.incoming .message-text {
+        color: var(--dark);
+    }
+    
+    /* Message Status */
+    .message-status {
+        text-align: right;
+        margin-top: 4px;
+        padding: 0 8px;
+        font-size: 11px;
+    }
+    
+    .message-status .seen {
+        color: var(--info);
+    }
+    
+    .message-status .sending {
+        color: #888;
+    }
+    
+    .message-status .failed {
+        color: var(--danger);
+    }
+    
+    /* Date Separators */
+    .date-separator {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+    
+    .date-separator::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+    
+    .date-text {
+        background: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        color: #666;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+        border: 1px solid #e9ecef;
+    }
+    
+    /* Loading States */
+    .loading-messages {
+        text-align: center;
+        padding: 40px 20px;
+        color: #666;
+    }
+    
+    .loading-spinner {
+        margin-bottom: 16px;
+    }
+    
+    .no-messages-found {
+        text-align: center;
+        padding: 60px 20px;
+        color: #666;
+    }
+    
+    .no-messages-icon {
+        margin-bottom: 20px;
+        color: #bdc3c7;
+    }
+    
+    .no-messages-found h4 {
+        color: var(--dark);
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+    
+    .error-loading {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--danger);
+        background: rgba(231, 76, 60, 0.05);
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(231, 76, 60, 0.2);
+    }
+    
+    /* Improved Message Input */
+    .message-input-container {
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        padding: 16px;
+        background-color: white;
+        border-radius: var(--border-radius);
+        border: 1px solid #e9ecef;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .message-input-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .message-input {
+        flex: 1;
+        position: relative;
+    }
+    
+    .message-input textarea {
+        border: 1px solid #e9ecef;
+        resize: none;
+        padding: 12px 16px;
+        border-radius: 24px;
+        background-color: #f8f9fa;
+        transition: var(--transition);
+        font-size: 14px;
+        line-height: 1.4;
+        min-height: 44px;
+        max-height: 120px;
+    }
+    
+    .message-input textarea:focus {
+        background-color: white;
+        box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        border-color: var(--primary);
+    }
+    
+    .message-char-count {
+        position: absolute;
+        bottom: 8px;
+        right: 12px;
+        font-size: 11px;
+        color: #888;
+        background: white;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+    
+    .message-char-count.char-warning {
+        color: var(--warning);
+        font-weight: 600;
+    }
+    
+    /* Avatar Improvements */
+    .avatar-initials {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        text-transform: uppercase;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .thread-avatar .avatar-initials {
+        width: 60px;
+        height: 60px;
+        font-size: 18px;
+    }
+    
+    .message-avatar .avatar-initials {
+        width: 40px;
+        height: 40px;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    /* Avatar background colors */
+    .teacher-bg { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .student-bg { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .parent-bg { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .staff-bg { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .user-bg { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+    .default-bg { background: linear-gradient(135deg, #4361ee, #6a11cb); }
+    .outgoing-bg { background: linear-gradient(135deg, #4361ee, #6a11cb); }
+    
+    /* Online/Offline status indicators */
+    .online-indicator {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: var(--success);
+        border: 2px solid white;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+    
+    .offline-indicator {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 12px;
+        height: 12px;
+        background-color: var(--secondary);
+        border: 2px solid white;
+        border-radius: 50%;
+        opacity: 0.6;
+    }
+    
+    .thread-status.online {
+        color: var(--success);
+        font-weight: 600;
+    }
+    
+    .thread-status.offline {
+        color: var(--secondary);
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+        }
+    }
+    
+    /* Improved Conversations List */
+    .conversations-list {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+    
+    .conversation-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 16px;
+        border-radius: var(--border-radius);
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+    
+    .conversation-item:hover {
+        background-color: rgba(67, 97, 238, 0.05);
+        border-color: rgba(67, 97, 238, 0.1);
+        transform: translateY(-1px);
+    }
+    
+    .conversation-item.active {
+        background-color: rgba(67, 97, 238, 0.1);
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.15);
+    }
+    
+    .conversation-item.unread {
+        background-color: rgba(67, 97, 238, 0.08);
+        border-left: 3px solid var(--primary);
+    }
+    
+    .conversation-avatar {
+        position: relative;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+    
+    .conversation-avatar img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .conversation-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 6px;
+    }
+    
+    .conversation-time {
+        font-size: 12px;
+        color: var(--secondary);
+        white-space: nowrap;
+    }
+    
+    .conversation-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+    }
+    
+    .conversation-badge {
+        font-size: 11px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+    
+    .conversation-badge.teacher {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: var(--info);
+        border: 1px solid rgba(52, 152, 219, 0.2);
+    }
+    
+    .conversation-badge.student {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(40, 167, 69, 0.2);
+    }
+    
+    .conversation-badge.parent {
+        background-color: rgba(243, 156, 18, 0.1);
+        color: var(--warning);
+        border: 1px solid rgba(243, 156, 18, 0.2);
+    }
+    
+    .conversation-badge.staff {
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+        border: 1px solid rgba(67, 97, 238, 0.2);
+    }
+    
+    .conversation-badge.user {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: var(--secondary);
+        border: 1px solid rgba(108, 117, 125, 0.2);
+    }
+    
+    .unread-count {
+        background-color: var(--danger);
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+    }
+    
+    /* Empty States */
+    .empty-conversations,
+    .empty-thread {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--secondary);
+    }
+    
+    .empty-icon,
+    .empty-thread-icon {
+        font-size: 64px;
+        color: #bdc3c7;
+        margin-bottom: 20px;
+        opacity: 0.6;
+    }
+    
+    .empty-conversations h5,
+    .empty-thread h5 {
+        color: var(--dark);
+        margin-bottom: 12px;
+        font-weight: 600;
+        font-size: 18px;
+    }
+    
+    .empty-conversations p,
+    .empty-thread p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* Send Button */
+    .btn-send {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #6a11cb);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+        font-size: 16px;
+        box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+    }
+    
+    .btn-send:active {
+        transform: translateY(0);
+    }
+    
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .new-message {
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    /* Scrollbar Styling */
+    .conversations-list::-webkit-scrollbar,
+    .message-thread::-webkit-scrollbar,
+    .emoji-grid::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .conversations-list::-webkit-scrollbar-track,
+    .message-thread::-webkit-scrollbar-track,
+    .emoji-grid::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .conversations-list::-webkit-scrollbar-thumb,
+    .message-thread::-webkit-scrollbar-thumb,
+    .emoji-grid::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    .conversations-list::-webkit-scrollbar-thumb:hover,
+    .message-thread::-webkit-scrollbar-thumb:hover,
+    .emoji-grid::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .conversation-item {
+            padding: 12px;
+        }
+        
+        .conversation-avatar img {
+            width: 45px;
+            height: 45px;
+        }
+        
+        .message-content {
+            max-width: 85%;
+        }
+        
+        .message-thread-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .thread-actions {
+            align-self: flex-end;
+        }
+        
+        .message-input-container {
+            flex-wrap: wrap;
+        }
+        
+        .message-input-actions {
+            order: 2;
+        }
+        
+        .message-input {
+            order: 1;
+            flex: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .message-send {
+            order: 3;
+        }
+        
+        .message-thread {
+            height: 400px;
+        }
+        
+        .emoji-picker {
+            width: 280px;
+            left: -120px;
+        }
+        
+        .file-preview-container {
+            left: -100px;
+        }
+    }
+</style>
+{% endblock %}

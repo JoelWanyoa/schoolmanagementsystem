@@ -1,0 +1,579 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/fullcalendar.min.css' %}">
+<style>
+    .dashboard-summery-one {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    .dashboard-summery-one:hover {
+        transform: translateY(-5px);
+    }
+    .item-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .item-content {
+        text-align: right;
+    }
+    .item-title {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .item-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .bg-light-magenta { background-color: #f8e3ff; }
+    .bg-light-blue { background-color: #e3f2fd; }
+    .bg-light-yellow { background-color: #fff8e1; }
+    .bg-light-green { background-color: #e8f5e8; }
+    .bg-light-orange { background-color: #ffe0b2; }
+    .bg-light-success { background-color: #c8e6c9; }
+    .text-magenta { color: #9c27b0; }
+    .text-blue { color: #2196f3; }
+    .text-yellow { color: #ff9800; }
+    .text-green { color: #4caf50; }
+    .text-orange { color: #ff9800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Admin Dashboard</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Admin</li>
+                </ul>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-magenta">
+                                    <i class="flaticon-classmates text-magenta"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Students</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_students|default:0 }}">
+                                            {{ total_students|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="flaticon-multiple-users-silhouette text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Teachers</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_teachers|default:0 }}">
+                                            {{ total_teachers|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="flaticon-maths-class-materials-cross-of-a-pencil-and-a-ruler text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Classes</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_classes|default:0 }}">
+                                            {{ total_classes|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="flaticon-open-book text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Subjects</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_subjects|default:0 }}">
+                                            {{ total_subjects|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Row: Pending Admissions & Monthly Collection -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-orange">
+                                    <i class="flaticon-list text-orange"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Pending Admissions</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ pending_admissions|default:0 }}">
+                                            {{ pending_admissions|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{% url 'manage_admissions' %}" class="btn btn-sm btn-outline-orange w-100">
+                                Review Applications
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Attendance -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Today's Attendance</h3>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="attendance-summary">
+                                    <div class="present-count text-success">
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                        <h4>{{ present_today|default:0 }}</h4>
+                                        <small>Present</small>
+                                    </div>
+                                    <div class="absent-count text-danger mt-3">
+                                        <i class="fas fa-times-circle fa-2x"></i>
+                                        <h4>{{ absent_today|default:0 }}</h4>
+                                        <small>Absent</small>
+                                    </div>
+                                </div>
+                                {% with total_attendance=present_today|add:absent_today %}
+    {% if total_attendance > 0 %}
+        {% widthratio present_today total_attendance 100 as present_percentage %}
+        {% widthratio absent_today total_attendance 100 as absent_percentage %}
+        <div class="progress-bar bg-success" style="width: {{ present_percentage }}%"></div>
+        <div class="progress-bar bg-danger" style="width: {{ absent_percentage }}%"></div>
+    {% endif %}
+{% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fee Collection -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Monthly Collection</h3>
+                                </div>
+                            </div>
+                            <div class="fee-collection text-center">
+                                {% comment %} <div class="revenue-icon">
+                                    <i class="fas fa-dollar-sign fa-3x text-success"></i>
+                                </div> {% endcomment %}
+                                <h2 class="text-success mt-2">Kshs. {{ monthly_fee_collection|floatformat:2|default:"0.00" }}</h2>
+                                <p class="text-muted">This Month</p>
+                                <a href="{% url 'financial_overview' %}" class="btn btn-success btn-sm">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Quick Stats</h3>
+                                </div>
+                            </div>
+                            <div class="quick-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-calendar-day text-primary"></i>
+                                    <span>Today: {% now "M d, Y" %}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-clock text-info"></i>
+                                    <span>{% now "H:i" %}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-user-shield text-warning"></i>
+                                    <span>Admin: {{ request.user.get_full_name|default:request.user.username }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Notices and Upcoming Exams -->
+            <div class="row gutters-20 mt-4">
+                <!-- Recent Notices -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Recent Notices</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'notice_board' %}">View All</a>
+                                        <a class="dropdown-item" href="{% url 'notice_board' %}">Post New</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="notice-board-wrap">
+                                {% if recent_notices %}
+                                    {% for notice in recent_notices %}
+                                    <div class="notice-list">
+                                        <div class="post-date bg-{% if notice.priority == 'HIGH' %}danger{% elif notice.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                            {{ notice.publish_date|date:"d M" }}
+                                        </div>
+                                        <h6 class="notice-title">
+                                            <a href="#">{{ notice.title|truncatewords:8 }}</a>
+                                        </h6>
+                                        <div class="entry-meta">
+                                            {{ notice.posted_by.get_full_name|default:notice.posted_by.username }} 
+                                            <span>• {{ notice.publish_date|timesince }} ago</span>
+                                        </div>
+                                        <p class="notice-excerpt">
+                                            {{ notice.content|truncatewords:15 }}
+                                        </p>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No recent notices</p>
+                                        <a href="{% url 'notice_board' %}" class="btn btn-primary btn-sm">Post First Notice</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Exams -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Upcoming Exams</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#">View All</a>
+                                        <a class="dropdown-item" href="#">Schedule New</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="upcoming-exams">
+                                {% if upcoming_exams %}
+                                    {% for exam in upcoming_exams %}
+                                    <div class="exam-item">
+                                        <div class="exam-date bg-{% if exam.exam_type == 'FINAL' %}danger{% elif exam.exam_type == 'MID' %}warning{% else %}info{% endif %}">
+                                            {{ exam.exam_date|date:"d M" }}
+                                        </div>
+                                        <div class="exam-details">
+                                            <h6>{{ exam.name }}</h6>
+                                            <p class="mb-1">
+                                                <small>{{ exam.subject.name }} - {{ exam.class_name.name }}</small>
+                                            </p>
+                                            <p class="mb-0">
+                                                <small class="text-muted">
+                                                    Total Marks: {{ exam.total_marks }} • 
+                                                    Passing: {{ exam.passing_marks }}
+                                                </small>
+                                            </p>
+                                        </div>
+                                        <div class="exam-actions">
+                                            <span class="badge badge-{% if exam.exam_type == 'FINAL' %}danger{% elif exam.exam_type == 'MID' %}warning{% else %}info{% endif %}">
+                                                {{ exam.get_exam_type_display }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No upcoming exams</p>
+                                        <p class="text-muted small">Exams scheduled for the next 30 days will appear here</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row gutters-20 mt-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="quick-actions">
+                                <a href="{% url 'admit_form' %}" class="single-action bg-light-blue">
+                                    <i class="flaticon-user"></i>
+                                    <span>Add Student</span>
+                                </a>
+                                <a href="{% url 'add_teacher' %}" class="single-action bg-light-green">
+                                    <i class="flaticon-multiple-users-silhouette"></i>
+                                    <span>Add Teacher</span>
+                                </a>
+                                <a href="{% url 'all_students' %}" class="single-action bg-light-magenta">
+                                    <i class="flaticon-classmates"></i>
+                                    <span>Manage Students</span>
+                                </a>
+                                <a href="{% url 'messaging' %}" class="single-action bg-light-yellow">
+                                    <i class="flaticon-chat"></i>
+                                    <span>Send Message</span>
+                                </a>
+                                <a href="{% url 'notice_board' %}" class="single-action bg-light-orange">
+                                    <i class="flaticon-script"></i>
+                                    <span>Post Notice</span>
+                                </a>
+                                <a href="{% url 'financial_overview' %}" class="single-action bg-light-success">
+                                    <i class="flaticon-technological"></i>
+                                    <span>Finance</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/Chart.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Counter Animation
+    $('.counter').each(function() {
+        var $this = $(this);
+        var target = parseInt($this.attr('data-num'));
+        var current = 0;
+        var increment = target / 50;
+        
+        var timer = setInterval(function() {
+            current += increment;
+            if (current >= target) {
+                $this.text(target);
+                clearInterval(timer);
+            } else {
+                $this.text(Math.floor(current));
+            }
+        }, 50);
+    });
+
+    // Refresh dashboard data every 30 seconds
+    setInterval(function() {
+        console.log('Refreshing dashboard data...');
+        // You can implement AJAX refresh here if needed
+    }, 30000);
+
+    // Add loading state to quick action buttons
+    $('.quick-actions a').on('click', function(e) {
+        var $this = $(this);
+        var originalText = $this.find('span').text();
+        
+        // Only show loading for internal links (not external)
+        if ($this.attr('href').startsWith('/') || $this.attr('href').startsWith('{% url "dashboard" %}'.split('/')[0])) {
+            $this.find('span').html('<i class="fas fa-spinner fa-spin"></i> Loading...');
+            $this.addClass('disabled');
+            
+            setTimeout(function() {
+                $this.find('span').text(originalText);
+                $this.removeClass('disabled');
+            }, 2000);
+        }
+    });
+});
+</script>
+
+<style>
+.attendance-summary {
+    padding: 10px;
+}
+
+.quick-stats .stat-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+
+.quick-stats .stat-item i {
+    margin-right: 10px;
+    width: 20px;
+}
+
+.notice-list, .exam-item {
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+    transition: background-color 0.3s ease;
+}
+
+.notice-list:hover, .exam-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notice-list:last-child, .exam-item:last-child {
+    border-bottom: none;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.single-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.single-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: #333;
+}
+
+.single-action i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.single-action.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.post-date, .exam-date {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 15px;
+    float: left;
+}
+
+.notice-title, .exam-details h6 {
+    margin-bottom: 5px;
+}
+
+.entry-meta, .exam-details p {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.notice-excerpt {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    clear: both;
+}
+
+.exam-item {
+    display: flex;
+    align-items: center;
+}
+
+.exam-details {
+    flex: 1;
+}
+
+.exam-actions {
+    margin-left: 15px;
+}
+</style>
+{% endblock %}

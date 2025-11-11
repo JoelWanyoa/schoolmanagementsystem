@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee Details - {{ fee.student.full_name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Fee Details</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_fees' %}">Fees Collection</a></li>
+                    <li>Fee #{{ fee.id }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Fee Details Area Start Here -->
+            <div class="row">
+                <!-- Main Content -->
+                <div class="col-lg-8">
+                    <!-- Fee Summary Card -->
+                    <div class="card height-auto mb-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Fee Information</h3>
+                                </div>
+                                <div class="header-actions">
+                                    <span class="status-badge {% if fee.status == 'paid' %}paid{% else %}unpaid{% endif %}">
+                                        {{ fee.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row compact-info">
+                                <div class="col-md-6">
+                                    <div class="info-grid">
+                                        <div class="info-item compact">
+                                            <label>Student:</label>
+                                            <span class="value">{{ fee.student.first_name }} {{ fee.student.last_name }}</span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Student ID:</label>
+                                            <span class="value">{{ fee.student.student_id }}</span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Fee Type:</label>
+                                            <span class="value badge badge-type">{{ fee.get_fee_type_display }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-grid">
+                                        <div class="info-item compact">
+                                            <label>Amount:</label>
+                                            <span class="value amount">Kes. {{ fee.amount|floatformat:2 }}</span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Due Date:</label>
+                                            <span class="value">{{ fee.due_date|date:"M d, Y" }}</span>
+                                        </div>
+                                        {% if fee.paid_date %}
+                                        <div class="info-item compact">
+                                            <label>Paid Date:</label>
+                                            <span class="value text-success">{{ fee.paid_date|date:"M d, Y" }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Student Information Card -->
+                    <div class="card height-auto mb-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Student Information</h3>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-grid">
+                                        <div class="info-item compact">
+                                            <label>Class:</label>
+                                            <span class="value">
+                                                {% if fee.student.current_class %}
+                                                    {{ fee.student.current_class.name }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Section:</label>
+                                            <span class="value">
+                                                {% if fee.student.current_section %}
+                                                    {{ fee.student.current_section.name }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Roll No:</label>
+                                            <span class="value">{{ fee.student.roll_number }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-grid">
+                                        <div class="info-item compact">
+                                            <label>Gender:</label>
+                                            <span class="value">
+                                                {% if fee.student.gender == 'M' %}
+                                                    Male
+                                                {% elif fee.student.gender == 'F' %}
+                                                    Female
+                                                {% else %}
+                                                    Other
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="info-item compact">
+                                            <label>Admission:</label>
+                                            <span class="value">{{ fee.student.admission_date|date:"M d, Y" }}</span>
+                                        </div>
+                                        {% if fee.student.phone %}
+                                        <div class="info-item compact">
+                                            <label>Phone:</label>
+                                            <span class="value">{{ fee.student.phone }}</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parent Information Card -->
+                    <div class="card height-auto mb-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Parent Information</h3>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item compact">
+                                        <label>Father:</label>
+                                        <span class="value">{{ fee.student.father_name }}</span>
+                                    </div>
+                                    {% if fee.student.father_occupation %}
+                                    <div class="info-item compact">
+                                        <label>Father's Occupation:</label>
+                                        <span class="value">{{ fee.student.father_occupation }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="info-item compact">
+                                        <label>Mother:</label>
+                                        <span class="value">{{ fee.student.mother_name }}</span>
+                                    </div>
+                                    {% if fee.student.mother_occupation %}
+                                    <div class="info-item compact">
+                                        <label>Mother's Occupation:</label>
+                                        <span class="value">{{ fee.student.mother_occupation }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="info-item compact">
+                                <label>Guardian Phone:</label>
+                                <span class="value">{{ fee.student.guardian_phone }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description Card -->
+                    {% if fee.description %}
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Description</h3>
+                                </div>
+                            </div>
+                            <div class="description-content compact">
+                                <p class="mb-0">{{ fee.description|linebreaks }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Student Profile Card -->
+                    <div class="card student-profile-card compact">
+                        <div class="card-body text-center p-3">
+                            {% if fee.student.photo %}
+                                <img src="{{ fee.student.photo.url }}" alt="Student Photo" class="student-photo rounded-circle mb-2" style="width: 60px; height: 60px;">
+                            {% else %}
+                                <div class="avatar-placeholder rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 60px; height: 60px;">
+                                    <i class="fas fa-user-graduate text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <h6 class="student-name mb-1">{{ fee.student.first_name }} {{ fee.student.last_name }}</h6>
+                            <p class="student-id text-muted small mb-2">{{ fee.student.student_id }}</p>
+                            <div class="student-class-info">
+                                <span class="badge badge-primary badge-sm">{{ fee.student.current_class.name|default:"No Class" }}</span>
+                                {% if fee.student.current_section %}
+                                <span class="badge badge-secondary badge-sm">{{ fee.student.current_section.name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Quick Actions Card -->
+                    <div class="card quick-actions-card compact">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">Quick Actions</h6>
+                            <div class="action-buttons compact">
+                                <a href="{% url 'edit_fee' fee.id %}" class="btn btn-primary btn-block btn-xs mb-1">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                {% if fee.status == 'unpaid' %}
+                                <a href="{% url 'mark_paid' fee.id %}" class="btn btn-success btn-block btn-xs mb-1">
+                                    <i class="fas fa-check"></i> Mark Paid
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'all_fees' %}" class="btn btn-secondary btn-block btn-xs mb-1">
+                                    <i class="fas fa-arrow-left"></i> Back
+                                </a>
+                                <button class="btn btn-info btn-block btn-xs mb-1" onclick="window.print()">
+                                    <i class="fas fa-print"></i> Print
+                                </button>
+                                <a href="{% url 'delete_fee' fee.id %}" class="btn btn-danger btn-block btn-xs">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Payment Status Card -->
+                    <div class="card status-card compact">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">Payment Status</h6>
+                            <div class="payment-status {% if fee.status == 'paid' %}paid{% else %}unpaid{% endif %} compact">
+                                <div class="status-icon">
+                                    <i class="fas {% if fee.status == 'paid' %}fa-check-circle{% else %}fa-clock{% endif %}"></i>
+                                </div>
+                                <div class="status-details">
+                                    <div class="status-text small">{{ fee.get_status_display }}</div>
+                                    {% if fee.status == 'paid' %}
+                                    <div class="status-date x-small">Paid: {{ fee.paid_date|date:"M d, Y" }}</div>
+                                    {% else %}
+                                    <div class="status-date x-small">Due: {{ fee.due_date|date:"M d, Y" }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Metadata Card -->
+                    <div class="card metadata-card compact">
+                        <div class="card-body p-3">
+                            <h6 class="card-title mb-2">Record Info</h6>
+                            <div class="metadata-list compact">
+                                <div class="metadata-item small">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>#{{ fee.id }}</span>
+                                </div>
+                                <div class="metadata-item small">
+                                    <i class="fas fa-calendar-plus"></i>
+                                    <span>{{ fee.created_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="metadata-item small">
+                                    <i class="fas fa-calendar-check"></i>
+                                    <span>{{ fee.updated_at|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="metadata-item small">
+                                    <i class="fas fa-user"></i>
+                                    <span>
+                                        {% if fee.created_by.get_full_name %}
+                                            {{ fee.created_by.get_full_name }}
+                                        {% else %}
+                                            {{ fee.created_by.username }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card{
+        height: auto;
+    }
+    .heading-layout1 .item-title h3 {
+        font-size: 1.38rem;
+        font-weight: 700;
+        color: #253858;
+    }
+    
+    .label, .info-item.compact label {
+        font-size: 1.07rem;
+        color: #363c4e;
+    }
+    
+    .info-item.compact .value,
+    .student-name, .student-id {
+        font-size: 1.13rem;
+    }
+    
+    .info-item.compact .amount {
+        font-size: 1.22rem;
+        color: #208549;
+        font-weight: 700;
+    }
+    
+    .status-badge {
+        font-size: 1.02rem;
+        padding: 6px 16px;
+        border-radius: 22px;
+    }
+    
+    .status-badge.paid { background: #d6f5dc; color: #26734d; border: 1px solid #b7e7ca; }
+    .status-badge.unpaid { background: #fbe8e6; color: #c52c2e; border: 1px solid #ffcccc; }
+    
+    .badge-type {
+        font-size: 1.03rem;
+        padding: 5px 11px;
+        background: #ddeafb;
+        color: #1976d2;
+        border-radius: 12px;
+    }
+    
+    .student-profile-card .card-body {
+        padding: 32px 18px;
+    }
+    
+    .student-photo, .avatar-placeholder {
+        width: 86px;
+        height: 86px;
+        border-radius: 50%;
+    }
+    
+    .student-class-info .badge {
+        font-size: 1.1rem;
+        margin: 2px;
+        padding: 6px 13px;
+    }
+    
+    .quick-actions-card .btn {
+        font-size: 1.08rem;
+        padding: 10px 13px;
+        border-radius: 10px;
+        transition: background 0.19s;
+    }
+    
+    .quick-actions-card .btn:hover {
+        background: #e3e9f6;
+    }
+    
+    .payment-status {
+        font-size: 1.07rem;
+        padding: 20px 11px;
+        border-radius: 12px;
+        background: #f8fdf8;
+    }
+    
+    .payment-status.paid { 
+        background: #e0f7ec; 
+        border: 1px solid #b2e3d8;
+    }
+    .payment-status.unpaid { 
+        background: #fffbe8; 
+        border: 1px solid #ffeab6;
+    }
+    
+    .status-icon {
+        font-size: 2.1rem;
+        margin-right: 16px;
+    }
+    
+    .status-details {
+        font-size: 1.1rem;
+    }
+    
+    .metadata-list.compact .metadata-item {
+        font-size: 1.1rem;
+        color: #7f8fa6;
+        margin-bottom: 8px;
+    }
+    
+    .description-content.compact {
+        font-size: 1.08rem;
+        padding: 20px;
+        border-left: 4px solid #5e8efa;
+        border-radius: 7px;
+        background: #f1f4fb;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        body, html {
+            font-size: 1.08rem;
+        }
+        .student-profile-card, .card, .card-body {
+            padding: 17px 8px;
+        }
+        .heading-layout1 .item-title h3 {
+            font-size: 1.17rem;
+        }
+        .info-item.compact label, .info-item.compact .value {
+            font-size: 1rem;
+        }
+    }
+    
+    /* Print Styles */
+    @media print {
+        .quick-actions-card,
+        .dropdown {
+            display: none !important;
+        }
+    }
+    
+</style>
+{% endblock %}

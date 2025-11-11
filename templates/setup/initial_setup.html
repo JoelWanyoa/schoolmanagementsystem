@@ -1,0 +1,617 @@
+<!-- templates/setup/initial_setup.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Initial Setup - School Management System{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root{
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --primary:#16a34a; /* green */
+      --primary-600:#0e9a44;
+      --accent:#0ea5e9; /* subtle blue accent for icons only */
+      --success-bg:#ecfdf5;
+      --warn-bg:#fff7ed;
+      --warn:#b45309;
+    }
+
+    
+
+    /* Header */
+    .header{
+      text-align:center;
+      margin:8px 0 24px;
+    }
+    .header h1{
+      font-size:28px;
+      font-weight:700;
+      margin:0 0 6px;
+      letter-spacing:-0.02em;
+      color:var(--text);
+    }
+    .header p{
+      margin:0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    /* Progress */
+    .progress-card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:20px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04);
+      margin-bottom:16px;
+    }
+    .progress-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .progress-title h2{
+      font-size:18px;
+      margin:0 0 4px;
+      font-weight:700;
+    }
+    .progress-title p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .progress-stats{
+      text-align:right;
+      min-width:140px;
+    }
+    .progress-number{
+      font-size:28px;
+      font-weight:800;
+      color:var(--primary);
+      line-height:1;
+    }
+    .progress-label{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+    }
+    .bar{
+      width:100%;
+      background:#eef2f6;
+      height:10px;
+      border-radius:999px;
+      overflow:hidden;
+    }
+    .bar-fill{
+      height:100%;
+      width:0%;
+      background:var(--primary);
+      border-radius:999px;
+      transition:width .4s ease;
+    }
+
+    /* Steps grid */
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:16px;
+      margin-top:12px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04);
+      position:relative;
+      height: auto;
+    }
+    .card.complete{
+      border-color:#bbf7d0;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:0 0 auto 0;
+      height:3px;
+      background:#e5e7eb;
+      border-top-left-radius:14px;
+      border-top-right-radius:14px;
+    }
+    .card.complete::before{
+      background:var(--primary);
+    }
+
+    .step-head{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:8px;
+    }
+    .step-num{
+      width:40px;height:40px;border-radius:10px;
+      display:grid;place-items:center;
+      border:1px solid var(--border);
+      color:var(--muted);
+      font-weight:700;
+      background:#f9fafb;
+      flex-shrink:0;
+    }
+    .card.complete .step-num{
+      background:var(--primary);
+      border-color:var(--primary);
+      color:white;
+      font-weight:800;
+    }
+    .step-info h3{
+      margin:0 0 2px;font-size:16px;font-weight:700;
+    }
+    .step-info p{
+      margin:0;color:var(--muted);font-size:13px;
+    }
+
+    .desc{
+      color:#374151;
+      font-size:14px;
+      line-height:1.5;
+      margin:10px 0 14px;
+    }
+
+    .badge-row{
+      display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;
+    }
+    .badge{
+      padding:6px 10px;
+      font-size:12px;
+      border-radius:999px;
+      background:#f3f4f6;
+      color:#374151;
+      border:1px solid #e5e7eb;
+      font-weight:600;
+    }
+    .card.complete .badge{
+      background:#ecfdf5;color:#065f46;border-color:#bbf7d0;
+    }
+
+    .btn{
+      width:100%;
+      appearance:none;
+      border:0;
+      border-radius:10px;
+      padding:12px 14px;
+      font-weight:700;
+      font-size:14px;
+      color:white;
+      background:var(--primary);
+      cursor:pointer;
+      transition:transform .06s ease,opacity .2s ease;
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn:active{transform:scale(.99)}
+
+    .alert{
+      padding:10px 12px;
+      border-radius:10px;
+      font-size:13px;
+      margin-top:8px;
+      border:1px solid var(--border);
+    }
+    .alert-success{background:var(--success-bg);color:#065f46;border-color:#bbf7d0}
+    .alert-warning{background:var(--warn-bg);color:var(--warn);border-color:#fed7aa}
+
+    .existing{
+      background:#f9fafb;border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;
+    }
+    .existing h4{margin:0 0 10px;font-size:14px}
+    .group{margin-bottom:10px}
+    .group:last-child{margin-bottom:0}
+    .label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+    .chips{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{
+      background:white;border:1px dashed var(--primary);color:var(--primary);
+      font-size:12px;font-weight:700;border-radius:8px;padding:6px 8px;
+    }
+
+    /* Complete section */
+    .complete-wrap{
+      margin-top:16px;
+    }
+    .complete-card{
+      background:var(--card);
+      border:1px solid #bbf7d0;
+      border-left:4px solid var(--primary);
+      border-radius:14px;
+      padding:24px;
+      text-align:center;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+    .complete-card i{color:var(--primary);font-size:40px;margin-bottom:8px}
+    .complete-card h2{margin:6px 0 6px;font-size:20px}
+    .complete-card p{margin:0 0 14px;color:var(--muted)}
+    .btn-launch{
+      background:var(--primary);
+      color:white;
+      padding:12px 18px;
+      border-radius:10px;
+      font-weight:800;
+      border:0;
+      cursor:pointer;
+      display:inline-flex;align-items:center;gap:8px;
+      text-decoration:none;
+    }
+    .btn-launch:hover{
+      background:var(--primary-600);
+      color:white;
+      text-decoration:none;
+    }
+
+    /* Info */
+    .info{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:18px;
+      margin-top:16px;
+    }
+    .info h3{
+      font-size:16px;margin:0 0 10px;display:flex;gap:8px;align-items:center
+    }
+    .info-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px
+    }
+    .info ul{margin:0;padding-left:18px}
+    .info li{color:#374151;font-size:14px;margin:8px 0}
+
+    .spinner{animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    @media (max-width:640px){
+      .progress-row{flex-direction:column;align-items:flex-start}
+      .progress-stats{text-align:left}
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="container-custom">
+                <div class="header">
+                    <h1>Initial System Setup</h1>
+                    <p>Complete these quick steps to get your school ready</p>
+                </div>
+
+                <div class="progress-card">
+                    <div class="progress-row">
+                        <div class="progress-title">
+                            <h2>Setup Progress</h2>
+                            <p>Complete all steps to unlock full access</p>
+                        </div>
+                        <div class="progress-stats">
+                            {% with total_steps=3 completed_steps=classes_exist|add:sections_exist|add:academic_years_exist %}
+                            <div class="progress-number" id="progressNumber">{{ completed_steps }}/3</div>
+                            <div class="progress-label">Steps Completed</div>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="bar">
+                        {% with total_steps=3 completed_steps=classes_exist|add:sections_exist|add:academic_years_exist %}
+                        {% widthratio completed_steps 3 100 as percentage %}
+                        <div class="bar-fill" id="progressBar" style="width: {{ percentage }}%"></div>
+                        {% endwith %}
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <!-- Step 1: Classes -->
+                    <div class="card {% if classes_exist %}complete{% endif %}" id="step1">
+                        <div class="step-head">
+                            <div class="step-num">
+                                <span class="number-text" {% if classes_exist %}style="display:none"{% endif %}>1</span>
+                                <i class="fa-solid fa-check" {% if not classes_exist %}style="display:none"{% endif %}></i>
+                            </div>
+                            <div class="step-info">
+                                <h3>Create Classes</h3>
+                                <p>Kenyan curriculum structure</p>
+                            </div>
+                        </div>
+                        <p class="desc">Set up your school's class levels following the Kenyan education system structure.</p>
+                        <div class="badge-row">
+                            <span class="badge">PP1 - PP3</span>
+                            <span class="badge">Grade 1 - 6</span>
+                            <span class="badge">Grade 7 - 9</span>
+                        </div>
+                        
+                        {% if not classes_exist %}
+                        <button class="btn" id="createClassesBtn">
+                            <i class="fa-solid fa-plus"></i><span>Create Classes</span>
+                        </button>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="fa-solid fa-circle-check"></i> Step completed successfully!
+                        </div>
+                        <div class="existing">
+                            <h4>Classes Created</h4>
+                            <div class="group">
+                                <span class="label">ECDE</span>
+                                <div class="chips">
+                                    {% for class in classes %}
+                                        {% if class.level_category == "ECDE" %}
+                                        <span class="chip">{{ class.name }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="group">
+                                <span class="label">Primary</span>
+                                <div class="chips">
+                                    {% for class in classes %}
+                                        {% if class.level_category == "PRIMARY" %}
+                                        <span class="chip">{{ class.name }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="group">
+                                <span class="label">Junior Secondary</span>
+                                <div class="chips">
+                                    {% for class in classes %}
+                                        {% if class.level_category == "JUNIOR_SECONDARY" %}
+                                        <span class="chip">{{ class.name }}</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Step 2: Sections -->
+                    <div class="card {% if sections_exist %}complete{% endif %}" id="step2">
+                        <div class="step-head">
+                            <div class="step-num">
+                                <span class="number-text" {% if sections_exist %}style="display:none"{% endif %}>2</span>
+                                <i class="fa-solid fa-check" {% if not sections_exist %}style="display:none"{% endif %}></i>
+                            </div>
+                            <div class="step-info">
+                                <h3>Create Sections</h3>
+                                <p>Classroom divisions</p>
+                            </div>
+                        </div>
+                        <p class="desc">Automatically create sections (A, B, C) for each class to organize your students.</p>
+                        <div class="badge-row">
+                            <span class="badge">Section A</span>
+                            <span class="badge">Section B</span>
+                            <span class="badge">Section C</span>
+                        </div>
+                        
+                        {% if classes_exist and not sections_exist %}
+                        <button class="btn" id="createSectionsBtn">
+                            <i class="fa-solid fa-plus"></i><span>Create Sections</span>
+                        </button>
+                        {% elif not classes_exist %}
+                        <div class="alert alert-warning">
+                            <i class="fa-solid fa-lock"></i> Complete classes first to unlock this step
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="fa-solid fa-circle-check"></i> Step completed successfully!
+                        </div>
+                        <div class="existing">
+                            <h4>Sections Created</h4>
+                            <div style="text-align:center;padding:8px 0;">
+                                <i class="fa-solid fa-layer-group" style="font-size:28px;color:var(--primary);margin-bottom:6px;"></i>
+                                <div style="color:var(--muted);font-size:14px;">{{ sections.count }} sections created across</div>
+                                <div style="font-weight:800;font-size:18px;color:var(--text);">{{ classes.count }} classes</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Step 3: Academic Years -->
+                    <div class="card {% if academic_years_exist %}complete{% endif %}" id="step3">
+                        <div class="step-head">
+                            <div class="step-num">
+                                <span class="number-text" {% if academic_years_exist %}style="display:none"{% endif %}>3</span>
+                                <i class="fa-solid fa-check" {% if not academic_years_exist %}style="display:none"{% endif %}></i>
+                            </div>
+                            <div class="step-info">
+                                <h3>Academic Years</h3>
+                                <p>School calendar setup</p>
+                            </div>
+                        </div>
+                        <p class="desc">Configure your academic years including the current year and future planning years.</p>
+                        <div class="badge-row">
+                            <span class="badge">2024/2025</span>
+                            <span class="badge">2025/2026</span>
+                            <span class="badge">2026/2027</span>
+                        </div>
+                        
+                        {% if classes_exist and sections_exist and not academic_years_exist %}
+                        <button class="btn" id="createAcademicYearsBtn">
+                            <i class="fa-solid fa-plus"></i><span>Create Academic Years</span>
+                        </button>
+                        {% elif not classes_exist or not sections_exist %}
+                        <div class="alert alert-warning">
+                            <i class="fa-solid fa-lock"></i> Complete previous steps first
+                        </div>
+                        {% else %}
+                        <div class="alert alert-success">
+                            <i class="fa-solid fa-circle-check"></i> Step completed successfully!
+                        </div>
+                        <div class="existing">
+                            <h4>Academic Years Created</h4>
+                            <div style="padding-top:4px">
+                                {% for year in academic_years %}
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;{% if not forloop.last %}border-bottom:1px solid var(--border);{% endif %}">
+                                    <span style="{% if year.is_current %}font-weight:700{% else %}color:var(--muted){% endif %}">{{ year.name }}</span>
+                                    {% if year.is_current %}
+                                    <span style="background:var(--primary);color:white;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700">Current</span>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if classes_exist and sections_exist and academic_years_exist %}
+                <div id="completeSection" class="complete-wrap pb-4">
+                    <div class="complete-card">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <h2>Setup Complete</h2>
+                        <p>All configuration steps are finished. Your school management system is ready to use.</p>
+                        <a href="{% url 'complete_setup' %}" class="btn-launch">
+                            <i class="fa-solid fa-rocket"></i> Launch System
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div id="infoSection" class="info">
+                    <h3><i class="fa-solid fa-circle-info" style="color:var(--accent)"></i> Setup Instructions</h3>
+                    <div class="info-grid">
+                        <ul>
+                            <li>Complete all 3 steps in sequential order</li>
+                            <li>Each step creates essential system data</li>
+                            <li>Data can be modified later from admin panels</li>
+                        </ul>
+                        <ul>
+                            <li>Page updates automatically after each step</li>
+                            <li>Setup required for full system access</li>
+                            <li>Estimated completion time: 2-3 minutes</li>
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Create Classes
+    $('#createClassesBtn').click(function() {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner spinner"></i><span>Creating Classes...</span>');
+        
+        $.ajax({
+            url: '{% url "create_initial_classes" %}',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('error', response.message);
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Classes</span>');
+                }
+            },
+            error: function() {
+                showAlert('error', 'An error occurred while creating classes.');
+                btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Classes</span>');
+            }
+        });
+    });
+    
+    // Create Sections
+    $('#createSectionsBtn').click(function() {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner spinner"></i><span>Creating Sections...</span>');
+        
+        $.ajax({
+            url: '{% url "create_initial_sections" %}',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('error', response.message);
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Sections</span>');
+                }
+            },
+            error: function() {
+                showAlert('error', 'An error occurred while creating sections.');
+                btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Sections</span>');
+            }
+        });
+    });
+    
+    // Create Academic Years
+    $('#createAcademicYearsBtn').click(function() {
+        const btn = $(this);
+        btn.prop('disabled', true).html('<i class="fa-solid fa-spinner spinner"></i><span>Creating Academic Years...</span>');
+        
+        $.ajax({
+            url: '{% url "create_initial_academic_years" %}',
+            type: 'POST',
+            data: {
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    showAlert('success', response.message);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showAlert('error', response.message);
+                    btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Academic Years</span>');
+                }
+            },
+            error: function() {
+                showAlert('error', 'An error occurred while creating academic years.');
+                btn.prop('disabled', false).html('<i class="fa-solid fa-plus"></i><span>Create Academic Years</span>');
+            }
+        });
+    });
+    
+    function showAlert(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'circle-check' : 'exclamation-circle';
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; font-size: 14px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                <i class="fa-solid fa-${icon}"></i> <strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        $('body').append(alertHtml);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            $('.alert').alert('close');
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

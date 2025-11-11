@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+    <!-- Sidebar -->
+    {% include 'includes/sidebar.html' %}
+    <!-- End Sidebar -->
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        {% include 'includes/header.html' %}
+        <!-- End Header -->
+
+        <!-- Page Content -->
+        <div class="page-content">
+            {% block page_content %}{% endblock %}
+        </div>
+        <!-- End Page Content -->
+    </div>
+    <!-- End Main Content -->
+</div>
+<!-- End Main Wrapper -->
+{% endblock %}

@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Parent Dashboard - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-summery-one {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    .dashboard-summery-one:hover {
+        transform: translateY(-5px);
+    }
+    .item-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .item-content {
+        text-align: right;
+    }
+    .item-title {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .item-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .bg-light-magenta { background-color: #f8e3ff; }
+    .bg-light-blue { background-color: #e3f2fd; }
+    .bg-light-yellow { background-color: #fff8e1; }
+    .bg-light-green { background-color: #e8f5e8; }
+    .bg-light-orange { background-color: #ffe0b2; }
+    .bg-light-success { background-color: #c8e6c9; }
+    .text-magenta { color: #9c27b0; }
+    .text-blue { color: #2196f3; }
+    .text-yellow { color: #ff9800; }
+    .text-green { color: #4caf50; }
+    .text-orange { color: #ff9800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Parent Dashboard</h3>
+                <ul>
+                    <li><a href="{% url 'parent_dashboard' %}">Home</a></li>
+                    <li>Parent</li>
+                </ul>
+            </div>
+
+            <!-- Welcome Section -->
+            <div class="row gutters-20 mb-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            {% if parent %}
+                            <div class="media align-items-center">
+                                {% if parent.photo %}
+                                    <img src="{{ parent.photo.url }}" class="rounded-circle mr-3" width="80" height="80" alt="Parent Photo">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-user-friends fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="media-body">
+                                    <h2 class="mb-1">Welcome, {{ parent.full_name|default:parent.user.get_full_name }}!</h2>
+                                    <p class="mb-0 text-muted">
+                                        Parent of {{ children.count }} student{{ children.count|pluralize }} | 
+                                        Phone: {{ parent.phone|default:"Not provided" }}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="badge badge-success p-2">
+                                        <i class="fas fa-circle mr-1"></i>
+                                        Active Parent
+                                    </div>
+                                    <p class="mb-0 text-muted mt-1">Email: {{ parent.email|default:parent.user.email }}</p>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                                <h4 class="text-warning">Parent Profile Not Found</h4>
+                                <p class="text-muted">Please contact the school administration to set up your parent profile.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if not parent %}
+            <!-- Show error message if no parent profile -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Parent Profile Required</h4>
+                        <p>Your user account doesn't have an associated parent profile. This could be because:</p>
+                        <ul>
+                            <li>Your children haven't been linked to your account yet</li>
+                            <li>Your parent profile hasn't been created</li>
+                            <li>There's a mismatch between your login email and student guardian information</li>
+                        </ul>
+                        <p class="mb-0">Please contact the school administration to resolve this issue.</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Debug Information - Remove this after testing -->
+            {% comment %} <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body bg-light">
+                            <h6>Debug Information:</h6>
+                            <p><strong>Parent Object:</strong> {{ parent }}</p>
+                            <p><strong>Parent User:</strong> {{ parent.user.username }} - {{ parent.user.email }}</p>
+                            <p><strong>Children Count:</strong> {{ children.count }}</p>
+                            <p><strong>Children List:</strong></p>
+                            <ul>
+                                {% for child in children %}
+                                    <li>{{ child.full_name }} - {{ child.student_id }} - Class: {{ child.current_class.name|default:"Not assigned" }}</li>
+                                {% empty %}
+                                    <li>No children found</li>
+                                {% endfor %}
+                            </ul>
+                            <p><strong>Parent Email:</strong> {{ parent.email }}</p>
+                            <p><strong>Parent Phone:</strong> {{ parent.phone }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div> {% endcomment %}
+
+            <!-- Children Overview -->
+            <div class="row gutters-20">
+                {% for child in children %}
+                <div class="col-xl-{% if children.count == 1 %}12{% elif children.count == 2 %}6{% else %}4{% endif %} col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-4">
+                                {% if child.photo %}
+                                    <img src="{{ child.photo.url }}" class="rounded-circle" width="60" height="60" alt="{{ child.full_name }}">
+                                {% else %}
+                                    <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-8">
+                                <div class="item-content">
+                                    <div class="item-title">{{ child.full_name }}</div>
+                                    <div class="item-number">
+                                        <small>{{ child.current_class.name|default:"Not assigned" }} - {{ child.current_section.name|default:"No section" }}</small>
+                                    </div>
+                                    <div class="item-status">
+                                        {% with attendance=attendance_summary|get_item:child.id %}
+                                            {% if attendance and attendance.total_days > 0 %}
+                                                {% widthratio attendance.present_days attendance.total_days 100 as attendance_percentage %}
+                                                <span class="badge badge-{% if attendance_percentage >= 80 %}success{% elif attendance_percentage >= 60 %}warning{% else %}danger{% endif %}">
+                                                    Attendance: {{ attendance_percentage }}%
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Attendance Data</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{% url 'student_details' child.student_id %}" class="btn btn-sm btn-outline-primary w-100">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body text-center py-5">
+                            <i class="fas fa-user-plus fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Children Registered</h4>
+                            <p class="text-muted">Please contact the school administration to register your children.</p>
+                            <div class="mt-3">
+                                <p><strong>Possible reasons:</strong></p>
+                                <ul class="list-unstyled text-left">
+                                    <li><i class="fas fa-info-circle text-info mr-2"></i>Your email/phone doesn't match student guardian information</li>
+                                    <li><i class="fas fa-info-circle text-info mr-2"></i>Students haven't been linked to your parent account</li>
+                                    <li><i class="fas fa-info-circle text-info mr-2"></i>Students are not active in the system</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Children Details & Recent Notices -->
+            {% if children %}
+            <div class="row gutters-20 mt-4">
+                <!-- Children Performance -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Children Overview</h3>
+                                </div>
+                            </div>
+                            <div class="children-overview">
+                                {% for child in children %}
+                                <div class="child-card">
+                                    <div class="child-header">
+                                        <div class="child-info">
+                                            <h5>{{ child.full_name }}</h5>
+                                            <p class="mb-1">
+                                                <small>
+                                                    {{ child.current_class.name|default:"Not assigned" }} - {{ child.current_section.name|default:"No section" }} | 
+                                                    Roll No: {{ child.roll_number|default:"Not assigned" }}
+                                                </small>
+                                            </p>
+                                        </div>
+                                        <div class="child-stats">
+                                            {% with attendance=attendance_summary|get_item:child.id %}
+                                                {% if attendance %}
+                                                    <div class="stat-item">
+                                                        <span class="text-success">{{ attendance.present_days|default:0 }}</span>
+                                                        <small>Present</small>
+                                                    </div>
+                                                    <div class="stat-item">
+                                                        <span class="text-danger">{{ attendance.absent_days|default:0 }}</span>
+                                                        <small>Absent</small>
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
+                                            {% with fees=fee_status|get_item:child.id %}
+                                                {% if fees and fees.total_due %}
+                                                    <div class="stat-item">
+                                                        <span class="text-{% if fees.total_paid >= fees.total_due %}success{% else %}warning{% endif %}">
+                                                            ${{ fees.total_paid|default:0 }}
+                                                        </span>
+                                                        <small>Paid</small>
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                    <div class="child-actions">
+                                        <a href="{% url 'student_details' child.student_id %}" class="btn btn-sm btn-outline-primary">View Profile</a>
+                                        <a href="#" class="btn btn-sm btn-outline-info">Attendance</a>
+                                        <a href="#" class="btn btn-sm btn-outline-success">Results</a>
+                                        <a href="#" class="btn btn-sm btn-outline-warning">Fees</a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Notices & Upcoming Exams -->
+                <div class="col-lg-4">
+                    <!-- Recent Notices -->
+                    <div class="card height-auto mb-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>School Notices</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'notice_board' %}">View All</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="school-notices">
+                                {% if recent_notices %}
+                                    {% for notice in recent_notices %}
+                                    <div class="notice-item">
+                                        <div class="notice-priority bg-{% if notice.priority == 'HIGH' %}danger{% elif notice.priority == 'MEDIUM' %}warning{% else %}info{% endif %}"></div>
+                                        <div class="notice-content">
+                                            <h6>{{ notice.title|truncatewords:5 }}</h6>
+                                            <p class="mb-1">
+                                                <small>{{ notice.content|truncatewords:8 }}</small>
+                                            </p>
+                                            <p class="mb-0">
+                                                <small class="text-muted">
+                                                    {{ notice.publish_date|timesince }} ago
+                                                </small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-bell fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small">No recent notices</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Exams -->
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Upcoming Exams</h3>
+                                </div>
+                            </div>
+                            <div class="upcoming-exams">
+                                {% if upcoming_exams %}
+                                    {% for exam in upcoming_exams %}
+                                    <div class="exam-item">
+                                        <div class="exam-date">
+                                            {{ exam.exam_date|date:"d M" }}
+                                        </div>
+                                        <div class="exam-info">
+                                            <h6>{{ exam.name }}</h6>
+                                            <p class="mb-0">
+                                                <small>{{ exam.subject.name }}</small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-clipboard-list fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted small">No upcoming exams</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row gutters-20 mt-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="parent-actions">
+                                <a href="#" class="single-action bg-light-blue">
+                                    <i class="flaticon-calendar"></i>
+                                    <span>View Attendance</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-green">
+                                    <i class="flaticon-open-book"></i>
+                                    <span>Check Results</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-magenta">
+                                    <i class="flaticon-credit-card"></i>
+                                    <span>Pay Fees</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-yellow">
+                                    <i class="flaticon-chat"></i>
+                                    <span>Contact Teacher</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-orange">
+                                    <i class="flaticon-timetable"></i>
+                                    <span>School Calendar</span>
+                                </a>
+                                <a href="{% url 'notice_board' %}" class="single-action bg-light-success">
+                                    <i class="flaticon-script"></i>
+                                    <span>School Notices</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Counter Animation
+    $('.counter').each(function() {
+        var $this = $(this);
+        var target = parseInt($this.attr('data-num'));
+        var current = 0;
+        var increment = target / 50;
+        
+        var timer = setInterval(function() {
+            current += increment;
+            if (current >= target) {
+                $this.text(target);
+                clearInterval(timer);
+            } else {
+                $this.text(Math.floor(current));
+            }
+        }, 50);
+    });
+});
+</script>
+
+<style>
+.children-overview, .school-notices, .upcoming-exams {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.child-card {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.child-card:hover {
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.child-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.child-info {
+    flex: 1;
+}
+
+.child-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item span {
+    display: block;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.stat-item small {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.child-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.child-actions .btn {
+    font-size: 12px;
+    padding: 4px 8px;
+}
+
+.notice-item, .exam-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.notice-item:last-child, .exam-item:last-child {
+    border-bottom: none;
+}
+
+.notice-priority {
+    width: 4px;
+    height: 40px;
+    border-radius: 2px;
+    margin-right: 12px;
+}
+
+.notice-content, .exam-info {
+    flex: 1;
+}
+
+.exam-date {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background: #e3f2fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #2196f3;
+    margin-right: 12px;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.parent-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.single-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.single-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: #333;
+}
+
+.single-action i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | All Parents{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Parents</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>All Parents</li>
+                </ul>
+            </div>
+            <!-- Parent Table Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>All Parents Data</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form class="mg-b-20" method="GET">
+                        <div class="row gutters-8">
+                            <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <input type="text" name="search" placeholder="Search by Name ..." class="form-control" value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-4 col-lg-3 col-12 form-group">
+                                <input type="text" name="email" placeholder="Search by Email ..." class="form-control" value="{{ request.GET.email }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <input type="text" name="phone" placeholder="Search by Phone ..." class="form-control" value="{{ request.GET.phone }}">
+                            </div>
+                            <div class="col-1-xxxl col-xl-2 col-lg-3 col-12 form-group">
+                                <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="parentsTable" class="table display data-table text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input checkAll">
+                                            <label class="form-check-label">ID</label>
+                                        </div>
+                                    </th>
+                                    <th>Photo</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Children</th>
+                                    <th>Occupation</th>
+                                    <th>Address</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for parent in parents %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input">
+                                            <label class="form-check-label">#{{ parent.id }}</label>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if parent.photo %}
+                                        <img src="{{ parent.photo.url }}" alt="parent" class="rounded-circle" width="40" height="40">
+                                        {% else %}
+                                        <img src="{% static 'img/figure/admin.jpg' %}" alt="parent" class="rounded-circle" width="40" height="40">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ parent.first_name }} {{ parent.last_name }}</strong>
+                                        {% if parent.user %}
+                                        <br><small class="text-muted">User: {{ parent.user.username }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ parent.email|default:"-" }}
+                                        {% if parent.user and parent.user.is_active %}
+                                        <br><small class="text-success">Active Account</small>
+                                        {% elif parent.user %}
+                                        <br><small class="text-warning">Inactive</small>
+                                        {% else %}
+                                        <br><small class="text-danger">No Account</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ parent.phone|default:"-" }}</td>
+                                    <td>
+                                        {% if parent.students.count > 0 %}
+                                            <span class="badge badge-info">{{ parent.students.count }}</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                {% for student in parent.students.all|slice:":2" %}
+                                                    {{ student.first_name }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                                {% if parent.students.count > 2 %}...{% endif %}
+                                            </small>
+                                        {% else %}
+                                            <span class="badge badge-secondary">0</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ parent.occupation|default:"Not specified" }}</td>
+                                    <td>
+                                        <small>{{ parent.address|truncatewords:3|default:"Not provided" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if parent.user and parent.user.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% elif parent.user %}
+                                            <span class="badge badge-warning">Inactive</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">No Account</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'parent_details' parent.id %}">
+                                                    <i class="fas fa-eye text-info"></i> View Details
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-edit text-warning"></i> Edit
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-link text-primary"></i> Link Students
+                                                </a>
+                                                {% if parent.user %}
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-key text-dark"></i> Reset Password
+                                                </a>
+                                                {% endif %}
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-trash text-danger"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                                            <h4>No Parents Found</h4>
+                                            <p class="text-muted">No parents match your search criteria.</p>
+                                            <a href="{% url 'add_parent' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i> Add New Parent
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Parent Table Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Wait for the table to be completely loaded
+        setTimeout(function() {
+            initializeDataTable();
+        }, 100);
+    });
+    
+    function initializeDataTable() {
+        var table = $('#parentsTable');
+        
+        if (!table.length) {
+            console.log('Table not found');
+            return;
+        }
+    
+        // Check if already initialized
+        if ($.fn.dataTable.isDataTable(table)) {
+            console.log('DataTable already initialized, destroying...');
+            table.DataTable().destroy();
+        }
+    
+        // Initialize with error handling
+        try {
+            var dataTable = table.DataTable({
+                "pageLength": 25,
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                "responsive": true,
+                "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "language": {
+                    "search": "Search:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ parents",
+                    "infoEmpty": "Showing 0 to 0 of 0 parents",
+                    "infoFiltered": "(filtered from _MAX_ total parents)",
+                    "zeroRecords": "No matching parents found",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "columnDefs": [
+                    {
+                        "targets": [0, 9],
+                        "orderable": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": 1,
+                        "orderable": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": 5,
+                        "orderable": false
+                    }
+                ],
+                "order": [[2, 'asc']]
+            });
+    
+            console.log('DataTable initialized successfully');
+            setupCustomFilters(dataTable);
+            
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    }
+    
+    function setupCustomFilters(dataTable) {
+        // Search functionality with debounce
+        let timeout;
+        $('input[name="search"]').on('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                dataTable.columns(2).search(this.value).draw();
+            }, 300);
+        });
+    
+        $('input[name="email"]').on('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                dataTable.columns(3).search(this.value).draw();
+            }, 300);
+        });
+    
+        $('input[name="phone"]').on('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                dataTable.columns(4).search(this.value).draw();
+            }, 300);
+        });
+    
+        // Check all functionality
+        $('.checkAll').on('change', function() {
+            $('tbody input[type="checkbox"]').prop('checked', this.checked);
+        });
+
+        // Tooltip initialization
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+
+    // Export functionality
+    function exportParents(format) {
+        alert(`Exporting parents data in ${format} format...`);
+        // Add export functionality here
+    }
+</script>
+
+<style>
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.table img.rounded-circle {
+    object-fit: cover;
+}
+
+.parent-children-list {
+    max-width: 150px;
+}
+
+.status-badge {
+    font-size: 0.7em;
+    padding: 3px 8px;
+}
+
+.dropdown-menu {
+    min-width: 180px;
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 5px;
+}
+</style>
+{% endblock %}

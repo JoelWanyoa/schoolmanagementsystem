@@ -1,0 +1,702 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Update Student - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Update Student</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li><a href="{% url 'student_details' student.student_id %}">{{ student.first_name }} {{ student.last_name }}</a></li>
+                    <li>Update Student</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Update Student Information</h3>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="new-added-form" id="updateStudentForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Student Basic Information -->
+                            <div class="col-12">
+                                <h4 class="text-heading">Student Basic Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>First Name *</label>
+                                <input type="text" name="first_name" id="first_name" class="form-control" 
+                                       value="{{ student.first_name }}" required pattern="[A-Za-z\s]{2,50}"
+                                       title="Only letters and spaces allowed (2-50 characters)">
+                                <div class="invalid-feedback">Please enter a valid first name (2-50 letters only)</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Last Name *</label>
+                                <input type="text" name="last_name" id="last_name" class="form-control" 
+                                       value="{{ student.last_name }}" required pattern="[A-Za-z\s]{2,50}"
+                                       title="Only letters and spaces allowed (2-50 characters)">
+                                <div class="invalid-feedback">Please enter a valid last name (2-50 letters only)</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Date of Birth *</label>
+                                <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" 
+                                       value="{{ student.date_of_birth|date:'Y-m-d' }}" required max="{% now 'Y-m-d' %}">
+                                <div class="invalid-feedback">Please select a valid date of birth (cannot be in future)</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Gender *</label>
+                                <select name="gender" id="gender" class="form-control" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                                    <option value="O" {% if student.gender == 'O' %}selected{% endif %}>Other</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a gender</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Religion</label>
+                                <input type="text" name="religion" id="religion" class="form-control" 
+                                       value="{{ student.religion }}" pattern="[A-Za-z\s]{0,50}"
+                                       title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid religion</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Student Photo</label>
+                                <input type="file" name="photo" id="photo" class="form-control" accept="image/jpeg,image/png,image/jpg">
+                                {% if student.photo %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Current Photo:</small>
+                                        <img src="{{ student.photo.url }}" alt="Current Photo" class="img-thumbnail ml-2" width="50" height="50">
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Accepted formats: JPG, PNG, JPEG (Max 2MB)</small>
+                                <div class="invalid-feedback">Please upload a valid image file (JPG, PNG, JPEG, max 2MB)</div>
+                            </div>
+
+                            <!-- Academic Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Academic Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Class</label>
+                                <select name="current_class" id="current_class" class="form-control">
+                                    <option value="">Select Class</option>
+                                    {% for class in classes %}
+                                        <option value="{{ class.id }}" {% if student.current_class.id == class.id %}selected{% endif %} data-name="{{ class.name }}">
+                                            {{ class.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a valid class</div>
+                            </div>
+                            
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Section</label>
+                                <select name="current_section" id="current_section" class="form-control">
+                                    <option value="">Select Section</option>
+                                    {% for section in sections %}
+                                        <option value="{{ section.id }}" {% if student.current_section.id == section.id %}selected{% endif %} data-name="{{ section.name }}">
+                                            {{ section.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a valid section</div>
+                            </div>
+                            
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Roll Number *</label>
+                                <input type="text" name="roll_number" id="roll_number" class="form-control" 
+                                       value="{{ student.roll_number }}" required pattern="[A-Za-z0-9\-\s]{1,20}"
+                                       title="Alphanumeric characters, hyphens and spaces only (1-20 characters)">
+                                <div class="invalid-feedback">Please enter a valid roll number</div>
+                            </div>
+
+                            <!-- Parent Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Parent Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Father's Name</label>
+                                <input type="text" name="father_name" id="father_name" class="form-control" 
+                                       value="{{ student.father_name }}" pattern="[A-Za-z\s]{0,100}"
+                                       title="Only letters and spaces allowed (max 100 characters)">
+                                <div class="invalid-feedback">Please enter a valid father's name</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Father's Occupation</label>
+                                <input type="text" name="father_occupation" id="father_occupation" class="form-control" 
+                                       value="{{ student.father_occupation }}" pattern="[A-Za-z\s]{0,50}"
+                                       title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid occupation</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Mother's Name</label>
+                                <input type="text" name="mother_name" id="mother_name" class="form-control" 
+                                       value="{{ student.mother_name }}" pattern="[A-Za-z\s]{0,100}"
+                                       title="Only letters and spaces allowed (max 100 characters)">
+                                <div class="invalid-feedback">Please enter a valid mother's name</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Mother's Occupation</label>
+                                <input type="text" name="mother_occupation" id="mother_occupation" class="form-control" 
+                                       value="{{ student.mother_occupation }}" pattern="[A-Za-z\s]{0,50}"
+                                       title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid occupation</div>
+                            </div>
+
+                            <!-- Contact Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Contact Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" id="email" class="form-control" 
+                                       value="{{ student.email }}" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                       title="Valid email address format required">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Phone</label>
+                                <input type="tel" name="phone" id="phone" class="form-control" 
+                                       value="{{ student.phone }}" pattern="^\+?[0-9\s\-\(\)]{0,15}$"
+                                       title="Valid phone number format">
+                                <div class="invalid-feedback">Please enter a valid phone number</div>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <label>Address</label>
+                                <textarea name="address" id="address" class="form-control" rows="3" 
+                                         maxlength="500">{{ student.address }}</textarea>
+                                <small class="form-text text-muted">Maximum 500 characters</small>
+                                <div class="invalid-feedback">Maximum 500 characters allowed</div>
+                            </div>
+
+                            <!-- Emergency Contact -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Emergency Contact</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Emergency Contact Name</label>
+                                <input type="text" name="emergency_contact_name" id="emergency_contact_name" class="form-control" 
+                                       value="{{ student.emergency_contact_name }}" pattern="[A-Za-z\s]{0,100}"
+                                       title="Only letters and spaces allowed (max 100 characters)">
+                                <div class="invalid-feedback">Please enter a valid emergency contact name</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Emergency Contact Phone</label>
+                                <input type="tel" name="emergency_contact_phone" id="emergency_contact_phone" class="form-control" 
+                                       value="{{ student.emergency_contact_phone }}" pattern="^\+?[0-9\s\-\(\)]{0,15}$"
+                                       title="Valid phone number format">
+                                <div class="invalid-feedback">Please enter a valid emergency contact phone</div>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <label>Relationship</label>
+                                <input type="text" name="emergency_relationship" id="emergency_relationship" class="form-control" 
+                                       value="{{ student.emergency_relationship }}" pattern="[A-Za-z\s]{0,50}"
+                                       title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid relationship</div>
+                            </div>
+
+                            <!-- Additional Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Additional Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Previous School</label>
+                                <input type="text" name="previous_school" id="previous_school" class="form-control" 
+                                       value="{{ student.previous_school }}" pattern="[A-Za-z0-9\s\-\.,&]{0,100}"
+                                       title="Maximum 100 characters allowed">
+                                <div class="invalid-feedback">Maximum 100 characters allowed</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>National ID</label>
+                                <input type="text" name="national_id" id="national_id" class="form-control" 
+                                       value="{{ student.national_id }}" pattern="[A-Za-z0-9\-\s]{0,20}"
+                                       title="Alphanumeric characters, hyphens and spaces only">
+                                <div class="invalid-feedback">Please enter a valid national ID</div>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <label>Medical Conditions</label>
+                                <textarea name="medical_conditions" id="medical_conditions" class="form-control" rows="3" 
+                                         maxlength="500">{{ student.medical_conditions }}</textarea>
+                                <small class="form-text text-muted">Maximum 500 characters</small>
+                                <div class="invalid-feedback">Maximum 500 characters allowed</div>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <label>Medications</label>
+                                <textarea name="medications" id="medications" class="form-control" rows="2" 
+                                         maxlength="300">{{ student.medications }}</textarea>
+                                <small class="form-text text-muted">Maximum 300 characters</small>
+                                <div class="invalid-feedback">Maximum 300 characters allowed</div>
+                            </div>
+
+                            <!-- Guardian Contact Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading">Guardian Contact Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Guardian Email</label>
+                                <input type="email" name="guardian_email" id="guardian_email" class="form-control" 
+                                       value="{{ student.guardian_email }}" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                       title="Valid email address format required">
+                                <div class="invalid-feedback">Please enter a valid guardian email</div>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Guardian Phone</label>
+                                <input type="tel" name="guardian_phone" id="guardian_phone" class="form-control" 
+                                       value="{{ student.guardian_phone }}" pattern="^\+?[0-9\s\-\(\)]{0,15}$"
+                                       title="Valid phone number format">
+                                <div class="invalid-feedback">Please enter a valid guardian phone</div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="col-12 form-group mt-5">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="submitBtn">
+                                    <i class="fas fa-save"></i> Update Student
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                                    <i class="fas fa-redo"></i> Reset Changes
+                                </button>
+                                <a href="{% url 'student_details' student.student_id %}" class="btn-fill-lg bg-red btn-hover-primary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Enhanced form validation
+    const form = document.getElementById('updateStudentForm');
+    let originalData = {};
+    let userModifiedFields = new Set(); // Track fields manually modified by user
+    
+    // Store original form data
+    function storeOriginalData() {
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            originalData[input.name] = input.value;
+        });
+    }
+    
+    // Initialize original data
+    storeOriginalData();
+
+    // Real-time validation for all inputs
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+            highlightChanges(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+            highlightChanges(this);
+            
+            // Track user modifications
+            if (this.value !== originalData[this.name]) {
+                userModifiedFields.add(this.name);
+            }
+        });
+    });
+
+    // Field validation function
+    function validateField(field) {
+        const isValid = field.checkValidity();
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+
+    // Highlight changed fields
+    function highlightChanges(field) {
+        const currentValue = field.value;
+        const originalValue = originalData[field.name];
+        
+        if (currentValue !== originalValue) {
+            field.style.backgroundColor = '#fff3cd'; // Light yellow background
+            field.style.borderLeft = '4px solid #ffc107'; // Yellow left border
+        } else {
+            field.style.backgroundColor = '';
+            field.style.borderLeft = '';
+        }
+    }
+
+    // Custom validation for date of birth
+    function validateDateOfBirth() {
+        const dobField = document.getElementById('date_of_birth');
+        const dob = new Date(dobField.value);
+        const today = new Date();
+        
+        if (dob > today) {
+            dobField.setCustomValidity('Date of birth cannot be in the future');
+            return false;
+        }
+        
+        // Check if student is at least 3 years old
+        const minAge = new Date();
+        minAge.setFullYear(minAge.getFullYear() - 3);
+        if (dob > minAge) {
+            dobField.setCustomValidity('Student must be at least 3 years old');
+            return false;
+        }
+        
+        dobField.setCustomValidity('');
+        return true;
+    }
+
+    // Custom validation for file upload
+    function validateFileUpload() {
+        const fileField = document.getElementById('photo');
+        if (fileField.files.length > 0) {
+            const file = fileField.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            if (!validTypes.includes(file.type)) {
+                fileField.setCustomValidity('Please upload a valid image file (JPG, PNG, JPEG)');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                fileField.setCustomValidity('File size must be less than 2MB');
+                return false;
+            }
+        }
+        
+        fileField.setCustomValidity('');
+        return true;
+    }
+
+    // Auto-update related fields
+    function setupAutoUpdates() {
+        // Auto-format phone numbers
+        $('input[type="tel"]').on('blur', function() {
+            let phone = $(this).val().trim();
+            
+            // Basic Kenyan phone number formatting
+            if (phone && !phone.startsWith('+')) {
+                if (phone.startsWith('0')) {
+                    phone = '+254' + phone.substring(1);
+                } else if (phone.startsWith('7') || phone.startsWith('1')) {
+                    phone = '+254' + phone;
+                }
+                $(this).val(phone);
+                highlightChanges(this);
+            }
+        });
+
+        // Auto-update guardian phone when main phone changes (only if guardian phone wasn't manually changed)
+        $('#phone').on('input blur', function() {
+            const mainPhone = $(this).val();
+            const guardianPhoneField = $('#guardian_phone');
+            
+            // Only auto-update if guardian phone hasn't been manually modified by user
+            if (!userModifiedFields.has('guardian_phone')) {
+                guardianPhoneField.val(mainPhone);
+                validateField(guardianPhoneField[0]);
+                highlightChanges(guardianPhoneField[0]);
+            }
+        });
+
+        // Auto-update emergency contact if empty
+        $('#guardian_phone').on('blur', function() {
+            if (!$('#emergency_contact_phone').val() && !userModifiedFields.has('emergency_contact_phone')) {
+                $('#emergency_contact_phone').val($(this).val());
+                validateField(document.getElementById('emergency_contact_phone'));
+                highlightChanges(document.getElementById('emergency_contact_phone'));
+            }
+        });
+
+        $('#father_name').on('blur', function() {
+            if (!$('#emergency_contact_name').val() && !userModifiedFields.has('emergency_contact_name')) {
+                $('#emergency_contact_name').val($(this).val());
+                validateField(document.getElementById('emergency_contact_name'));
+                highlightChanges(document.getElementById('emergency_contact_name'));
+            }
+        });
+
+        // Track when user manually modifies guardian phone
+        $('#guardian_phone').on('input', function() {
+            userModifiedFields.add('guardian_phone');
+        });
+
+        // Track when user manually modifies emergency contact fields
+        $('#emergency_contact_phone, #emergency_contact_name').on('input', function() {
+            userModifiedFields.add(this.name);
+        });
+
+        // Auto-suggest based on class and section changes
+        $('#current_class, #current_section').on('change', function() {
+            updateStudentSummary();
+            highlightChanges(this);
+        });
+
+        // Update roll number validation based on class/section
+        $('#current_class, #current_section').on('change', function() {
+            const classVal = $('#current_class').val();
+            const sectionVal = $('#current_section').val();
+            
+            if (classVal && sectionVal) {
+                // You can add AJAX call here to check if roll number is unique in class/section
+                console.log('Checking roll number availability for class:', classVal, 'section:', sectionVal);
+            }
+        });
+    }
+
+    // Update student summary preview
+    function updateStudentSummary() {
+        const firstName = $('#first_name').val() || '{{ student.first_name }}';
+        const lastName = $('#last_name').val() || '{{ student.last_name }}';
+        const className = $('#current_class option:selected').data('name') || '{{ student.current_class.name|default:"Not assigned" }}';
+        const sectionName = $('#current_section option:selected').data('name') || '{{ student.current_section.name|default:"Not assigned" }}';
+        const rollNumber = $('#roll_number').val() || '{{ student.roll_number }}';
+        
+        console.log('Student updated:', firstName, lastName, '-', className, sectionName, '- Roll:', rollNumber);
+    }
+
+    // Date of birth validation
+    $('#date_of_birth').on('change', function() {
+        validateDateOfBirth();
+        validateField(this);
+        highlightChanges(this);
+    });
+
+    // File upload validation
+    $('#photo').on('change', function() {
+        validateFileUpload();
+        validateField(this);
+        highlightChanges(this);
+        
+        // Preview image if uploaded
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#photo').siblings('img').remove();
+                $('#photo').after('<img src="' + e.target.result + '" class="img-thumbnail mt-2" width="50" height="50" alt="New Photo Preview">');
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+
+    // Form submission validation
+    $('#updateStudentForm').on('submit', function(e) {
+        // Validate all fields
+        let formIsValid = true;
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                formIsValid = false;
+            }
+        });
+
+        // Custom validations
+        if (!validateDateOfBirth()) {
+            formIsValid = false;
+        }
+        
+        if (!validateFileUpload()) {
+            formIsValid = false;
+        }
+
+        if (!formIsValid) {
+            e.preventDefault();
+            // Scroll to first invalid field
+            const firstInvalid = form.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+            alert('Please fix the errors in the form before submitting.');
+            return false;
+        }
+
+        // Show loading state
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Updating...');
+        
+        // Show confirmation for significant changes
+        const classChanged = $('#current_class').val() !== originalData['current_class'];
+        const sectionChanged = $('#current_section').val() !== originalData['current_section'];
+        const rollChanged = $('#roll_number').val() !== originalData['roll_number'];
+        
+        if (classChanged || sectionChanged || rollChanged) {
+            if (!confirm('You are changing academic information. This may affect class lists and reports. Continue?')) {
+                e.preventDefault();
+                $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Update Student');
+                return false;
+            }
+        }
+    });
+
+    // Reset form handler
+    $('#resetBtn').on('click', function() {
+        if (confirm('Are you sure you want to reset all changes?')) {
+            // Clear all validation states
+            inputs.forEach(input => {
+                input.classList.remove('is-valid', 'is-invalid');
+                input.style.backgroundColor = '';
+                input.style.borderLeft = '';
+            });
+            
+            // Restore original data
+            Object.keys(originalData).forEach(key => {
+                const field = form.querySelector(`[name="${key}"]`);
+                if (field) {
+                    field.value = originalData[key];
+                }
+            });
+            
+            // Clear user modification tracking
+            userModifiedFields.clear();
+            
+            // Enable submit button
+            $('#submitBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Update Student');
+            
+            alert('Form has been reset to original values.');
+        }
+    });
+
+    // Character counters for textareas
+    $('textarea').on('input', function() {
+        const maxLength = $(this).attr('maxlength');
+        const currentLength = $(this).val().length;
+        if (maxLength) {
+            let counter = $(this).siblings('.char-counter');
+            if (!counter.length) {
+                counter = $('<small class="char-counter text-muted float-right"></small>');
+                $(this).after(counter);
+            }
+            counter.text(`${currentLength}/${maxLength}`);
+            
+            if (currentLength > maxLength * 0.8) {
+                counter.removeClass('text-muted').addClass('text-warning');
+            } else {
+                counter.removeClass('text-warning').addClass('text-muted');
+            }
+        }
+        
+        // Track user modification
+        if (this.value !== originalData[this.name]) {
+            userModifiedFields.add(this.name);
+        }
+    });
+
+    // Initialize character counters
+    $('textarea').each(function() {
+        const maxLength = $(this).attr('maxlength');
+        const currentLength = $(this).val().length;
+        if (maxLength) {
+            $(this).after(`<small class="char-counter text-muted float-right">${currentLength}/${maxLength}</small>`);
+        }
+    });
+
+    // Initialize auto-updates
+    setupAutoUpdates();
+    
+    // Initial validation
+    inputs.forEach(input => {
+        validateField(input);
+    });
+    
+    // Show user guidance about auto-updates
+    console.log('Auto-update enabled: Changing phone number will automatically update guardian phone unless manually modified.');
+});
+</script>
+
+<style>
+.form-control.is-valid {
+    border-color: #28a745;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    padding-right: calc(1.5em + 0.75rem);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.text-heading {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.char-counter {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+/* Style for auto-updated fields to indicate they're linked */
+.auto-update-hint {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}

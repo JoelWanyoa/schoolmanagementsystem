@@ -1,0 +1,1448 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notice Board - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Notice Board</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Notice Board</li>
+                </ul>
+            </div>
+
+            <!-- Display Messages -->
+            <div id="ajaxMessages"></div>
+
+            <div class="row gutters-20">
+                <!-- Notice List -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>
+                                        {% if user.is_staff %}
+                                        All Notices
+                                        {% elif user.teacher %}  {# Fixed syntax #}
+                                        Teacher Notices
+                                        {% elif user.student %}  {# Fixed syntax #}
+                                        Student Notices
+                                        {% elif user.parent %}   {# Fixed syntax #}
+                                        Parent Notices
+                                        {% else %}
+                                        Notices
+                                        {% endif %}
+                                    </h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="viewActiveNotices">
+                                            <i class="fas fa-eye text-success"></i> View Active
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="viewAllNotices">
+                                            <i class="fas fa-list text-info"></i> View All
+                                        </a>
+                                        {% if user.is_staff %}
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#" id="printNotices">
+                                            <i class="fas fa-print text-primary"></i> Print
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- User Role Indicator -->
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle"></i>
+                                {% if user.is_staff %}
+                                You are viewing all notices as an administrator.
+                                {% elif user.teacher %}  {# Fixed syntax #}
+                                You are viewing notices for teachers and general announcements.
+                                {% elif user.student %}  {# Fixed syntax #}
+                                You are viewing notices for students and general announcements.
+                                {% elif user.parent %}   {# Fixed syntax #}
+                                You are viewing notices for parents and general announcements.
+                                {% else %}
+                                You are viewing general announcements.
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Search and Filter -->
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <div class="search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" class="form-control" id="noticeSearch" placeholder="Search notices...">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-control" id="priorityFilter">
+                                        <option value="">All Priorities</option>
+                                        <option value="HIGH">High Priority</option>
+                                        <option value="MEDIUM">Medium Priority</option>
+                                        <option value="LOW">Low Priority</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="notice-board-wrap" id="noticesContainer">
+                                {% if notices %}
+                                    {% for notice in notices %}
+                                    <div class="notice-card" data-priority="{{ notice.priority }}" data-search="{{ notice.title }} {{ notice.content }}" data-audience="{{ notice.target_audience }}">
+                                        <div class="notice-indicator bg-{% if notice.priority == 'HIGH' %}danger{% elif notice.priority == 'MEDIUM' %}warning{% else %}info{% endif %}"></div>
+                                        <div class="notice-content">
+                                            <div class="notice-header">
+                                                <div class="notice-meta">
+                                                    <div class="notice-date">
+                                                        <i class="far fa-calendar"></i>
+                                                        {{ notice.publish_date|date:"M d, Y" }}
+                                                    </div>
+                                                    <div class="notice-author">
+                                                        <i class="far fa-user"></i>
+                                                        {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}
+                                                    </div>
+                                                    {% if user.is_staff %}
+                                                    <div class="notice-audience-badge">
+                                                        <span class="badge badge-audience-type">
+                                                            {{ notice.get_target_audience_display }}
+                                                        </span>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="notice-actions">
+                                                    {% if user.is_staff or notice.posted_by == user %}
+                                                    <div class="dropdown">
+                                                        <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                                                            <i class="fas fa-ellipsis-v"></i>
+                                                        </a>
+                                                        <div class="dropdown-menu dropdown-menu-right">
+                                                            <a class="dropdown-item view-notice" href="#" 
+                                                               data-notice-id="{{ notice.id }}"
+                                                               data-notice-title="{{ notice.title }}"
+                                                               data-notice-content="{{ notice.content }}"
+                                                               data-notice-priority="{{ notice.priority }}"
+                                                               data-notice-audience="{{ notice.target_audience }}"
+                                                               data-notice-publish-date="{{ notice.publish_date|date:'M d, Y' }}"
+                                                               data-notice-expiry-date="{{ notice.expiry_date|date:'M d, Y' }}"
+                                                               data-notice-author="{{ notice.posted_by.get_full_name|default:notice.posted_by.username }}">
+                                                                <i class="fas fa-eye text-info"></i> View Details
+                                                            </a>
+                                                            {% if user.is_staff %}
+                                                            <a class="dropdown-item edit-notice" href="#" 
+                                                               data-notice-id="{{ notice.id }}"
+                                                               data-notice-title="{{ notice.title }}"
+                                                               data-notice-content="{{ notice.content }}"
+                                                               data-notice-priority="{{ notice.priority }}"
+                                                               data-notice-audience="{{ notice.target_audience }}"
+                                                               data-notice-expiry-date="{{ notice.expiry_date|date:'Y-m-d' }}">
+                                                                <i class="fas fa-edit text-warning"></i> Edit
+                                                            </a>
+                                                            <a class="dropdown-item delete-notice" href="#" data-notice-id="{{ notice.id }}" data-notice-title="{{ notice.title }}">
+                                                                <i class="fas fa-trash text-danger"></i> Delete
+                                                            </a>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <h4 class="notice-title">
+                                                <a href="#" class="view-notice" 
+                                                   data-notice-id="{{ notice.id }}"
+                                                   data-notice-title="{{ notice.title }}"
+                                                   data-notice-content="{{ notice.content }}"
+                                                   data-notice-priority="{{ notice.priority }}"
+                                                   data-notice-audience="{{ notice.target_audience }}"
+                                                   data-notice-publish-date="{{ notice.publish_date|date:'M d, Y' }}"
+                                                   data-notice-expiry-date="{{ notice.expiry_date|date:'M d, Y' }}"
+                                                   data-notice-author="{{ notice.posted_by.get_full_name|default:notice.posted_by.username }}">
+                                                    {{ notice.title }}
+                                                </a>
+                                                {% if not notice.is_active %}
+                                                <span class="badge badge-expired">Expired</span>
+                                                {% endif %}
+                                            </h4>
+                                            <p class="notice-excerpt">
+                                                {{ notice.content|truncatewords:30 }}
+                                            </p>
+                                            <div class="notice-footer">
+                                                <div class="notice-tags">
+                                                    <span class="badge badge-priority-{{ notice.priority|lower }}">
+                                                        <i class="fas fa-flag"></i> {{ notice.get_priority_display }}
+                                                    </span>
+                                                    {% if user.is_staff %}
+                                                    <span class="badge badge-audience">
+                                                        <i class="fas fa-users"></i> {{ notice.get_target_audience_display }}
+                                                    </span>
+                                                    {% endif %}
+                                                    {% if notice.expiry_date %}
+                                                    <span class="badge badge-expiry">
+                                                        <i class="far fa-clock"></i> Expires: {{ notice.expiry_date|date:"M d, Y" }}
+                                                    </span>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="notice-time">
+                                                    <i class="far fa-clock"></i> {{ notice.publish_date|timesince }} ago
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-state">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-bell-slash"></i>
+                                        </div>
+                                        <h4>No Notices Available</h4>
+                                        <p>
+                                            {% if user.is_staff %}
+                                            There are no notices to display at the moment.
+                                            {% else %}
+                                            There are no notices available for your role at the moment.
+                                            {% endif %}
+                                        </p>
+                                        {% if user.is_staff %}
+                                        <button class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="addFirstNotice">
+                                            <i class="fas fa-plus"></i> Create First Notice
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create Notice Form (for staff only) -->
+                {% if user.is_staff %}
+                <div class="col-lg-4">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Create New Notice</h3>
+                                </div>
+                            </div>
+                            
+                            <form method="POST" id="noticeForm">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label>Title *</label>
+                                    <input type="text" name="title" class="form-control" placeholder="Enter notice title" required maxlength="200">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Content *</label>
+                                    <textarea name="content" class="form-control" rows="5" placeholder="Enter notice content" required maxlength="2000"></textarea>
+                                    <div class="char-counter">
+                                        <span id="charCount">0</span>/2000 characters
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Priority</label>
+                                            <select name="priority" class="form-control">
+                                                <option value="LOW">Low</option>
+                                                <option value="MEDIUM" selected>Medium</option>
+                                                <option value="HIGH">High</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Target Audience</label>
+                                            <select name="target_audience" class="form-control">
+                                                <option value="ALL" selected>Everyone</option>
+                                                <option value="TEACHERS">Teachers Only</option>
+                                                <option value="STUDENTS">Students Only</option>
+                                                <option value="PARENTS">Parents Only</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Expiry Date (Optional)</label>
+                                    <div class="input-group">
+                                        <input type="date" name="expiry_date" class="form-control" min="{% now 'Y-m-d' %}">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted">Leave empty if notice doesn't expire</small>
+                                </div>
+                                
+                                <div class="form-group mt-5">
+                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="submitBtn">
+                                        <i class="fas fa-paper-plane"></i> Publish Notice
+                                    </button>
+                                    <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                                        <i class="fas fa-redo"></i> Reset Form
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card height-auto mt-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Notice Statistics</h3>
+                            </div>
+                            <div class="stats-grid" id="statsContainer">
+                                <div class="stat-card stat-total">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ notices.count }}</h4>
+                                        <p>Total Notices</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card stat-active">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ active_notices_count }}</h4>
+                                        <p>Active Notices</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card stat-high">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ high_priority_count }}</h4>
+                                        <p>High Priority</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- For non-staff users -->
+                <div class="col-lg-4">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Notice Information</h3>
+                            </div>
+                            <div class="info-cards">
+                                <div class="info-card">
+                                    <div class="info-icon info-primary">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h5>Role-Based Access</h5>
+                                        <p>You only see notices that are relevant to your role in the school.</p>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-icon info-warning">
+                                        <i class="fas fa-bell"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h5>Priority Notices</h5>
+                                        <p>High priority notices are marked with a red indicator for immediate attention.</p>
+                                    </div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-icon info-secondary">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="info-content">
+                                        <h5>Latest Updates</h5>
+                                        <p>Notices are sorted by publish date with the newest announcements first.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Notice Detail Modal -->
+<div class="modal fade" id="viewNoticeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Notice Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="viewNoticeModalBody">
+                <!-- Notice content will be loaded here via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Close
+                </button>
+                <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="printNotice">
+                    <i class="fas fa-print"></i> Print
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Notice Modal -->
+<div class="modal fade" id="editNoticeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Notice</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editNoticeForm">
+                {% csrf_token %}
+                <input type="hidden" name="notice_id" id="editNoticeId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Title *</label>
+                        <input type="text" name="title" id="editNoticeTitle" class="form-control" required maxlength="200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Content *</label>
+                        <textarea name="content" id="editNoticeContent" class="form-control" rows="6" required maxlength="2000"></textarea>
+                        <div class="char-counter">
+                            <span id="editCharCount">0</span>/2000 characters
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Priority</label>
+                                <select name="priority" id="editNoticePriority" class="form-control">
+                                    <option value="LOW">Low</option>
+                                    <option value="MEDIUM">Medium</option>
+                                    <option value="HIGH">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Target Audience</label>
+                                <select name="target_audience" id="editNoticeAudience" class="form-control">
+                                    <option value="ALL">Everyone</option>
+                                    <option value="TEACHERS">Teachers Only</option>
+                                    <option value="STUDENTS">Students Only</option>
+                                    <option value="PARENTS">Parents Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Expiry Date (Optional)</label>
+                        <div class="input-group">
+                            <input type="date" name="expiry_date" id="editNoticeExpiry" class="form-control" min="{% now 'Y-m-d' %}">
+                            <div class="input-group-append">
+                                <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted">Leave empty if notice doesn't expire</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="updateNoticeBtn">
+                        <i class="fas fa-save"></i> Update Notice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="delete-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <p>Are you sure you want to delete the notice: <strong id="deleteNoticeTitle"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn-fill-lg bg-red btn-hover-primary" id="confirmDelete">
+                    <i class="fas fa-trash"></i> Delete Notice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF token setup for AJAX
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Show message function
+function showMessage(message, type = 'success') {
+    const alertClass = type === 'error' ? 'danger' : type;
+    const iconClass = {
+        'success': 'fa-check-circle',
+        'error': 'fa-exclamation-circle',
+        'warning': 'fa-exclamation-triangle',
+        'info': 'fa-info-circle'
+    }[type];
+
+    const messageHtml = `
+        <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert">
+            <strong><i class="fas ${iconClass}"></i> ${type.charAt(0).toUpperCase() + type.slice(1)}!</strong>
+            ${message}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    `;
+    
+    $('#ajaxMessages').html(messageHtml);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        $('.alert').alert('close');
+    }, 5000);
+}
+
+// Loading state management
+function setLoading(button, isLoading, text = '') {
+    if (isLoading) {
+        button.prop('disabled', true);
+        button.html(`<i class="fas fa-spinner fa-spin"></i> ${text}`);
+    } else {
+        button.prop('disabled', false);
+        button.html(text);
+    }
+}
+
+// Helper functions
+function getPriorityDisplay(priority) {
+    const priorities = {
+        'HIGH': 'High Priority',
+        'MEDIUM': 'Medium Priority',
+        'LOW': 'Low Priority'
+    };
+    return priorities[priority] || priority;
+}
+
+function getAudienceDisplay(audience) {
+    const audiences = {
+        'ALL': 'Everyone',
+        'TEACHERS': 'Teachers Only',
+        'STUDENTS': 'Students Only',
+        'PARENTS': 'Parents Only'
+    };
+    return audiences[audience] || audience;
+}
+
+function formatNoticeContent(content) {
+    // Convert line breaks to paragraphs
+    const paragraphs = content.split('\n').filter(p => p.trim() !== '');
+    return paragraphs.map(p => `<p>${p}</p>`).join('');
+}
+
+$(document).ready(function() {
+    // Search functionality
+    $('#noticeSearch').on('keyup', function() {
+        const searchText = $(this).val().toLowerCase();
+        filterNotices();
+    });
+
+    // Priority filter
+    $('#priorityFilter').on('change', function() {
+        filterNotices();
+    });
+
+    function filterNotices() {
+        const searchText = $('#noticeSearch').val().toLowerCase();
+        const priorityFilter = $('#priorityFilter').val();
+        
+        $('.notice-card').each(function() {
+            const noticeText = $(this).data('search').toLowerCase();
+            const noticePriority = $(this).data('priority');
+            
+            const matchesSearch = noticeText.includes(searchText);
+            const matchesPriority = !priorityFilter || noticePriority === priorityFilter;
+            
+            if (matchesSearch && matchesPriority) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+
+    // Create Notice Form - AJAX Submission
+    $('#noticeForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const submitBtn = $('#submitBtn');
+        
+        setLoading(submitBtn, true, 'Publishing...');
+        
+        $.ajax({
+            url: "{% url 'create_notice_ajax' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    $('#noticeForm')[0].reset();
+                    $('#charCount').text('0');
+                    
+                    // Refresh the page to show the new notice
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while creating the notice.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showMessage(errorMessage, 'error');
+            },
+            complete: function() {
+                setLoading(submitBtn, false, '<i class="fas fa-paper-plane"></i> Publish Notice');
+            }
+        });
+    });
+
+    // View notice details
+    $(document).on('click', '.view-notice', function(e) {
+        e.preventDefault();
+        
+        const noticeData = {
+            id: $(this).data('notice-id'),
+            title: $(this).data('notice-title'),
+            content: $(this).data('notice-content'),
+            priority: $(this).data('notice-priority'),
+            audience: $(this).data('notice-audience'),
+            publishDate: $(this).data('notice-publish-date'),
+            expiryDate: $(this).data('notice-expiry-date'),
+            author: $(this).data('notice-author')
+        };
+
+        // Build the view modal content
+        const modalContent = `
+            <div class="notice-detail">
+                <div class="detail-header">
+                    <div class="detail-meta">
+                        <span class="badge badge-priority-${noticeData.priority.toLowerCase()}">
+                            <i class="fas fa-flag"></i> ${getPriorityDisplay(noticeData.priority)}
+                        </span>
+                        <span class="badge badge-audience">
+                            <i class="fas fa-users"></i> ${getAudienceDisplay(noticeData.audience)}
+                        </span>
+                    </div>
+                    <div class="detail-date">
+                        <i class="far fa-calendar"></i> Published: ${noticeData.publishDate}
+                    </div>
+                </div>
+                <h4 class="detail-title">${noticeData.title}</h4>
+                <div class="detail-content">
+                    ${formatNoticeContent(noticeData.content)}
+                </div>
+                <div class="detail-footer">
+                    <div class="detail-author">
+                        <i class="far fa-user"></i> Posted by: ${noticeData.author}
+                    </div>
+                    ${noticeData.expiryDate ? `
+                    <div class="detail-expiry">
+                        <i class="far fa-clock"></i> Expires: ${noticeData.expiryDate}
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        $('#viewNoticeModalBody').html(modalContent);
+        $('#viewNoticeModal').modal('show');
+    });
+
+    // Edit notice - Load data
+    $(document).on('click', '.edit-notice', function(e) {
+        e.preventDefault();
+        
+        const noticeData = {
+            id: $(this).data('notice-id'),
+            title: $(this).data('notice-title'),
+            content: $(this).data('notice-content'),
+            priority: $(this).data('notice-priority'),
+            audience: $(this).data('notice-audience'),
+            expiryDate: $(this).data('notice-expiry-date')
+        };
+
+        // Populate the edit form
+        $('#editNoticeId').val(noticeData.id);
+        $('#editNoticeTitle').val(noticeData.title);
+        $('#editNoticeContent').val(noticeData.content);
+        $('#editNoticePriority').val(noticeData.priority);
+        $('#editNoticeAudience').val(noticeData.audience);
+        $('#editNoticeExpiry').val(noticeData.expiryDate);
+        
+        // Update character count
+        $('#editCharCount').text(noticeData.content.length);
+        
+        $('#editNoticeModal').modal('show');
+    });
+
+    // Update Notice - AJAX Submission
+    $('#editNoticeForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const updateBtn = $('#updateNoticeBtn');
+        
+        setLoading(updateBtn, true, 'Updating...');
+        
+        $.ajax({
+            url: "{% url 'update_notice_ajax' %}",
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                if (response.success) {
+                    showMessage(response.message, 'success');
+                    $('#editNoticeModal').modal('hide');
+                    
+                    // Refresh the page to show updated notice
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showMessage(response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'An error occurred while updating the notice.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showMessage(errorMessage, 'error');
+            },
+            complete: function() {
+                setLoading(updateBtn, false, '<i class="fas fa-save"></i> Update Notice');
+            }
+        });
+    });
+
+    // Delete notice functionality
+    let noticeToDelete = null;
+    
+    $(document).on('click', '.delete-notice', function(e) {
+        e.preventDefault();
+        noticeToDelete = $(this).data('notice-id');
+        const noticeTitle = $(this).data('notice-title');
+        
+        $('#deleteNoticeTitle').text(noticeTitle);
+        $('#deleteModal').modal('show');
+    });
+
+    $('#confirmDelete').on('click', function() {
+        if (noticeToDelete) {
+            const deleteBtn = $('#confirmDelete');
+            setLoading(deleteBtn, true, 'Deleting...');
+            
+            $.ajax({
+                url: "{% url 'delete_notice_ajax' %}",
+                type: 'POST',
+                data: {
+                    'notice_id': noticeToDelete,
+                    'csrfmiddlewaretoken': getCSRFToken()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showMessage(response.message, 'success');
+                        $('#deleteModal').modal('hide');
+                        
+                        // Refresh the page to reflect the deletion
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showMessage(response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'An error occurred while deleting the notice.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    showMessage(errorMessage, 'error');
+                },
+                complete: function() {
+                    setLoading(deleteBtn, false, '<i class="fas fa-trash"></i> Delete Notice');
+                    noticeToDelete = null;
+                }
+            });
+        }
+    });
+
+    // Character counter for edit form
+    $('#editNoticeContent').on('input', function() {
+        const currentLength = $(this).val().length;
+        $('#editCharCount').text(currentLength);
+        
+        if (currentLength > 1800) {
+            $('#editCharCount').parent().addClass('char-warning');
+        } else {
+            $('#editCharCount').parent().removeClass('char-warning');
+        }
+    });
+
+    // Character counter for create form
+    $('textarea[name="content"]').on('input', function() {
+        const currentLength = $(this).val().length;
+        $('#charCount').text(currentLength);
+        
+        if (currentLength > 1800) {
+            $('#charCount').parent().addClass('char-warning');
+        } else {
+            $('#charCount').parent().removeClass('char-warning');
+        }
+    });
+
+    // Print functionality
+    $('#printNotice').on('click', function() {
+        const printContent = $('#viewNoticeModalBody').html();
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Print Notice</title>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+                    .detail-title { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+                    .detail-content p { margin-bottom: 15px; }
+                    .detail-meta { margin: 20px 0; }
+                    .badge { padding: 5px 10px; border-radius: 15px; font-size: 12px; margin-right: 10px; }
+                    .badge-priority-high { background: #e74c3c; color: white; }
+                    .badge-priority-medium { background: #f39c12; color: white; }
+                    .badge-priority-low { background: #3498db; color: white; }
+                    .detail-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+                </style>
+            </head>
+            <body>
+                ${printContent}
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    });
+
+    $('#printNotices').on('click', function(e) {
+        e.preventDefault();
+        window.print();
+    });
+
+    // Add first notice button
+    $('#addFirstNotice').on('click', function() {
+        $('html, body').animate({
+            scrollTop: $('#noticeForm').offset().top
+        }, 500);
+        $('#noticeForm input[name="title"]').focus();
+    });
+
+    // View active notices only
+    $('#viewActiveNotices').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = "{% url 'notice_board' %}?active=true";
+    });
+
+    // View all notices
+    $('#viewAllNotices').on('click', function(e) {
+        e.preventDefault();
+        window.location.href = "{% url 'notice_board' %}";
+    });
+
+    // Set minimum date for expiry date fields
+    const today = new Date().toISOString().split('T')[0];
+    $('input[name="expiry_date"]').attr('min', today);
+    $('#editNoticeExpiry').attr('min', today);
+});
+</script>
+
+<style>
+:root {
+    --primary: #4361ee;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --info: #3498db;
+    --light: #f8f9fa;
+    --dark: #2c3e50;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Base font size increase */
+body {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.card-body {
+    font-size: 16px;
+}
+
+/* Notice Cards */
+.notice-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 25px;
+    margin-bottom: 20px;
+    /* border-left: 4px solid var(--info); */
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    font-size: 16px;
+}
+
+.notice-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.notice-indicator {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.bg-danger { background-color: var(--danger); }
+.bg-warning { background-color: var(--warning); }
+.bg-info { background-color: var(--info); }
+
+.notice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.notice-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 15px;
+    color: var(--secondary);
+}
+
+.notice-meta i {
+    margin-right: 8px;
+}
+
+.notice-title {
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.notice-title a {
+    color: var(--dark);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.notice-title a:hover {
+    color: var(--primary);
+}
+
+.notice-excerpt {
+    color: var(--secondary);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.notice-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.notice-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.badge-priority-high {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--danger);
+    border: 1px solid var(--danger);
+}
+
+.badge-priority-medium {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.badge-priority-low {
+    background-color: rgba(52, 152, 219, 0.1);
+    color: var(--info);
+    border: 1px solid var(--info);
+}
+
+.badge-audience {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+.badge-expiry {
+    background-color: rgba(149, 165, 166, 0.1);
+    color: #95a5a6;
+    border: 1px solid #95a5a6;
+}
+
+.badge-expired {
+    background-color: var(--secondary);
+    color: white;
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-left: 10px;
+}
+
+.notice-time {
+    font-size: 15px;
+    color: var(--secondary);
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+.search-box input {
+    padding-left: 45px;
+    font-size: 16px;
+    height: 50px;
+}
+
+/* Form Styling */
+.form-control {
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    transition: var(--transition);
+    font-size: 16px;
+    padding: 12px 15px;
+    height: auto;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 15px;
+    margin-top: 8px;
+    color: var(--secondary);
+}
+
+.char-warning {
+    color: var(--danger);
+    font-weight: 500;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    font-size: 24px;
+    color: white;
+}
+
+.stat-total .stat-icon { background: var(--primary); }
+.stat-active .stat-icon { background: var(--success); }
+.stat-high .stat-icon { background: var(--danger); }
+
+.stat-content h4 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.stat-content p {
+    margin: 0;
+    color: var(--secondary);
+    font-size: 16px;
+}
+
+/* Info Cards */
+.info-cards {
+    display: grid;
+    gap: 20px;
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    background: var(--light);
+    border-radius: var(--border-radius);
+}
+
+.info-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    color: white;
+    flex-shrink: 0;
+    font-size: 20px;
+}
+
+.info-primary { background: var(--primary); }
+.info-warning { background: var(--warning); }
+.info-secondary { background: var(--secondary); }
+
+.info-content h5 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    color: var(--dark);
+    font-weight: 600;
+}
+
+.info-content p {
+    margin: 0;
+    font-size: 15px;
+    color: var(--secondary);
+    line-height: 1.5;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 80px;
+    color: #bdc3c7;
+    margin-bottom: 25px;
+}
+
+.empty-state h4 {
+    color: var(--dark);
+    margin-bottom: 15px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: var(--secondary);
+    margin-bottom: 30px;
+    font-size: 17px;
+}
+
+/* Modal Enhancements */
+.modal-content {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    font-size: 16px;
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 25px;
+}
+
+.modal-header .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 25px;
+    font-size: 16px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 20px 25px;
+}
+
+.delete-icon {
+    text-align: center;
+    font-size: 60px;
+    color: var(--danger);
+    margin-bottom: 20px;
+}
+
+/* Detail View */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.detail-meta {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.detail-date {
+    color: var(--secondary);
+    font-size: 15px;
+}
+
+.detail-title {
+    color: var(--dark);
+    margin-bottom: 25px;
+    font-weight: 600;
+    font-size: 22px;
+}
+
+.detail-content {
+    line-height: 1.7;
+    margin-bottom: 25px;
+    font-size: 16px;
+}
+
+.detail-content p {
+    margin-bottom: 15px;
+}
+
+.detail-footer {
+    border-top: 1px solid #e9ecef;
+    padding-top: 20px;
+    color: var(--secondary);
+    font-size: 15px;
+}
+
+/* Button Styles to match your design */
+.btn-fill-lg {
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-gradient-yellow {
+    background: linear-gradient(135deg, #ffd400, #ff9500);
+    color: #2c3e50;
+}
+
+.btn-gradient-yellow:hover {
+    background: linear-gradient(135deg, #ff9500, #ffd400);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 149, 0, 0.3);
+}
+
+.bg-blue-dark {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.bg-blue-dark:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
+}
+
+.bg-red {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.bg-red:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Form buttons container */
+.form-group.mt-5 {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.form-group.mt-5 .btn-fill-lg {
+    flex: 1;
+    min-width: 160px;
+    justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;
+    }
+    
+    .notice-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notice-actions {
+        margin-top: 15px;
+    }
+    
+    .notice-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .notice-time {
+        margin-top: 15px;
+    }
+    
+    .detail-header {
+        flex-direction: column;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .form-group.mt-5 {
+        flex-direction: column;
+    }
+    
+    .form-group.mt-5 .btn-fill-lg {
+        width: 100%;
+    }
+}
+
+@media print {
+    .card, .notice-card {
+        border: 1px solid #000 !important;
+        break-inside: avoid;
+    }
+    
+    .btn, .dropdown, .modal, .breadcrumbs-area, .notice-actions {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

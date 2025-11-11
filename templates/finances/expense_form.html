@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Accounts</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'expense_management' %}">Expense Management</a>
+                    </li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Add Expense Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>{{ title }}</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'expense_management' %}">
+                                    <i class="fas fa-times text-orange-red"></i>Close
+                                </a>
+                                <a class="dropdown-item" href="{% url 'expense_management' %}">
+                                    <i class="fas fa-list text-dark-pastel-green"></i>Back to List
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Display Messages -->
+                    {% if messages %}
+                    <div class="alert-container">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form class="new-added-form" method="POST" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Display Form Errors -->
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="row">
+                            <!-- Name Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.name.label }}</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.name.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Expense ID Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.expense_id.label }}</label>
+                                {{ form.expense_id }}
+                                {% if form.expense_id.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.expense_id.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Expense Type Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.expense_type.label }}</label>
+                                {{ form.expense_type }}
+                                {% if form.expense_type.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.expense_type.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Amount Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.amount.label }}</label>
+                                {{ form.amount }}
+                                {% if form.amount.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.amount.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Phone Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.phone.label }}</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.phone.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.email.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.status.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Date Field -->
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>{{ form.date.label }}</label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.date.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description Field -->
+                            <div class="col-12 form-group">
+                                <label>{{ form.description.label }}</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.description.errors %}
+                                    <p>{{ error }}</p>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Form Buttons -->
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    <i class="fas fa-save"></i> Save
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow">
+                                    <i class="fas fa-redo"></i> Reset
+                                </button>
+                                <a href="{% url 'expense_management' %}" class="btn-fill-lg bg-light btn-hover-dark">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Add Expense Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize date picker
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize select2 if available
+        if ($.fn.select2) {
+            $(".select2").select2();
+        }
+
+        // Initialize date picker if available
+        if ($.fn.datepicker) {
+            $(".air-datepicker").datepicker({
+                format: "dd/mm/yyyy",
+                autoclose: true,
+            });
+        }
+    });
+</script>
+{% endblock %}

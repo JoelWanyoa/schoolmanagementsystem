@@ -1,0 +1,905 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Promotion - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Student Promotion</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li>Student Promotion</li>
+                </ul>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <strong>
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i> Error!
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle"></i> Success!
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i> Warning!
+                            {% elif message.tags == 'info' %}
+                                <i class="fas fa-info-circle"></i> Info!
+                            {% endif %}
+                        </strong>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row gutters-20">
+                <!-- Student Selection -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Select Students for Promotion</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="selectAllStudents">
+                                            <i class="fas fa-check-square text-success"></i> Select All
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="deselectAllStudents">
+                                            <i class="fas fa-times-circle text-danger"></i> Deselect All
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#" id="filterByClass">
+                                            <i class="fas fa-filter text-info"></i> Filter by Class
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Search and Filter -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="search-box">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" class="form-control" id="studentSearch" placeholder="Search students...">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-control" id="classFilter">
+                                        <option value="">All Classes</option>
+                                        {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="students-list-wrap" id="studentsContainer">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th width="5%">
+                                                    <input type="checkbox" id="selectAll">
+                                                </th>
+                                                <th width="15%">Student ID</th>
+                                                <th width="25%">Student Name</th>
+                                                <th width="15%">Current Class</th>
+                                                <th width="15%">Section</th>
+                                                <th width="15%">Academic Year</th>
+                                                <th width="10%">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for student in students %}
+                                            <tr class="student-row" data-class="{{ student.current_class.id }}">
+                                                <td>
+                                                    <input type="checkbox" name="students" value="{{ student.id }}" class="student-checkbox">
+                                                </td>
+                                                <td>
+                                                    <strong>{{ student.student_id }}</strong>
+                                                </td>
+                                                <td>
+                                                    <div class="student-info">
+                                                        <div class="student-avatar">
+                                                            {% if student.profile_picture %}
+                                                            <img src="{{ student.profile_picture.url }}" alt="{{ student.get_full_name }}">
+                                                            {% else %}
+                                                            <div class="avatar-placeholder">
+                                                                <i class="fas fa-user-graduate"></i>
+                                                            </div>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="student-details">
+                                                            <h6 class="student-name">{{ student.get_full_name }}</h6>
+                                                            <span class="student-email">{{ student.email }}</span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-class">{{ student.current_class.name }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-section">{{ student.current_section.name }}</span>
+                                                </td>
+                                                <td>
+                                                    {% if student.academic_year %}
+                                                    <span class="badge badge-year">{{ student.academic_year.name }}</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">Not Set</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-{% if student.is_active %}success{% else %}secondary{% endif %}">
+                                                        {{ student.is_active|yesno:"Active,Inactive" }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="text-center py-5">
+                                                    <div class="empty-state">
+                                                        <div class="empty-icon">
+                                                            <i class="fas fa-user-graduate"></i>
+                                                        </div>
+                                                        <h4>No Students Found</h4>
+                                                        <p>There are no active students to display.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Promotion Form -->
+                <div class="col-lg-4">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Promotion Details</h3>
+                                </div>
+                            </div>
+                            
+                            <form method="POST" id="promotionForm">
+                                {% csrf_token %}
+                                
+                                <div class="selected-students-summary mb-4">
+                                    <div class="summary-card">
+                                        <div class="summary-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                        <div class="summary-content">
+                                            <h4 id="selectedCount">0</h4>
+                                            <p>Students Selected</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>New Class *</label>
+                                    <select name="new_class" class="form-control" required id="newClass">
+                                        <option value="">Select New Class</option>
+                                        {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>New Section *</label>
+                                    <select name="new_section" class="form-control" required id="newSection">
+                                        <option value="">Select New Section</option>
+                                        {% for section in sections %}
+                                        <option value="{{ section.id }}">{{ section.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Academic Year *</label>
+                                    <select name="academic_year" class="form-control" required id="academicYear">
+                                        <option value="">Select Academic Year</option>
+                                        {% for year in academic_years %}
+                                        <option value="{{ year.id }}">{{ year.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="promotion-preview mb-4" id="promotionPreview" style="display: none;">
+                                    <h6 class="preview-title">Promotion Preview</h6>
+                                    <div class="preview-content">
+                                        <div class="preview-item">
+                                            <span class="preview-label">From:</span>
+                                            <span class="preview-value" id="previewCurrent"></span>
+                                        </div>
+                                        <div class="preview-item">
+                                            <span class="preview-label">To:</span>
+                                            <span class="preview-value" id="previewNew"></span>
+                                        </div>
+                                        <div class="preview-item">
+                                            <span class="preview-label">Academic Year:</span>
+                                            <span class="preview-value" id="previewYear"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group mt-5">
+                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="promoteBtn" disabled>
+                                        <i class="fas fa-graduation-cap"></i> Promote Students
+                                    </button>
+                                    <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                                        <i class="fas fa-redo"></i> Reset Form
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card height-auto mt-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Promotion Statistics</h3>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card stat-total">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ students.count }}</h4>
+                                        <p>Total Students</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card stat-active">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4 id="activeStudentsCount">{{ students.count }}</h4>
+                                        <p>Active Students</p>
+                                    </div>
+                                </div>
+                                <div class="stat-card stat-classes">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-chalkboard"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ classes.count }}</h4>
+                                        <p>Available Classes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Promotion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <p>Are you sure you want to promote <strong id="confirmCount">0</strong> students?</p>
+                <div class="confirmation-details">
+                    <p><strong>From:</strong> <span id="confirmCurrent">Current classes</span></p>
+                    <p><strong>To:</strong> <span id="confirmNew">New class and section</span></p>
+                    <p><strong>Academic Year:</strong> <span id="confirmYear">Selected academic year</span></p>
+                </div>
+                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="confirmPromotion">
+                    <i class="fas fa-check"></i> Confirm Promotion
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // CSRF token setup
+    function getCSRFToken() {
+        return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    }
+
+    // Student selection functionality
+    $('#selectAll').on('change', function() {
+        $('.student-checkbox').prop('checked', this.checked);
+        updateSelectedCount();
+        updatePromotionPreview();
+    });
+
+    $('.student-checkbox').on('change', function() {
+        if (!this.checked) {
+            $('#selectAll').prop('checked', false);
+        } else {
+            const allChecked = $('.student-checkbox:checked').length === $('.student-checkbox').length;
+            $('#selectAll').prop('checked', allChecked);
+        }
+        updateSelectedCount();
+        updatePromotionPreview();
+    });
+
+    // Select all students
+    $('#selectAllStudents').on('click', function(e) {
+        e.preventDefault();
+        $('.student-checkbox').prop('checked', true);
+        $('#selectAll').prop('checked', true);
+        updateSelectedCount();
+        updatePromotionPreview();
+    });
+
+    // Deselect all students
+    $('#deselectAllStudents').on('click', function(e) {
+        e.preventDefault();
+        $('.student-checkbox').prop('checked', false);
+        $('#selectAll').prop('checked', false);
+        updateSelectedCount();
+        updatePromotionPreview();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+        const selectedCount = $('.student-checkbox:checked').length;
+        $('#selectedCount').text(selectedCount);
+        
+        if (selectedCount > 0) {
+            $('#promoteBtn').prop('disabled', false);
+        } else {
+            $('#promoteBtn').prop('disabled', true);
+        }
+    }
+
+    // Search functionality
+    $('#studentSearch').on('keyup', function() {
+        const searchText = $(this).val().toLowerCase();
+        filterStudents();
+    });
+
+    // Class filter
+    $('#classFilter').on('change', function() {
+        filterStudents();
+    });
+
+    function filterStudents() {
+        const searchText = $('#studentSearch').val().toLowerCase();
+        const classFilter = $('#classFilter').val();
+        
+        $('.student-row').each(function() {
+            const studentName = $(this).find('.student-name').text().toLowerCase();
+            const studentId = $(this).find('td:nth-child(2) strong').text().toLowerCase();
+            const studentClass = $(this).data('class');
+            
+            const matchesSearch = studentName.includes(searchText) || studentId.includes(searchText);
+            const matchesClass = !classFilter || studentClass == classFilter;
+            
+            if (matchesSearch && matchesClass) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
+
+    // Promotion preview
+    $('#newClass, #newSection, #academicYear').on('change', function() {
+        updatePromotionPreview();
+    });
+
+    function updatePromotionPreview() {
+        const newClass = $('#newClass option:selected').text();
+        const newSection = $('#newSection option:selected').text();
+        const academicYear = $('#academicYear option:selected').text();
+        
+        if (newClass && newSection && academicYear) {
+            const selectedStudents = $('.student-checkbox:checked');
+            if (selectedStudents.length > 0) {
+                const currentClasses = [];
+                selectedStudents.each(function() {
+                    const className = $(this).closest('tr').find('.badge-class').text();
+                    if (!currentClasses.includes(className)) {
+                        currentClasses.push(className);
+                    }
+                });
+                
+                $('#previewCurrent').text(currentClasses.join(', '));
+                $('#previewNew').text(`${newClass} - ${newSection}`);
+                $('#previewYear').text(academicYear);
+                $('#promotionPreview').show();
+            } else {
+                $('#promotionPreview').hide();
+            }
+        } else {
+            $('#promotionPreview').hide();
+        }
+    }
+
+    // Form submission with confirmation
+    $('#promotionForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const selectedCount = $('.student-checkbox:checked').length;
+        const newClass = $('#newClass option:selected').text();
+        const newSection = $('#newSection option:selected').text();
+        const academicYear = $('#academicYear option:selected').text();
+        
+        if (selectedCount === 0) {
+            alert('Please select at least one student to promote.');
+            return;
+        }
+        
+        if (!newClass || !newSection || !academicYear) {
+            alert('Please select new class, section, and academic year.');
+            return;
+        }
+        
+        // Get current classes for confirmation
+        const currentClasses = [];
+        $('.student-checkbox:checked').each(function() {
+            const className = $(this).closest('tr').find('.badge-class').text();
+            if (!currentClasses.includes(className)) {
+                currentClasses.push(className);
+            }
+        });
+        
+        $('#confirmCount').text(selectedCount);
+        $('#confirmCurrent').text(currentClasses.join(', '));
+        $('#confirmNew').text(`${newClass} - ${newSection}`);
+        $('#confirmYear').text(academicYear);
+        $('#confirmationModal').modal('show');
+    });
+
+    // Confirm promotion
+    $('#confirmPromotion').on('click', function() {
+        const promoteBtn = $(this);
+        const originalText = promoteBtn.html();
+        
+        // Show loading state
+        promoteBtn.prop('disabled', true);
+        promoteBtn.html('<i class="fas fa-spinner fa-spin"></i> Promoting...');
+        
+        // Submit the form
+        $('#promotionForm').off('submit').submit();
+    });
+
+    // Reset form
+    $('#resetBtn').on('click', function() {
+        $('.student-checkbox').prop('checked', false);
+        $('#selectAll').prop('checked', false);
+        updateSelectedCount();
+        $('#promotionPreview').hide();
+        $('#newClass').val('');
+        $('#newSection').val('');
+        $('#academicYear').val('');
+    });
+
+    // Initialize
+    updateSelectedCount();
+});
+</script>
+
+<style>
+:root {
+    --primary: #4361ee;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #e74c3c;
+    --warning: #f39c12;
+    --info: #3498db;
+    --light: #f8f9fa;
+    --dark: #2c3e50;
+    --border-radius: 10px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+/* Student Info Styles */
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.student-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--secondary);
+    font-size: 18px;
+}
+
+.student-details h6 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.student-email {
+    font-size: 12px;
+    color: var(--secondary);
+}
+
+/* Badge Styles */
+.badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.badge-class {
+    background-color: rgba(67, 97, 238, 0.1);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.badge-section {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--success);
+    border: 1px solid var(--success);
+}
+
+.badge-year {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+}
+
+.badge-secondary {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+}
+
+/* Selected Students Summary */
+.selected-students-summary {
+    background: var(--light);
+    border-radius: var(--border-radius);
+    padding: 20px;
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+}
+
+.summary-content h4 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.summary-content p {
+    margin: 0;
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+/* Promotion Preview */
+.promotion-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    color: white;
+}
+
+.preview-title {
+    margin: 0 0 15px 0;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.preview-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.preview-label {
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+.preview-value {
+    font-weight: 600;
+}
+
+/* Table Styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: var(--dark);
+    background: var(--light);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+}
+
+/* Checkbox Styles */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+}
+
+.search-box i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--secondary);
+}
+
+.search-box input {
+    padding-left: 45px;
+    font-size: 16px;
+    height: 50px;
+}
+
+/* Form Styles */
+.form-control {
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+    transition: var(--transition);
+    font-size: 16px;
+    padding: 12px 15px;
+    height: auto;
+}
+
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 20px;
+    color: white;
+}
+
+.stat-total .stat-icon { background: var(--primary); }
+.stat-active .stat-icon { background: var(--success); }
+.stat-classes .stat-icon { background: var(--warning); }
+
+.stat-content h4 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.stat-content p {
+    margin: 0;
+    color: var(--secondary);
+    font-size: 14px;
+}
+
+/* Modal Styles */
+.confirmation-icon {
+    text-align: center;
+    font-size: 60px;
+    color: var(--warning);
+    margin-bottom: 20px;
+}
+
+.confirmation-details {
+    background: var(--light);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.confirmation-details p {
+    margin: 5px 0;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    font-size: 60px;
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: var(--dark);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: var(--secondary);
+    margin-bottom: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .student-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 8px;
+    }
+    
+    .summary-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .table-responsive {
+        font-size: 14px;
+    }
+    
+    .preview-content {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .preview-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Button Styles */
+.btn-fill-lg {
+    padding: 15px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-gradient-yellow {
+    background: linear-gradient(135deg, #ffd400, #ff9500);
+    color: #2c3e50;
+}
+
+.btn-gradient-yellow:hover {
+    background: linear-gradient(135deg, #ff9500, #ffd400);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 149, 0, 0.3);
+}
+
+.bg-blue-dark {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.bg-blue-dark:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+</style>
+{% endblock %}

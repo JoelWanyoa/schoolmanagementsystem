@@ -1,0 +1,599 @@
+{% extends 'base.html' %} 
+{% load static %} 
+{% block title %}Add New Fee{% endblock %} 
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+  {% include 'includes/header.html' %}
+
+  <div class="dashboard-page-one">
+    {% include 'includes/sidebar.html' %}
+    <div class="dashboard-content-one">
+      <!-- Breadcrumbs Area Start -->
+      <div class="breadcrumbs-area">
+        <h3>Accounts</h3>
+        <ul>
+          <li><a href="{% url 'dashboard' %}">Home</a></li>
+          <li><a href="#">Accounts</a></li>
+          <li><a href="#">Fees</a></li>
+          <li><a href="{% url 'all_fees' %}">Fees Collection</a></li>
+          <li>Add New Fee</li>
+        </ul>
+      </div>
+      <!-- Breadcrumbs Area End -->
+
+      <!-- Add Fee Area Start -->
+      <div class="card height-auto">
+        <div class="card-body">
+          <div class="heading-layout1">
+            <div class="item-title">
+              <h3>Add New Fee</h3>
+            </div>
+            <div class="dropdown">
+              <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+              <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="{% url 'all_fees' %}">
+                  <i class="fas fa-times text-orange-red"></i>Close
+                </a>
+                <a class="dropdown-item" href="{% url 'all_fees' %}">
+                  <i class="fas fa-list text-dark-pastel-green"></i>Back to List
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Display Messages -->
+          {% if messages %}
+          <div class="alert-container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <form class="new-added-form" method="POST" novalidate id="feeForm">
+            {% csrf_token %}
+            
+            <!-- Display Form Errors -->
+            {% if form.errors %}
+            <div class="alert alert-danger">
+              <h6>Please fix the following errors:</h6>
+              <ul class="mb-0">
+                {% for field in form %}
+                  {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                  <li>{{ error }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Student Field (Hidden) - THIS IS CRITICAL -->
+                <div style="display: none">{{ form.student }}</div>
+
+                <!-- Class Level Field (Hidden) - THIS IS CRITICAL -->
+                <div style="display: none">{{ form.class_level }}</div>
+              <!-- Student Selection Field -->
+              <div class="col-xl-6 col-lg-6 col-12 form-group">
+                <label for="studentSelect">Select Student *</label>
+                <select id="studentSelect" class="form-control select2" required>
+                  <option value="">Select a student...</option>
+                  {% for student in students %}
+                  <option value="{{ student.id }}" 
+                          data-full-name="{{ student.full_name }}"
+                          data-student-id="{{ student.student_id }}"
+                          data-class-name="{% if student.current_class %}{{ student.current_class.name }}{% endif %}"
+                          data-class-id="{% if student.current_class %}{{ student.current_class.id }}{% endif %}"
+                          data-section="{% if student.current_section %}{{ student.current_section.name }}{% endif %}"
+                          data-roll-number="{{ student.roll_number }}"
+                          data-academic-year-id="{% if current_academic_year %}{{ current_academic_year.id }}{% endif %}">
+                    {{ student.full_name }} ({{ student.student_id }}) - 
+                    {% if student.current_class %}
+                      {{ student.current_class.name }}{% if student.current_section %}{{ student.current_section.name }}{% endif %}
+                    {% else %}
+                      [NO CLASS ASSIGNED]
+                    {% endif %}
+                  </option>
+                  {% empty %}
+                  <option value="">No students found</option>
+                  {% endfor %}
+                </select>
+                <small class="form-text text-muted">Select a student to auto-fill the form</small>
+              </div>
+
+              <!-- Student Info Display -->
+              <div class="col-xl-6 col-lg-6 col-12">
+                <div class="student-info-card card bg-light" id="studentInfoCard" style="display: none;">
+                  <div class="card-body p-3">
+                    <h6 class="card-title mb-2">Student Information</h6>
+                    <div class="row">
+                      <div class="col-6">
+                        <small><strong>Name:</strong> <span id="displayName">-</span></small>
+                      </div>
+                      <div class="col-6">
+                        <small><strong>ID:</strong> <span id="displayStudentId">-</span></small>
+                      </div>
+                      <div class="col-6">
+                        <small><strong>Class:</strong> <span id="displayClass">-</span></small>
+                      </div>
+                      <div class="col-6">
+                        <small><strong>Section:</strong> <span id="displaySection">-</span></small>
+                      </div>
+                      <div class="col-6">
+                        <small><strong>Roll No:</strong> <span id="displayRoll">-</span></small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Name Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.name.label }}</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <div class="text-danger small">
+                  {% for error in form.name.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Academic Year Field (Visible) -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.academic_year.label }}</label>
+                {{ form.academic_year }}
+                {% if form.academic_year.errors %}
+                <div class="text-danger small">
+                  {% for error in form.academic_year.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Fee Type Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.fee_type.label }}</label>
+                {{ form.fee_type }}
+                {% if form.fee_type.errors %}
+                <div class="text-danger small">
+                  {% for error in form.fee_type.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Amount Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.amount.label }}</label>
+                {{ form.amount }}
+                {% if form.amount.errors %}
+                <div class="text-danger small">
+                  {% for error in form.amount.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Status Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.status.label }}</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <div class="text-danger small">
+                  {% for error in form.status.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Due Date Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.due_date.label }}</label>
+                {{ form.due_date }}
+                {% if form.due_date.errors %}
+                <div class="text-danger small">
+                  {% for error in form.due_date.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Paid Date Field -->
+              <div class="col-xl-4 col-lg-6 col-12 form-group">
+                <label>{{ form.paid_date.label }}</label>
+                {{ form.paid_date }}
+                <small class="form-text text-muted">Leave empty if not paid yet</small>
+                {% if form.paid_date.errors %}
+                <div class="text-danger small">
+                  {% for error in form.paid_date.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Description Field -->
+              <div class="col-12 form-group">
+                <label>{{ form.description.label }}</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <div class="text-danger small">
+                  {% for error in form.description.errors %}
+                  <p>{{ error }}</p>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+
+              <!-- Form Buttons -->
+              <div class="col-12 form-group mg-t-8">
+                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="submitBtn" disabled>
+                  <i class="fas fa-save"></i> Save Fee
+                </button>
+                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                  <i class="fas fa-redo"></i> Reset
+                </button>
+                <a href="{% url 'all_fees' %}" class="btn-fill-lg bg-light btn-hover-dark">
+                  <i class="fas fa-times"></i> Cancel
+                </a>
+              </div>
+            </div>
+            
+            <!-- Debug Button -->
+            <div class="col-12 form-group">
+              <button type="button" id="debugBtn" class="btn btn-info btn-sm">
+                <i class="fas fa-bug"></i> Debug Form State
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Add Fee Area End -->
+    </div>
+  </div>
+</div>
+{% endblock %} 
+
+{% block extra_css %}
+<style>
+  .student-info-card {
+    border-left: 4px solid #4e73df;
+    height: 100%;
+  }
+
+  .student-info-card .card-body {
+    padding: 15px;
+  }
+
+  #studentInfoCard {
+    transition: all 0.3s ease;
+  }
+
+  .select2-container--default .select2-selection--single {
+    border: 1px solid #ddd;
+    height: 45px;
+    padding: 8px 12px;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 28px;
+  }
+
+  .select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 43px;
+  }
+
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .alert-container {
+    margin-bottom: 20px;
+  }
+</style>
+{% endblock %} 
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Debug button to check current form state
+      $('#debugBtn').on('click', function() {
+        console.log('=== MANUAL DEBUG CHECK ===');
+        console.log('Student Select Value:', $('#studentSelect').val());
+        console.log('Student Field:', $('#id_student').val());
+        console.log('Class Level Field:', $('#id_class_level').val());
+        console.log('Academic Year:', $('#id_academic_year').val());
+        console.log('Name Field:', $('#id_name').val());
+  
+        // Check form field HTML
+        console.log('Student Field HTML:', $('#id_student').prop('outerHTML'));
+        console.log('Class Level Field HTML:', $('#id_class_level').prop('outerHTML'));
+  
+        // Check if selected option has data
+        const selectedOption = $('#studentSelect option:selected');
+        console.log('Selected Option Data:', {
+          fullName: selectedOption.data('full-name'),
+          classId: selectedOption.data('class-id'),
+          className: selectedOption.data('class-name'),
+          studentId: selectedOption.data('student-id')
+        });
+      });
+  
+      // Initialize select2
+      if ($.fn.select2) {
+        $('.select2').select2();
+      }
+  
+      // Set default due date to 30 days from now
+      const defaultDueDate = new Date();
+      defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+      const defaultDueDateString = defaultDueDate.toISOString().split('T')[0];
+      
+      if (!$('#id_due_date').val()) {
+        $('#id_due_date').val(defaultDueDateString);
+      }
+  
+      // Set default academic year to current if available
+      const currentAcademicYearId = '{{ current_academic_year.id|default:"" }}';
+      if (currentAcademicYearId && !$('#id_academic_year').val()) {
+        $('#id_academic_year').val(currentAcademicYearId);
+      }
+  
+      // Student selection handler - COMPLETELY REWRITTEN
+      $('#studentSelect').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const studentId = selectedOption.val();
+        
+        console.log('=== STUDENT SELECTION ===');
+        console.log('Selected Student ID:', studentId);
+        console.log('Selected Option:', selectedOption);
+        
+        if (studentId && studentId !== '') {
+          // Get all student data from data attributes
+          const fullName = selectedOption.attr('data-full-name') || selectedOption.data('full-name');
+          const studentIdNum = selectedOption.attr('data-student-id') || selectedOption.data('student-id');
+          const className = selectedOption.attr('data-class-name') || selectedOption.data('class-name');
+          const classId = selectedOption.attr('data-class-id') || selectedOption.data('class-id');
+          const section = selectedOption.attr('data-section') || selectedOption.data('section');
+          const rollNumber = selectedOption.attr('data-roll-number') || selectedOption.data('roll-number');
+          const academicYearId = selectedOption.attr('data-academic-year-id') || selectedOption.data('academic-year-id');
+          
+          console.log('Student Data:', {
+            fullName, studentIdNum, className, classId, section, rollNumber, academicYearId
+          });
+  
+          // Show student info card
+          $('#studentInfoCard').slideDown(300);
+          
+          // Update displayed student info
+          $('#displayName').text(fullName || '-');
+          $('#displayStudentId').text(studentIdNum || '-');
+          $('#displayClass').text(className || 'Not assigned');
+          $('#displaySection').text(section || '-');
+          $('#displayRoll').text(rollNumber || '-');
+  
+          // METHOD 1: Directly set the form field values
+          console.log('=== SETTING FORM FIELDS ===');
+          
+          // Set student field - TRY DIFFERENT APPROACHES
+          $('#id_student').val(studentId);
+          console.log('1. Set student field via val():', $('#id_student').val());
+          
+          // Also try setting the value attribute directly
+          $('#id_student').attr('value', studentId);
+          console.log('2. Set student field via attr():', $('#id_student').val());
+          
+          // Set class_level field
+          if (classId && classId !== '' && classId !== 'None') {
+            $('#id_class_level').val(classId);
+            $('#id_class_level').attr('value', classId);
+            console.log('3. Set class_level field:', $('#id_class_level').val());
+          } else {
+            console.log('❌ No class ID available for this student');
+            alert('Error: This student does not have a class assigned. Please assign a class to the student first.');
+            $('#studentSelect').val('').trigger('change');
+            return;
+          }
+  
+          // Auto-fill name field
+          const feeName = fullName + ' - ' + studentIdNum;
+          $('#id_name').val(feeName);
+          console.log('4. Set name field to:', $('#id_name').val());
+  
+          // Set academic year if available
+          if (academicYearId && academicYearId !== '' && academicYearId !== 'None') {
+            $('#id_academic_year').val(academicYearId);
+            console.log('5. Set academic year to:', $('#id_academic_year').val());
+          }
+  
+          // Auto-generate description
+          const feeType = $('#id_fee_type').val();
+          if (feeType) {
+            const feeTypeText = $('#id_fee_type option:selected').text();
+            const description = `Fee for ${fullName} (${studentIdNum}) - ${className}${section} - ${feeTypeText}`;
+            $('#id_description').val(description);
+          }
+  
+          // Enable submit button
+          $('#submitBtn').prop('disabled', false);
+          console.log('✅ Submit button enabled');
+  
+          // Final verification - Check ALL field values
+          console.log('=== FINAL FORM VERIFICATION ===');
+          console.log('Student field value:', $('#id_student').val());
+          console.log('Student field HTML:', $('#id_student').prop('outerHTML'));
+          console.log('Class Level field value:', $('#id_class_level').val());
+          console.log('Class Level field HTML:', $('#id_class_level').prop('outerHTML'));
+          console.log('Name field value:', $('#id_name').val());
+          console.log('Academic Year field value:', $('#id_academic_year').val());
+          
+          // Create test FormData to see what would be submitted
+          const testFormData = new FormData();
+          testFormData.append('student', $('#id_student').val());
+          testFormData.append('class_level', $('#id_class_level').val());
+          testFormData.append('csrfmiddlewaretoken', $('[name=csrfmiddlewaretoken]').val());
+          console.log('FormData would submit:', {
+            student: $('#id_student').val(),
+            class_level: $('#id_class_level').val()
+          });
+          
+        } else {
+          // No student selected - reset everything
+          $('#studentInfoCard').slideUp(300);
+          $('#submitBtn').prop('disabled', true);
+          
+          // Clear all form fields
+          $('#id_student').val('');
+          $('#id_class_level').val('');
+          $('#id_name').val('');
+          $('#id_description').val('');
+          
+          console.log('=== FORM RESET ===');
+          console.log('All fields cleared');
+        }
+      });
+  
+      // Auto-set paid date when status changes to paid
+      $('#id_status').on('change', function() {
+        if ($(this).val() === 'paid') {
+          const today = new Date().toISOString().split('T')[0];
+          $('#id_paid_date').val(today);
+        } else {
+          $('#id_paid_date').val('');
+        }
+      });
+  
+      // Update description when fee type changes
+      $('#id_fee_type').on('change', function() {
+        const studentSelect = $('#studentSelect');
+        if (studentSelect.val()) {
+          const selectedOption = studentSelect.find('option:selected');
+          const fullName = selectedOption.attr('data-full-name') || selectedOption.data('full-name');
+          const studentIdNum = selectedOption.attr('data-student-id') || selectedOption.data('student-id');
+          const className = selectedOption.attr('data-class-name') || selectedOption.data('class-name');
+          const section = selectedOption.attr('data-section') || selectedOption.data('section');
+          const feeTypeText = $(this).find('option:selected').text();
+          const description = `Fee for ${fullName} (${studentIdNum}) - ${className}${section} - ${feeTypeText}`;
+          $('#id_description').val(description);
+        }
+      });
+  
+      // Form reset handler
+      $('#resetBtn').on('click', function() {
+        $('#studentSelect').val('').trigger('change');
+        $('#studentInfoCard').hide();
+        $('#submitBtn').prop('disabled', true);
+        
+        // Reset default due date
+        $('#id_due_date').val(defaultDueDateString);
+        
+        console.log('=== MANUAL FORM RESET ===');
+      });
+  
+      // Form submission - WITH ENHANCED VALIDATION
+      $('#feeForm').on('submit', function(e) {
+        const studentValue = $('#id_student').val();
+        const classValue = $('#id_class_level').val();
+        
+        console.log('=== FORM SUBMISSION VALIDATION ===');
+        console.log('Student field value:', studentValue);
+        console.log('Class Level field value:', classValue);
+        console.log('Student field HTML:', $('#id_student').prop('outerHTML'));
+        console.log('Class Level field HTML:', $('#id_class_level').prop('outerHTML'));
+        
+        // Enhanced validation
+        if (!studentValue || studentValue === '' || !classValue || classValue === '') {
+          e.preventDefault();
+          
+          // Check what's actually in the student select
+          const studentSelectValue = $('#studentSelect').val();
+          console.log('Student Select value:', studentSelectValue);
+          
+          if (!studentSelectValue) {
+            alert('Error: Please select a student from the dropdown.');
+          } else if (!classValue) {
+            alert('Error: The selected student does not have a class assigned. Please assign a class to this student first.');
+          } else {
+            alert('Error: Please select a student with a valid class assignment.');
+          }
+          
+          console.log('❌ Validation failed');
+          console.log('Student value:', studentValue);
+          console.log('Class value:', classValue);
+          return false;
+        }
+        
+        // Final confirmation
+        const selectedOption = $('#studentSelect option:selected');
+        const studentName = selectedOption.attr('data-full-name') || selectedOption.data('full-name');
+        const className = selectedOption.attr('data-class-name') || selectedOption.data('class-name');
+        const confirmed = confirm(`Create fee record for:\n\nStudent: ${studentName}\nClass: ${className}\n\nClick OK to confirm.`);
+        
+        if (!confirmed) {
+          e.preventDefault();
+          console.log('Submission cancelled by user');
+          return false;
+        }
+  
+        console.log('✅ Form submission proceeding...');
+        console.log('Final submission data:', {
+          student: studentValue,
+          class_level: classValue,
+          academic_year: $('#id_academic_year').val(),
+          name: $('#id_name').val()
+        });
+        return true;
+      });
+      
+      // Debug: Check initial state and form field existence
+      console.log('=== FORM INITIALIZATION ===');
+      console.log('Default due date:', defaultDueDateString);
+      console.log('Current academic year:', currentAcademicYearId);
+      
+      // Check if form fields exist and their initial state
+      console.log('Student field exists:', $('#id_student').length > 0);
+      console.log('Student field initial value:', $('#id_student').val());
+      console.log('Student field HTML:', $('#id_student').prop('outerHTML'));
+      
+      console.log('Class Level field exists:', $('#id_class_level').length > 0);
+      console.log('Class Level field initial value:', $('#id_class_level').val());
+      console.log('Class Level field HTML:', $('#id_class_level').prop('outerHTML'));
+      
+      // Enhanced student option testing
+      console.log('=== ENHANCED STUDENT OPTIONS TEST ===');
+      $('#studentSelect option').each(function(index) {
+        if (index === 0) return; // Skip the "Select a student..." option
+        
+        const $option = $(this);
+        console.log(`Student Option ${index}:`, {
+          text: $option.text(),
+          value: $option.val(),
+          'data-full-name': $option.attr('data-full-name'),
+          'data-class-id': $option.attr('data-class-id'),
+          'data-class-name': $option.attr('data-class-name'),
+          'data-student-id': $option.attr('data-student-id')
+        });
+        
+        // Only log first 5 to avoid console spam
+        if (index >= 5) return false;
+      });
+    });
+  </script>
+{% endblock %}

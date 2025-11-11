@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Teacher Dashboard - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-summery-one {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease;
+    }
+    .dashboard-summery-one:hover {
+        transform: translateY(-5px);
+    }
+    .item-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .item-content {
+        text-align: right;
+    }
+    .item-title {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+    .item-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .bg-light-magenta { background-color: #f8e3ff; }
+    .bg-light-blue { background-color: #e3f2fd; }
+    .bg-light-yellow { background-color: #fff8e1; }
+    .bg-light-green { background-color: #e8f5e8; }
+    .bg-light-orange { background-color: #ffe0b2; }
+    .bg-light-success { background-color: #c8e6c9; }
+    .text-magenta { color: #9c27b0; }
+    .text-blue { color: #2196f3; }
+    .text-yellow { color: #ff9800; }
+    .text-green { color: #4caf50; }
+    .text-orange { color: #ff9800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Teacher Dashboard</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li>Teacher</li>
+                </ul>
+            </div>
+
+            <!-- Welcome Section -->
+            <div class="row gutters-20 mb-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="media align-items-center">
+                                {% if teacher.photo %}
+                                    <img src="{{ teacher.photo.url }}" class="rounded-circle mr-3" width="80" height="80" alt="Teacher Photo">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-3" style="width: 80px; height: 80px;">
+                                        <i class="fas fa-chalkboard-teacher fa-2x"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="media-body">
+                                    <h2 class="mb-1">Welcome, {{ teacher.full_name }}!</h2>
+                                    <p class="mb-0 text-muted">
+                                        Teacher ID: {{ teacher.teacher_id }} | 
+                                        Subjects: {% for subject in teacher.subjects.all %}{{ subject.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="badge badge-success p-2">
+                                        <i class="fas fa-circle mr-1"></i>
+                                        Active Teacher
+                                    </div>
+                                    <p class="mb-0 text-muted mt-1">Experience: {{ teacher.experience }} years</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-magenta">
+                                    <i class="flaticon-classmates text-magenta"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">My Students</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_students|default:0 }}">
+                                            {{ total_students|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="flaticon-maths-class-materials-cross-of-a-pencil-and-a-ruler text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">My Classes</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ teacher_classes.count|default:0 }}">
+                                            {{ teacher_classes.count|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="flaticon-list text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Assignments to Grade</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ assignments_to_grade|default:0 }}">
+                                            {{ assignments_to_grade|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="flaticon-open-book text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Subjects</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-num="{{ total_subjects|default:0 }}">
+                                            {{ total_subjects|default:0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Schedule & Attendance Summary -->
+            <div class="row gutters-20 mt-4">
+                <!-- Today's Schedule -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Today's Schedule</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#">Full Timetable</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="today-schedule">
+                                {% if today_schedule %}
+                                    {% for schedule in today_schedule %}
+                                    <div class="schedule-item">
+                                        <div class="schedule-time bg-primary text-white">
+                                            {{ schedule.start_time|time:"H:i" }}<br>to<br>{{ schedule.end_time|time:"H:i" }}
+                                        </div>
+                                        <div class="schedule-details">
+                                            <h6>{{ schedule.subject.name }}</h6>
+                                            <p class="mb-1">
+                                                <small>{{ schedule.class_level.name }} - {{ schedule.class_level.section_set.first.name }}</small>
+                                            </p>
+                                            <p class="mb-0">
+                                                <small class="text-muted">Room: {{ schedule.room_number|default:"TBA" }}</small>
+                                            </p>
+                                        </div>
+                                        <div class="schedule-status">
+                                            <span class="badge badge-{% if schedule.is_active %}success{% else %}secondary{% endif %}">
+                                                {{ schedule.is_active|yesno:"Active,Inactive" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-calendar-day fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No classes scheduled for today</p>
+                                        <p class="text-muted small">Your teaching schedule will appear here</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Attendance -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Today's Attendance</h3>
+                                </div>
+                            </div>
+                            <div class="attendance-summary text-center">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="present-count text-success">
+                                            <i class="fas fa-check-circle fa-2x"></i>
+                                            <h4>{{ present_today|default:0 }}</h4>
+                                            <small>Present</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="absent-count text-danger">
+                                            <i class="fas fa-times-circle fa-2x"></i>
+                                            <h4>{{ absent_today|default:0 }}</h4>
+                                            <small>Absent</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% with total_attendance=present_today|add:absent_today %}
+                                    {% if total_attendance > 0 %}
+                                        <div class="progress mt-3" style="height: 10px;">
+                                            <div class="progress-bar bg-success" style="width: {% widthratio present_today total_attendance 100 %}%"></div>
+                                            <div class="progress-bar bg-danger" style="width: {% widthratio absent_today total_attendance 100 %}%"></div>
+                                        </div>
+                                        <small class="text-muted">
+                                            Attendance Rate: {% widthratio present_today total_attendance 100 %}%
+                                        </small>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Classes & Recent Notices -->
+            <div class="row gutters-20 mt-4">
+                <!-- My Classes -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>My Classes</h3>
+                                </div>
+                            </div>
+                            <div class="my-classes">
+                                {% if teacher_classes %}
+                                    {% for class in teacher_classes %}
+                                    <div class="class-item">
+                                        <div class="class-icon bg-info text-white">
+                                            {{ class.name|slice:":1" }}
+                                        </div>
+                                        <div class="class-details">
+                                            <h6>{{ class.name }}</h6>
+                                            <p class="mb-1">
+                                                <small>
+                                                    Students: {{ class.student_set.count }} • 
+                                                    Capacity: {{ class.capacity }}
+                                                </small>
+                                            </p>
+                                            <p class="mb-0">
+                                                <small class="text-muted">
+                                                    Level: {{ class.get_level_category_display }}
+                                                </small>
+                                            </p>
+                                        </div>
+                                        <div class="class-actions">
+                                            <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No classes assigned</p>
+                                        <p class="text-muted small">Classes assigned to you will appear here</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Notices -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Recent Notices</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'notice_board' %}">View All</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="recent-notices">
+                                {% if recent_notices %}
+                                    {% for notice in recent_notices %}
+                                    <div class="notice-item">
+                                        <div class="notice-date bg-{% if notice.priority == 'HIGH' %}danger{% elif notice.priority == 'MEDIUM' %}warning{% else %}info{% endif %}">
+                                            {{ notice.publish_date|date:"d M" }}
+                                        </div>
+                                        <div class="notice-details">
+                                            <h6>{{ notice.title|truncatewords:6 }}</h6>
+                                            <p class="mb-1">
+                                                <small>{{ notice.content|truncatewords:10 }}</small>
+                                            </p>
+                                            <p class="mb-0">
+                                                <small class="text-muted">
+                                                    By: {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}
+                                                </small>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-bell fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">No recent notices</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row gutters-20 mt-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="teacher-actions">
+                                <a href="#" class="single-action bg-light-blue">
+                                    <i class="flaticon-calendar"></i>
+                                    <span>Mark Attendance</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-green">
+                                    <i class="flaticon-edit"></i>
+                                    <span>Enter Marks</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-magenta">
+                                    <i class="flaticon-list"></i>
+                                    <span>Create Assignment</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-yellow">
+                                    <i class="flaticon-timetable"></i>
+                                    <span>My Schedule</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-orange">
+                                    <i class="flaticon-chat"></i>
+                                    <span>Student Messages</span>
+                                </a>
+                                <a href="#" class="single-action bg-light-success">
+                                    <i class="flaticon-script"></i>
+                                    <span>Upload Materials</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Counter Animation
+    $('.counter').each(function() {
+        var $this = $(this);
+        var target = parseInt($this.attr('data-num'));
+        var current = 0;
+        var increment = target / 50;
+        
+        var timer = setInterval(function() {
+            current += increment;
+            if (current >= target) {
+                $this.text(target);
+                clearInterval(timer);
+            } else {
+                $this.text(Math.floor(current));
+            }
+        }, 50);
+    });
+});
+</script>
+
+<style>
+.today-schedule, .my-classes, .recent-notices {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.schedule-item, .class-item, .notice-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.3s ease;
+}
+
+.schedule-item:hover, .class-item:hover, .notice-item:hover {
+    background-color: #f8f9fa;
+}
+
+.schedule-item:last-child, .class-item:last-child, .notice-item:last-child {
+    border-bottom: none;
+}
+
+.schedule-time {
+    width: 80px;
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin-right: 15px;
+    line-height: 1.2;
+}
+
+.class-icon, .notice-date {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 15px;
+}
+
+.schedule-details, .class-details, .notice-details {
+    flex: 1;
+}
+
+.teacher-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.single-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.single-action:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-decoration: none;
+    color: #333;
+}
+
+.single-action i {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.attendance-summary .progress {
+    background: #e9ecef;
+}
+
+.attendance-summary .progress-bar {
+    transition: width 0.3s ease;
+}
+</style>
+{% endblock %}

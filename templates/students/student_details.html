@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Details - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .single-info-details {
+        padding: 30px;
+    }
+
+    .item-img img {
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-table table {
+        margin-top: 20px;
+    }
+
+    .info-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-table td:first-child {
+        font-weight: 600;
+        color: #333;
+        width: 200px;
+    }
+
+    .header-elements ul {
+        display: flex;
+        gap: 10px;
+    }
+
+    .header-elements a {
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .header-elements a:hover {
+        color: #ff7e5f;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Student Details</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li>{{ student.first_name }} {{ student.last_name }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Student Details Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>About Student</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="{% url 'update_student' student.student_id %}"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="single-info-details">
+                        <div class="item-img">
+                            {% if student.photo %}
+                            <img src="{{ student.photo.url }}" alt="{{ student.first_name }} {{ student.last_name }}"
+                                width="300" height="300">
+                            {% else %}
+                            <img src="{% static 'img/figure/student1.jpg' %}"
+                                alt="{{ student.first_name }} {{ student.last_name }}" width="300" height="300">
+                            {% endif %}
+                        </div>
+                        <div class="item-content">
+                            <div class="header-inline item-header">
+                                <h3 class="text-dark-medium font-medium">{{ student.first_name }} {{ student.last_name }}</h3>
+                                <div class="header-elements">
+                                    <ul>
+                                        <li>
+                                            <a href="{% url 'update_student' student.student_id %}"
+                                                title="Edit Student">
+                                                <i class="far fa-edit text-primary"></i>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{% url 'delete_student' student.student_id %}"
+                                                title="Delete Student" class="text-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </li>
+                                        <li><a href="#"><i class="fas fa-print"></i></a></li>
+                                        <li><a href="#"><i class="fas fa-download"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <p>{{ student.first_name }} is a dedicated student at Petra Education Centre with a strong
+                                academic record and active participation in school activities.</p>
+
+                            <div class="info-table table-responsive">
+                                <table class="table text-nowrap">
+                                    <tbody>
+                                        <tr>
+                                            <td>Student ID:</td>
+                                            <td class="font-medium text-dark-medium">{{ student.student_id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Full Name:</td>
+                                            <td class="font-medium text-dark-medium">{{ student.first_name }} {{ student.last_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Gender:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.gender == 'M' %}
+                                                Male
+                                                {% elif student.gender == 'F' %}
+                                                Female
+                                                {% else %}
+                                                Other
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Father's Name:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.father_name %}
+                                                    {{ student.father_name }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Mother's Name:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.mother_name %}
+                                                    {{ student.mother_name }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Date of Birth:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.date_of_birth %}
+                                                    {{ student.date_of_birth|date:"d.m.Y" }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Religion:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.religion %}
+                                                    {{ student.religion }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Father's Occupation:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.father_occupation %}
+                                                    {{ student.father_occupation }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Mother's Occupation:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.mother_occupation %}
+                                                    {{ student.mother_occupation }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.guardian_email %}
+                                                    {{ student.guardian_email }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Admission Date:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.admission_date %}
+                                                    {{ student.admission_date|date:"d.m.Y" }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Class:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.current_class %}
+                                                    {{ student.current_class.name }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Section:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.current_section %}
+                                                    {{ student.current_section.name }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Roll Number:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.roll_number %}
+                                                    {{ student.roll_number }}
+                                                {% else %}
+                                                    Not assigned
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Address:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.address %}
+                                                    {{ student.address }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Phone:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if student.guardian_phone %}
+                                                    {{ student.guardian_phone }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% if student.emergency_contact_name %}
+                                        <tr>
+                                            <td>Emergency Contact:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {{ student.emergency_contact_name }}
+                                                {% if student.emergency_relationship %}
+                                                ({{ student.emergency_relationship }})
+                                                {% endif %}
+                                                <br>
+                                                {{ student.emergency_contact_phone }}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if student.previous_school %}
+                                        <tr>
+                                            <td>Previous School:</td>
+                                            <td class="font-medium text-dark-medium">{{ student.previous_school }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if student.medical_conditions %}
+                                        <tr>
+                                            <td>Medical Conditions:</td>
+                                            <td class="font-medium text-dark-medium">{{ student.medical_conditions }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Cards -->
+            <div class="row">
+                <!-- Attendance Summary -->
+                <div class="col-lg-6 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Attendance Summary</h3>
+                                </div>
+                            </div>
+                            <div class="progress-info">
+                                {% if attendance_summary.total_days > 0 %}
+                                {% with present_percentage=attendance_summary.present_days|floatformat:0 %}
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar"
+                                        style="width: {{ present_percentage }}%"
+                                        aria-valuenow="{{ present_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <div class="progress-status d-flex justify-content-between mt-2">
+                                    <span class="text-dark">Attendance Rate</span>
+                                    <span class="text-dark">{{ present_percentage }}%</span>
+                                </div>
+                                {% endwith %}
+                                <div class="attendance-stats mt-3">
+                                    <div class="row text-center">
+                                        <div class="col-4">
+                                            <div class="border-right">
+                                                <h4 class="text-success">{{ attendance_summary.present_days }}</h4>
+                                                <p class="mb-0">Present</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="border-right">
+                                                <h4 class="text-danger">{{ attendance_summary.absent_days }}</h4>
+                                                <p class="mb-0">Absent</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div>
+                                                <h4 class="text-info">{{ attendance_summary.total_days }}</h4>
+                                                <p class="mb-0">Total</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No attendance records found.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Performance -->
+                <div class="col-lg-6 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Academic Performance</h3>
+                                </div>
+                            </div>
+                            {% if exam_results %}
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Exam</th>
+                                            <th>Marks</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for result in exam_results %}
+                                        <tr>
+                                            <td>{{ result.exam.subject.name }}</td>
+                                            <td>{{ result.exam.name }}</td>
+                                            <td>{{ result.marks_obtained }}/{{ result.exam.total_marks }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                        {% if result.grade == 'A+' or result.grade == 'A' %}badge-success
+                                                        {% elif result.grade == 'B' or result.grade == 'C' %}badge-warning
+                                                        {% elif result.grade == 'D' %}badge-info
+                                                        {% else %}badge-danger
+                                                        {% endif %}">
+                                                    {{ result.grade }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">No exam results available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fee Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Fee Information</h3>
+                        </div>
+                    </div>
+                    {% if fee_payments %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Fee Type</th>
+                                    <th>Amount Paid</th>
+                                    <th>Payment Date</th>
+                                    <th>Payment Method</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in fee_payments %}
+                                <tr>
+                                    <td>{{ payment.fee.name }}</td>
+                                    <td>${{ payment.amount_paid }}</td>
+                                    <td>{{ payment.payment_date|date:"d.m.Y" }}</td>
+                                    <td>{{ payment.payment_method }}</td>
+                                    <td>
+                                        <span class="badge badge-success">Paid</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No fee payment records found.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Print functionality
+        $('.fa-print').parent().on('click', function () {
+            window.print();
+        });
+
+        // Download functionality
+        $('.fa-download').parent().on('click', function () {
+            alert('Download feature will be implemented soon!');
+        });
+    });
+</script>
+{% endblock %}

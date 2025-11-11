@@ -1,0 +1,503 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Parent Details - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .single-info-details {
+        padding: 30px;
+    }
+
+    .item-img img {
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-table table {
+        margin-top: 20px;
+    }
+
+    .info-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-table td:first-child {
+        font-weight: 600;
+        color: #333;
+        width: 200px;
+    }
+
+    .header-elements ul {
+        display: flex;
+        gap: 10px;
+    }
+
+    .header-elements a {
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .header-elements a:hover {
+        color: #ff7e5f;
+    }
+
+    .children-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .child-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .child-item:hover {
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Parent Details</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_parents' %}">Parents</a></li>
+                    <li>{{ parent.first_name }} {{ parent.last_name }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Parent Details Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>About Parent</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="single-info-details">
+                        <div class="item-img">
+                            {% if parent.photo %}
+                            <img src="{{ parent.photo.url }}" alt="{{ parent.first_name }} {{ parent.last_name }}"
+                                width="300" height="300">
+                            {% else %}
+                            <img src="{% static 'img/figure/admin.jpg' %}"
+                                alt="{{ parent.first_name }} {{ parent.last_name }}" width="300" height="300">
+                            {% endif %}
+                        </div>
+                        <div class="item-content">
+                            <div class="header-inline item-header">
+                                <h3 class="text-dark-medium font-medium">{{ parent.first_name }} {{ parent.last_name }}</h3>
+                                <div class="header-elements">
+                                    <ul>
+                                        <li>
+                                            <a href="#"
+                                                title="Edit Parent">
+                                                <i class="far fa-edit text-primary"></i>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                                title="Delete Parent" class="text-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </li>
+                                        <li><a href="#"><i class="fas fa-print"></i></a></li>
+                                        <li><a href="#"><i class="fas fa-download"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <p>{{ parent.first_name }} is a dedicated parent at Petra Education Centre with {{ children.count }} child{{ children.count|pluralize:"ren" }} enrolled in our school.</p>
+
+                            <div class="info-table table-responsive">
+                                <table class="table text-nowrap">
+                                    <tbody>
+                                        <tr>
+                                            <td>Parent ID:</td>
+                                            <td class="font-medium text-dark-medium">#{{ parent.id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Full Name:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.first_name }} {{ parent.last_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Username:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if parent.user %}
+                                                    {{ parent.user.username }}
+                                                {% else %}
+                                                    <span class="text-danger">No user account</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.email|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Phone:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.phone|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Occupation:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.occupation|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Address:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.address|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Wife's Name:</td>
+                                            <td class="font-medium text-dark-medium">{{ parent.mother_name|default:"Not specified" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Account Status:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if parent.user and parent.user.is_active %}
+                                                    <span class="badge badge-success">Active</span>
+                                                {% elif parent.user %}
+                                                    <span class="badge badge-warning">Inactive</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">No Account</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Children Count:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                <span class="badge badge-info">{{ children.count }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Date Joined:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if parent.user %}
+                                                    {{ parent.user.date_joined|date:"d.m.Y" }}
+                                                {% else %}
+                                                    Not specified
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% if parent.user %}
+                                        <tr>
+                                            <td>Last Login:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if parent.user.last_login %}
+                                                    {{ parent.user.last_login|date:"d.m.Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-warning">Never logged in</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Children Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Children Information</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'link_children_to_parent' parent.id %}">
+                                    <i class="fas fa-link text-primary"></i> Link Existing Children
+                                </a>
+                                <a class="dropdown-item" href="{% url 'add_student_to_parent' parent.id %}">
+                                    <i class="fas fa-user-plus text-success"></i> Add New Student
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if children %}
+                    <div class="children-list">
+                        {% for child in children %}
+                        <div class="child-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-1">
+                                    {% if child.photo %}
+                                    <img src="{{ child.photo.url }}" alt="{{ child.full_name }}" class="rounded-circle" width="50" height="50">
+                                    {% else %}
+                                    <img src="{% static 'img/figure/student2.png' %}" alt="{{ child.full_name }}" class="rounded-circle" width="50" height="50">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">{{ child.full_name }}</h6>
+                                    <small class="text-muted">ID: {{ child.student_id }}</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-primary">
+                                        {% if child.current_class %}
+                                            {{ child.current_class.name }}
+                                        {% else %}
+                                            Not assigned
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-info">
+                                        {% if child.current_section %}
+                                            {{ child.current_section.name }}
+                                        {% else %}
+                                            No section
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <small>Roll: {{ child.roll_number|default:"N/A" }}</small>
+                                </div>
+                                <div class="col-md-2 text-right">
+                                    <a href="{% url 'student_details' child.student_id %}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </div>
+                                <!-- In the children list section, add this to each child item -->
+<div class="col-md-2 text-right">
+    <a href="{% url 'student_details' child.student_id %}" class="btn btn-sm btn-info">
+        <i class="fas fa-eye"></i> View
+    </a>
+    <form method="post" action="{% url 'unlink_child' parent.id child.id %}" class="d-inline" onsubmit="return confirm('Are you sure you want to unlink this child?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-danger">
+            <i class="fas fa-unlink"></i>
+        </button>
+    </form>
+</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-plus fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Children Linked</h4>
+                        <p class="text-muted">This parent doesn't have any children linked to their account.</p>
+                        <div class="btn-group">
+                            <a href="{% url 'link_children_to_parent' parent.id %}" class="btn btn-primary mr-2">
+                                <i class="fas fa-link"></i> Link Existing Children
+                            </a>
+                            <a href="{% url 'add_student_to_parent' parent.id %}" class="btn btn-success">
+                                <i class="fas fa-user-plus"></i> Add New Student
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Additional Information Cards -->
+            <div class="row mt-4">
+                <!-- Account Information -->
+                <div class="col-lg-6 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Account Information</h3>
+                                </div>
+                            </div>
+                            <div class="account-info">
+                                {% if parent.user %}
+                                <div class="info-item">
+                                    <strong>Username:</strong> {{ parent.user.username }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Email:</strong> {{ parent.user.email }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Status:</strong> 
+                                    {% if parent.user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Date Joined:</strong> {{ parent.user.date_joined|date:"d.m.Y" }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Last Login:</strong> 
+                                    {% if parent.user.last_login %}
+                                        {{ parent.user.last_login|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-warning">Never</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-warning mr-2">
+                                        <i class="fas fa-key"></i> Reset Password
+                                    </button>
+                                    {% if parent.user.is_active %}
+                                        <button class="btn btn-sm btn-secondary">Deactivate</button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-success">Activate</button>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                    <p class="text-warning">No user account created</p>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-plus"></i> Create Account
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+<div class="col-lg-6 col-12">
+    <div class="card">
+        <div class="card-body">
+            <div class="heading-layout1">
+                <div class="item-title">
+                    <h3>Quick Actions</h3>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <a href="{% url 'send_message_to_parent' parent.id %}" class="btn btn-light btn-block py-3">
+                            <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                            <br>
+                            <small>Send Message</small>
+                        </a>
+                    </div>
+                    <div class="col-6 mb-3">
+                        {% if parent.phone %}
+                        <a href="tel:{{ parent.phone }}" class="btn btn-light btn-block py-3">
+                            <i class="fas fa-phone fa-2x text-success mb-2"></i>
+                            <br>
+                            <small>Call Parent</small>
+                            <br>
+                            <small class="text-muted">{{ parent.phone }}</small>
+                        </a>
+                        {% else %}
+                        <button class="btn btn-light btn-block py-3" disabled>
+                            <i class="fas fa-phone fa-2x text-muted mb-2"></i>
+                            <br>
+                            <small>Call Parent</small>
+                            <br>
+                            <small class="text-muted">No phone</small>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'link_children_to_parent' parent.id %}" class="btn btn-light btn-block py-3">
+                            <i class="fas fa-link fa-2x text-info mb-2"></i>
+                            <br>
+                            <small>Link Children</small>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'parent_fee_history' parent.id %}" class="btn btn-light btn-block py-3">
+                            <i class="fas fa-file-invoice-dollar fa-2x text-warning mb-2"></i>
+                            <br>
+                            <small>Fee History</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+
+            <!-- Contact History (Optional) -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Communications</h3>
+                        </div>
+                    </div>
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No recent communications found.</p>
+                        <a href="{% url 'messaging' %}" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Print functionality
+        $('.fa-print').parent().on('click', function () {
+            window.print();
+        });
+
+        // Download functionality
+        $('.fa-download').parent().on('click', function () {
+            alert('Download feature will be implemented soon!');
+        });
+
+        // Reset password functionality
+        $('.btn-warning').on('click', function () {
+            if (confirm('Are you sure you want to reset the password for {{ parent.first_name }}?')) {
+                alert('Password reset link will be sent to {{ parent.email }}');
+            }
+        });
+
+        // Account activation/deactivation
+        $('.btn-success, .btn-secondary').on('click', function () {
+            const action = $(this).hasClass('btn-success') ? 'activate' : 'deactivate';
+            if (confirm(`Are you sure you want to ${action} {{ parent.first_name }}'s account?`)) {
+                alert(`Account ${action}d successfully!`);
+                location.reload();
+            }
+        });
+    });
+</script>
+{% endblock %}

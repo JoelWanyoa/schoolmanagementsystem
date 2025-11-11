@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Student - {{ parent.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        border-left: 4px solid #007bff;
+    }
+    
+    .form-section h5 {
+        color: #007bff;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 10px;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .parent-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page-one">
+    {% include 'includes/sidebar.html' %}
+    
+    <div class="dashboard-content-one">
+        <!-- Breadcubs Area Start Here -->
+        <div class="breadcrumbs-area">
+            <h3>Add New Student for {{ parent.full_name }}</h3>
+            <ul>
+                <li><a href="{% url 'dashboard' %}">Home</a></li>
+                <li><a href="{% url 'all_parents' %}">Parents</a></li>
+                <li><a href="{% url 'parent_details' parent.id %}">{{ parent.full_name }}</a></li>
+                <li>Add Student</li>
+            </ul>
+        </div>
+        <!-- Breadcubs Area End Here -->
+
+        <!-- Parent Information Card -->
+        <div class="parent-info-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="text-white mb-1">{{ parent.full_name }}</h4>
+                    <p class="text-white mb-1">
+                        <i class="fas fa-envelope"></i> {{ parent.email|default:"No email" }}
+                        &nbsp; | &nbsp;
+                        <i class="fas fa-phone"></i> {{ parent.phone|default:"No phone" }}
+                    </p>
+                    <p class="text-white mb-0">
+                        <i class="fas fa-map-marker-alt"></i> {{ parent.address|truncatewords:10 }}
+                    </p>
+                </div>
+                <div class="col-md-4 text-right">
+                    <span class="badge badge-light badge-pill p-2">
+                        {{ parent.students.count }} Child{{ parent.students.count|pluralize:"ren" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card height-auto">
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Student Basic Information -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-user-graduate"></i> Student Basic Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required-field">First Name</label>
+                                    <input type="text" name="first_name" class="form-control" required 
+                                           placeholder="Enter student's first name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required-field">Last Name</label>
+                                    <input type="text" name="last_name" class="form-control" required 
+                                           placeholder="Enter student's last name">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required-field">Date of Birth</label>
+                                    <input type="date" name="date_of_birth" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required-field">Gender</label>
+                                    <select name="gender" class="form-control" required>
+                                        <option value="">Select Gender</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>National ID/Birth Certificate</label>
+                                    <input type="text" name="national_id" class="form-control" 
+                                           placeholder="Enter national ID or birth certificate number">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Student Photo</label>
+                                    <input type="file" name="student_photo" class="form-control-file" 
+                                           accept="image/*">
+                                    <small class="form-text text-muted">Optional: Upload student's photo</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Academic Information -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-graduation-cap"></i> Academic Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="required-field">Class Level</label>
+                                    <select name="class_level" class="form-control" required id="class-select">
+                                        <option value="">Select Class</option>
+                                        {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Section</label>
+                                    <select name="section" class="form-control" id="section-select">
+                                        <option value="">Select Section</option>
+                                        {% for section in sections %}
+                                        <option value="{{ section.id }}" data-class="{{ section.class_name.id }}">
+                                            {{ section.name }} - {{ section.class_name.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parent Information (Pre-filled from existing parent) -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-users"></i> Parent Information</h5>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            Parent information is automatically inherited from {{ parent.full_name }}. 
+                            You can override specific fields below if needed.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Father's Name</label>
+                                    <input type="text" name="father_name" class="form-control" 
+                                           value="{{ parent.father_name|default:'' }}"
+                                           placeholder="Father's name (if different from parent)">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Mother's Name</label>
+                                    <input type="text" name="mother_name" class="form-control" 
+                                           value="{{ parent.mother_name|default:'' }}"
+                                           placeholder="Mother's name (if different from parent)">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Guardian Email</label>
+                                    <input type="email" class="form-control" 
+                                           value="{{ parent.email }}" disabled>
+                                    <small class="form-text text-muted">Inherited from parent profile</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Guardian Phone</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ parent.phone }}" disabled>
+                                    <small class="form-text text-muted">Inherited from parent profile</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea class="form-control" rows="2" disabled>{{ parent.address }}</textarea>
+                            <small class="form-text text-muted">Inherited from parent profile</small>
+                        </div>
+                    </div>
+
+                    <!-- Medical Information -->
+                    <div class="form-section">
+                        <h5><i class="fas fa-heartbeat"></i> Medical Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Medical Conditions</label>
+                                    <textarea name="medical_conditions" class="form-control" rows="3" 
+                                              placeholder="Any known medical conditions or allergies"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Current Medications</label>
+                                    <textarea name="medications" class="form-control" rows="3" 
+                                              placeholder="Any current medications"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Doctor's Name</label>
+                                    <input type="text" name="doctor_name" class="form-control" 
+                                           placeholder="Family doctor's name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Doctor's Phone</label>
+                                    <input type="text" name="doctor_phone" class="form-control" 
+                                           placeholder="Doctor's phone number">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="form-group mb-0 text-right">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-user-plus"></i> Add Student
+                        </button>
+                        <a href="{% url 'parent_details' parent.id %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Filter sections based on selected class
+        $('#class-select').on('change', function () {
+            const classId = $(this).val();
+            const sectionSelect = $('#section-select');
+            
+            // Show all sections if no class selected
+            if (!classId) {
+                sectionSelect.find('option').show();
+                return;
+            }
+            
+            // Hide sections that don't belong to selected class
+            sectionSelect.find('option').each(function () {
+                const sectionClassId = $(this).data('class');
+                if (sectionClassId == classId || $(this).val() === '') {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            // Reset section selection
+            sectionSelect.val('');
+        });
+        
+        // Form validation
+        $('form').on('submit', function (e) {
+            const firstName = $('input[name="first_name"]').val().trim();
+            const lastName = $('input[name="last_name"]').val().trim();
+            const dateOfBirth = $('input[name="date_of_birth"]').val();
+            const gender = $('select[name="gender"]').val();
+            const classLevel = $('select[name="class_level"]').val();
+            
+            if (!firstName || !lastName || !dateOfBirth || !gender || !classLevel) {
+                e.preventDefault();
+                alert('Please fill in all required fields marked with *');
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

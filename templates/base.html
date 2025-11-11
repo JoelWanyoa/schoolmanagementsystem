@@ -1,0 +1,496 @@
+{% load static %}
+<!DOCTYPE html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>{% block title %}Petra Education Centre{% endblock %}</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Favicon -->
+    <link
+      rel="shortcut icon"
+      type="image/x-icon"
+      href="{% static 'img/logo2.png' %}"
+    />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{% static 'css/normalize.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'fonts/flaticon.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/fullcalendar.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/animate.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      /* Smart Toast Styles */
+      .toast-container {
+        z-index: 9999;
+        padding: 20px;
+      }
+
+      .custom-toast {
+        min-width: 380px;
+        max-width: 420px;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        backdrop-filter: blur(20px);
+        margin-bottom: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        border-left: 4px solid;
+      }
+
+      .custom-toast::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      }
+
+      .custom-toast:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Uniform solid colors for each type */
+      .custom-toast.bg-success {
+        background: #10b981;
+        border-left-color: #059669;
+      }
+
+      .custom-toast.bg-danger {
+        background: #ef4444;
+        border-left-color: #dc2626;
+      }
+
+      .custom-toast.bg-warning {
+        background: #f59e0b;
+        border-left-color: #d97706;
+      }
+
+      .custom-toast.bg-info {
+        background: #06b6d4;
+        border-left-color: #0891b2;
+      }
+
+      /* Toast content */
+      .toast-content {
+        display: flex;
+        align-items: flex-start;
+        padding: 16px 20px;
+        width: 100%;
+      }
+
+      .toast-icon {
+        min-width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        flex-shrink: 0;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        backdrop-filter: blur(10px);
+      }
+
+      .toast-body {
+        flex: 1;
+        padding: 0;
+        color: white;
+      }
+
+      .toast-title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+        color: white;
+        letter-spacing: -0.01em;
+      }
+
+      .toast-message {
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0;
+      }
+
+      .btn-close-custom {
+        padding: 8px;
+        margin: -8px -8px -8px 12px;
+        border: none;
+        background: rgba(255, 255, 255, 0.2);
+        opacity: 0.8;
+        transition: all 0.2s ease;
+        border-radius: 6px;
+        color: white;
+        flex-shrink: 0;
+        align-self: flex-start;
+        backdrop-filter: blur(10px);
+      }
+
+      .btn-close-custom:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+      }
+
+      /* Progress bar */
+      .toast-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.5);
+        animation: progressBar linear forwards;
+      }
+
+      .bg-success .toast-progress { animation-duration: 5s; }
+      .bg-danger .toast-progress { animation-duration: 10s; }
+      .bg-warning .toast-progress { animation-duration: 5s; }
+      .bg-info .toast-progress { animation-duration: 5s; }
+
+      @keyframes progressBar {
+        from { width: 100%; }
+        to { width: 0%; }
+      }
+
+      /* Animations */
+      @keyframes slideInRight {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+      }
+
+      .toast {
+        animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .toast.hiding {
+        animation: slideOutRight 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+      }
+
+      /* Responsive design */
+      @media (max-width: 576px) {
+        .toast-container {
+          padding: 16px;
+          width: 100%;
+        }
+
+        .custom-toast {
+          min-width: unset;
+          max-width: 100%;
+          margin-bottom: 8px;
+        }
+
+        .toast-content {
+          padding: 14px 16px;
+        }
+
+        .toast-icon {
+          min-width: 40px;
+          height: 40px;
+          margin-right: 12px;
+          font-size: 1rem;
+        }
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    <!-- Preloader Start Here -->
+    <div id="preloader"></div>
+    <!-- Preloader End Here -->
+
+    <!-- Toast Container -->
+    <div
+      id="toastContainer"
+      class="toast-container position-fixed top-0 end-0 p-3"
+      style="z-index: 9999"
+    >
+      {% for message in messages %}
+      <div
+        class="toast custom-toast align-items-center text-white bg-{{ message.tags }} border-0"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-bs-delay="{% if message.tags == 'error' or message.tags == 'danger' %}10000{% else %}5000{% endif %}"
+      >
+        <div class="toast-progress"></div>
+        <div class="toast-content">
+          <div class="toast-icon">
+            {% if message.tags == 'success' %}
+            <i class="fas fa-check"></i>
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+            <i class="fas fa-exclamation"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="fas fa-exclamation-triangle"></i>
+            {% else %}
+            <i class="fas fa-info"></i>
+            {% endif %}
+          </div>
+          <div class="toast-body">
+            <div class="toast-title">
+              {% if message.tags == 'success' %}Success
+              {% elif message.tags == 'error' or message.tags == 'danger' %}Error
+              {% elif message.tags == 'warning' %}Warning
+              {% else %}Information{% endif %}
+            </div>
+            <div class="toast-message">{{ message }}</div>
+          </div>
+          <button
+            type="button"
+            class="btn-close-custom"
+            data-bs-dismiss="toast"
+            aria-label="Close"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Setup Required Modal - Only show if setup_required context variable exists -->
+    {% if setup_required and request.path != '/setup/' and request.path != '/setup/complete/' %}
+    <script>
+      $(document).ready(function () {
+        // Show setup required modal
+        $("#setupRequiredModal").modal("show");
+      });
+    </script>
+
+    <!-- Setup Required Modal -->
+    <div
+      class="modal fade"
+      id="setupRequiredModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="setupRequiredModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title" id="setupRequiredModalLabel">
+              <i class="fas fa-exclamation-triangle"></i> Initial Setup Required
+            </h5>
+          </div>
+          <div class="modal-body">
+            <p>
+              Before you can use the School Management System, you need to
+              complete the initial setup.
+            </p>
+            <p>This includes creating classes, sections, and academic years.</p>
+            <div class="alert alert-info">
+              <strong>Note:</strong> You will be redirected to the setup page
+              automatically.
+            </div>
+          </div>
+          <div class="modal-footer">
+            <a href="{% url 'initial_setup' %}" class="btn btn-primary">
+              <i class="fas fa-cogs"></i> Go to Setup
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <!-- Preloader Hide Script -->
+    <script>
+      class ToastManager {
+        constructor() {
+          this.container = document.getElementById("toastContainer");
+          this.init();
+        }
+
+        init() {
+          // Initialize existing toasts from Django messages
+          this.showAllToasts();
+
+          // Auto-remove toasts after they're hidden
+          this.setupAutoRemove();
+        }
+
+        showAllToasts() {
+          const toastElList = [].slice.call(
+            document.querySelectorAll(".toast")
+          );
+          const toastList = toastElList.map(
+            (toastEl) => new bootstrap.Toast(toastEl)
+          );
+
+          toastList.forEach((toast) => {
+            toast.show();
+          });
+        }
+
+        setupAutoRemove() {
+          document.querySelectorAll(".toast").forEach((toastElement) => {
+            toastElement.addEventListener("hidden.bs.toast", () => {
+              toastElement.classList.add('hiding');
+              setTimeout(() => {
+                if (toastElement.parentNode) {
+                  toastElement.parentNode.removeChild(toastElement);
+                }
+              }, 300);
+            });
+          });
+        }
+
+        // Method to show new toasts dynamically
+        showToast(message, type = "info", title = null) {
+          const toastId = "toast-" + Date.now();
+          const iconClass = this.getIconClass(type);
+          const toastTitle = title || this.getDefaultTitle(type);
+          const delay = type === "danger" ? 10000 : 5000;
+
+          const toastHtml = `
+            <div id="${toastId}" class="toast custom-toast align-items-center text-white bg-${type} border-0" 
+                 role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="${delay}">
+              <div class="toast-progress" style="animation-duration: ${delay}ms"></div>
+              <div class="toast-content">
+                <div class="toast-icon">
+                  <i class="${iconClass}"></i>
+                </div>
+                <div class="toast-body">
+                  <div class="toast-title">${toastTitle}</div>
+                  <div class="toast-message">${message}</div>
+                </div>
+                <button type="button" class="btn-close-custom" data-bs-dismiss="toast" aria-label="Close">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+          `;
+
+          this.container.insertAdjacentHTML("beforeend", toastHtml);
+
+          const toastElement = document.getElementById(toastId);
+          const toast = new bootstrap.Toast(toastElement);
+
+          toastElement.addEventListener("hidden.bs.toast", () => {
+            toastElement.classList.add('hiding');
+            setTimeout(() => {
+              if (toastElement.parentNode) {
+                toastElement.parentNode.removeChild(toastElement);
+              }
+            }, 300);
+          });
+
+          toast.show();
+        }
+
+        getIconClass(type) {
+          const icons = {
+            success: "fas fa-check",
+            danger: "fas fa-exclamation",
+            warning: "fas fa-exclamation-triangle",
+            info: "fas fa-info",
+          };
+          return icons[type] || icons.info;
+        }
+
+        getDefaultTitle(type) {
+          const titles = {
+            success: "Success",
+            danger: "Error",
+            warning: "Warning",
+            info: "Information",
+          };
+          return titles[type] || titles.info;
+        }
+      }
+
+      // Initialize when DOM is loaded
+      document.addEventListener("DOMContentLoaded", function () {
+        window.toastManager = new ToastManager();
+      });
+
+      document.addEventListener("DOMContentLoaded", function () {
+        // Hide preloader when page is fully loaded
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            const preloader = document.getElementById("preloader");
+            if (preloader) {
+              preloader.style.opacity = "0";
+              preloader.style.visibility = "hidden";
+              preloader.style.transition =
+                "opacity 0.5s ease, visibility 0.5s ease";
+
+              // Remove from DOM after animation
+              setTimeout(function () {
+                preloader.style.display = "none";
+              }, 500);
+            }
+          }, 1000);
+        });
+
+        // Fallback: hide preloader after 3 seconds max
+        setTimeout(function () {
+          const preloader = document.getElementById("preloader");
+          if (preloader && preloader.style.display !== "none") {
+            preloader.style.opacity = "0";
+            preloader.style.visibility = "hidden";
+            preloader.style.transition =
+              "opacity 0.5s ease, visibility 0.5s ease";
+
+            setTimeout(function () {
+              preloader.style.display = "none";
+            }, 500);
+          }
+        }, 3000);
+      });
+    </script>
+
+    <!-- JS Files -->
+    <script src="{% static 'js/jquery-3.3.1.min.js' %}"></script>
+    <script src="{% static 'js/plugins.js' %}"></script>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="{% static 'js/jquery.counterup.min.js' %}"></script>
+    <script src="{% static 'js/moment.min.js' %}"></script>
+    <script src="{% static 'js/jquery.waypoints.min.js' %}"></script>
+    <script src="{% static 'js/jquery.scrollUp.min.js' %}"></script>
+    <script src="{% static 'js/fullcalendar.min.js' %}"></script>
+    <script src="{% static 'js/Chart.min.js' %}"></script>
+    <script src="{% static 'js/main.js' %}"></script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

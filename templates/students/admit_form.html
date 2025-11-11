@@ -1,0 +1,678 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Admission Form - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Admission Form</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li>Admission Form</li>
+                </ul>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+                <div class="row">
+                    <div class="col-12">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                <strong>
+                                    {% if message.tags == 'error' %}
+                                        <i class="fas fa-exclamation-circle"></i> Error!
+                                    {% elif message.tags == 'success' %}
+                                        <i class="fas fa-check-circle"></i> Success!
+                                    {% elif message.tags == 'warning' %}
+                                        <i class="fas fa-exclamation-triangle"></i> Warning!
+                                    {% elif message.tags == 'info' %}
+                                        <i class="fas fa-info-circle"></i> Info!
+                                    {% endif %}
+                                </strong>
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Student Admission Form</h3>
+                        </div>
+                    </div>
+                    
+                    <form method="post" class="new-added-form" enctype="multipart/form-data" id="admissionForm" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Student Personal Information -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="text-heading">Student Personal Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>First Name *</label>
+                                <input type="text" name="first_name" id="first_name" placeholder="First Name" class="form-control" required 
+                                       pattern="[A-Za-z\s]{2,50}" title="Only letters and spaces allowed (2-50 characters)">
+                                <div class="invalid-feedback">Please enter a valid first name (2-50 letters only)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Last Name *</label>
+                                <input type="text" name="last_name" id="last_name" placeholder="Last Name" class="form-control" required
+                                       pattern="[A-Za-z\s]{2,50}" title="Only letters and spaces allowed (2-50 characters)">
+                                <div class="invalid-feedback">Please enter a valid last name (2-50 letters only)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Date of Birth *</label>
+                                <input type="date" name="date_of_birth" id="date_of_birth" class="form-control" required
+                                       max="{% now 'Y-m-d' %}">
+                                <div class="invalid-feedback">Please select a valid date of birth (cannot be in future)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Gender *</label>
+                                <select class="form-control" name="gender" id="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <div class="invalid-feedback">Please select a gender</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Student Photo</label>
+                                <input type="file" name="student_photo" id="student_photo" class="form-control-file" accept="image/jpeg,image/png,image/jpg">
+                                <small class="form-text text-muted">Accepted formats: JPG, PNG, JPEG (Max 2MB)</small>
+                                <div class="invalid-feedback">Please upload a valid image file (JPG, PNG, JPEG, max 2MB)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>National ID/Birth Certificate No.</label>
+                                <input type="text" name="national_id" id="national_id" placeholder="ID Number" class="form-control"
+                                       pattern="[A-Za-z0-9\-\s]{5,20}" title="Alphanumeric characters, hyphens and spaces only (5-20 characters)">
+                                <div class="invalid-feedback">Please enter a valid ID number (5-20 alphanumeric characters)</div>
+                            </div>
+                        </div>
+
+                        <!-- Student Academic Information -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Academic Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Class *</label>
+                                <select class="form-control" name="class_level" id="class_level" required>
+                                    <option value="">Select Class</option>
+                                    {% for class in classes %}
+                                        <option value="{{ class.id }}">{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a class</div>
+                                {% if not classes %}
+                                    <small class="text-danger">No classes available. Please add classes first.</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Section *</label>
+                                <select class="form-control" name="section" id="section" required>
+                                    <option value="">Select Section</option>
+                                    {% for section in sections %}
+                                        <option value="{{ section.id }}">{{ section.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback">Please select a section</div>
+                                {% if not sections %}
+                                    <small class="text-danger">No sections available. Please add sections first.</small>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Roll Number</label>
+                                <input type="text" name="roll_number" placeholder="Auto-generated after admission" class="form-control" readonly>
+                                <small class="form-text text-muted">Will be assigned automatically</small>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Previous School</label>
+                                <input type="text" name="previous_school" id="previous_school" placeholder="Previous school name" class="form-control"
+                                       pattern="[A-Za-z0-9\s\-\.,&]{0,100}" title="Maximum 100 characters allowed">
+                                <div class="invalid-feedback">Maximum 100 characters allowed for previous school name</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Transfer Certificate No.</label>
+                                <input type="text" name="transfer_certificate" id="transfer_certificate" placeholder="TC Number" class="form-control"
+                                       pattern="[A-Za-z0-9\-\s]{0,50}" title="Alphanumeric characters, hyphens and spaces only (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid transfer certificate number</div>
+                            </div>
+                        </div>
+
+                        <!-- Parent/Guardian Information -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Parent/Guardian Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Father's Name *</label>
+                                <input type="text" name="father_name" id="father_name" placeholder="Father's Full Name" class="form-control" required
+                                       pattern="[A-Za-z\s]{2,100}" title="Only letters and spaces allowed (2-100 characters)">
+                                <div class="invalid-feedback">Please enter a valid father's name (2-100 letters only)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Father's Occupation</label>
+                                <input type="text" name="father_occupation" id="father_occupation" placeholder="Occupation" class="form-control"
+                                       pattern="[A-Za-z\s]{0,50}" title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid occupation</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Mother's Name *</label>
+                                <input type="text" name="mother_name" id="mother_name" placeholder="Mother's Full Name" class="form-control" required
+                                       pattern="[A-Za-z\s]{2,100}" title="Only letters and spaces allowed (2-100 characters)">
+                                <div class="invalid-feedback">Please enter a valid mother's name (2-100 letters only)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Mother's Occupation</label>
+                                <input type="text" name="mother_occupation" id="mother_occupation" placeholder="Occupation" class="form-control"
+                                       pattern="[A-Za-z\s]{0,50}" title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid occupation</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Guardian's Phone *</label>
+                                <input type="tel" name="guardian_phone" id="guardian_phone" placeholder="e.g., +254712345678" class="form-control" required
+                                       pattern="^\+?[0-9\s\-\(\)]{10,15}$" title="Valid phone number format (10-15 digits)">
+                                <small class="form-text text-muted">Format: +254XXXXXXXXX or 0712345678</small>
+                                <div class="invalid-feedback">Please enter a valid phone number (10-15 digits)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Guardian's Email *</label>
+                                <input type="email" name="guardian_email" id="guardian_email" placeholder="Email Address" class="form-control" required
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Valid email address required">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
+                            </div>
+                            <div class="col-12 form-group">
+                                <label>Home Address *</label>
+                                <textarea name="address" id="address" placeholder="Full Address" class="form-control" rows="3" required
+                                         minlength="10" maxlength="500" title="Minimum 10 characters required"></textarea>
+                                <div class="invalid-feedback">Please enter a complete address (minimum 10 characters)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>City</label>
+                                <input type="text" name="city" id="city" placeholder="City" class="form-control"
+                                       pattern="[A-Za-z\s]{0,50}" title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid city name</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Postal Code</label>
+                                <input type="text" name="postal_code" id="postal_code" placeholder="Postal Code" class="form-control"
+                                       pattern="[A-Za-z0-9\s\-]{0,20}" title="Alphanumeric characters, hyphens and spaces only">
+                                <div class="invalid-feedback">Please enter a valid postal code</div>
+                            </div>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Emergency Contact</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Emergency Contact Name *</label>
+                                <input type="text" name="emergency_contact_name" id="emergency_contact_name" placeholder="Full Name" class="form-control" required
+                                       pattern="[A-Za-z\s]{2,100}" title="Only letters and spaces allowed (2-100 characters)">
+                                <div class="invalid-feedback">Please enter a valid emergency contact name (2-100 letters only)</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Emergency Contact Phone *</label>
+                                <input type="tel" name="emergency_contact_phone" id="emergency_contact_phone" placeholder="Phone Number" class="form-control" required
+                                       pattern="^\+?[0-9\s\-\(\)]{10,15}$" title="Valid phone number format (10-15 digits)">
+                                <div class="invalid-feedback">Please enter a valid emergency contact phone number</div>
+                            </div>
+                            <div class="col-12 form-group">
+                                <label>Relationship to Student</label>
+                                <input type="text" name="emergency_relationship" id="emergency_relationship" placeholder="e.g., Uncle, Aunt, Grandparent" class="form-control"
+                                       pattern="[A-Za-z\s]{0,50}" title="Only letters and spaces allowed (max 50 characters)">
+                                <div class="invalid-feedback">Please enter a valid relationship</div>
+                            </div>
+                        </div>
+
+                        <!-- Parent Login Information -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Parent Login Information</h4>
+                                <p class="text-muted">This will be used to access the parent portal</p>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Username *</label>
+                                <input type="text" name="username" id="username" placeholder="Choose username" class="form-control" required
+                                       pattern="[a-zA-Z0-9_\.]{3,30}" title="3-30 characters: letters, numbers, underscore, dot only">
+                                <small class="form-text text-muted">3-30 characters: letters, numbers, underscore, dot only</small>
+                                <div class="invalid-feedback">Username must be 3-30 characters (letters, numbers, underscore, dot only)</div>
+                                <span id="username-feedback" class="d-block mt-1"></span>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Email (for login) *</label>
+                                <input type="email" name="email" id="email" placeholder="Email for login" class="form-control" required
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Valid email address required">
+                                <div class="invalid-feedback">Please enter a valid email address</div>
+                                <span id="email-feedback" class="d-block mt-1"></span>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Password *</label>
+                                <input type="password" name="password1" id="password1" placeholder="Password" class="form-control" required 
+                                       minlength="8" maxlength="50" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+                                       title="Minimum 8 characters with at least one uppercase letter, one lowercase letter, and one number">
+                                <small class="form-text text-muted">Minimum 8 characters with uppercase, lowercase, and number</small>
+                                <div class="invalid-feedback">Password must be 8+ characters with uppercase, lowercase, and number</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Confirm Password *</label>
+                                <input type="password" name="password2" id="password2" placeholder="Confirm Password" class="form-control" required
+                                       minlength="8" maxlength="50">
+                                <div class="invalid-feedback">Please confirm your password</div>
+                                <span id="password-match-feedback" class="d-block mt-1"></span>
+                            </div>
+                        </div>
+
+                        <!-- Medical Information -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Medical Information</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <label>Any Medical Conditions</label>
+                                <textarea name="medical_conditions" id="medical_conditions" placeholder="List any medical conditions, allergies, or special needs" 
+                                          class="form-control" rows="3" maxlength="500"></textarea>
+                                <small class="form-text text-muted">Maximum 500 characters</small>
+                                <div class="invalid-feedback">Maximum 500 characters allowed</div>
+                            </div>
+                            <div class="col-12 form-group">
+                                <label>Medications</label>
+                                <textarea name="medications" id="medications" placeholder="List any current medications" 
+                                          class="form-control" rows="2" maxlength="300"></textarea>
+                                <small class="form-text text-muted">Maximum 300 characters</small>
+                                <div class="invalid-feedback">Maximum 300 characters allowed</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Doctor's Name</label>
+                                <input type="text" name="doctor_name" id="doctor_name" placeholder="Doctor's Name" class="form-control"
+                                       pattern="[A-Za-z\s\.]{0,50}" title="Only letters, spaces and dots allowed">
+                                <div class="invalid-feedback">Please enter a valid doctor's name</div>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Doctor's Phone</label>
+                                <input type="tel" name="doctor_phone" id="doctor_phone" placeholder="Doctor's Phone" class="form-control"
+                                       pattern="^\+?[0-9\s\-\(\)]{0,15}$" title="Valid phone number format">
+                                <div class="invalid-feedback">Please enter a valid phone number</div>
+                            </div>
+                        </div>
+
+                        <!-- Declaration -->
+                        <div class="row mg-t-30">
+                            <div class="col-12">
+                                <h4 class="text-heading">Declaration</h4>
+                                <hr>
+                            </div>
+                            
+                            <div class="col-12 form-group">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="declaration" required>
+                                    <label class="form-check-label" for="declaration">
+                                        I hereby declare that the information provided is true and correct to the best of my knowledge. 
+                                        I understand that providing false information may lead to cancellation of admission.
+                                    </label>
+                                    <div class="invalid-feedback">You must agree to the declaration before submitting</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="row mg-t-30">
+                            <div class="col-12 form-group">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="submitBtn">
+                                    <i class="fas fa-user-plus"></i> Submit Admission
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                                    <i class="fas fa-redo"></i> Reset Form
+                                </button>
+                                <a href="{% url 'all_students' %}" class="btn-fill-lg bg-red btn-hover-primary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Enhanced form validation
+    const form = document.getElementById('admissionForm');
+    
+    // Real-time validation for all inputs
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+        
+        input.addEventListener('input', function() {
+            if (this.classList.contains('is-invalid')) {
+                validateField(this);
+            }
+        });
+    });
+
+    // Field validation function
+    function validateField(field) {
+        const isValid = field.checkValidity();
+        
+        if (isValid) {
+            field.classList.remove('is-invalid');
+            field.classList.add('is-valid');
+        } else {
+            field.classList.remove('is-valid');
+            field.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+
+    // Custom validation for specific fields
+    function validateDateOfBirth() {
+        const dobField = document.getElementById('date_of_birth');
+        const dob = new Date(dobField.value);
+        const today = new Date();
+        
+        if (dob > today) {
+            dobField.setCustomValidity('Date of birth cannot be in the future');
+            return false;
+        }
+        
+        // Check if student is at least 3 years old
+        const minAge = new Date();
+        minAge.setFullYear(minAge.getFullYear() - 3);
+        if (dob > minAge) {
+            dobField.setCustomValidity('Student must be at least 3 years old');
+            return false;
+        }
+        
+        dobField.setCustomValidity('');
+        return true;
+    }
+
+    // Custom validation for file upload
+    function validateFileUpload() {
+        const fileField = document.getElementById('student_photo');
+        if (fileField.files.length > 0) {
+            const file = fileField.files[0];
+            const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            
+            if (!validTypes.includes(file.type)) {
+                fileField.setCustomValidity('Please upload a valid image file (JPG, PNG, JPEG)');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                fileField.setCustomValidity('File size must be less than 2MB');
+                return false;
+            }
+        }
+        
+        fileField.setCustomValidity('');
+        return true;
+    }
+
+    // Auto-generate username based on parent name
+    $('#father_name').on('blur', function() {
+        const fatherName = $(this).val();
+        if (fatherName && !$('#username').val()) {
+            // Generate username: lowercase, replace spaces with dots, remove special chars
+            const username = fatherName.toLowerCase()
+                .replace(/\s+/g, '.')
+                .replace(/[^a-z0-9.]/g, '')
+                .substring(0, 30);
+            $('#username').val(username);
+            validateField(document.getElementById('username'));
+        }
+    });
+
+    // Check username availability
+    $('#username').on('blur', function() {
+        const username = $(this).val();
+        if (username.length >= 3) {
+            $.ajax({
+                url: '{% url "check_username_availability" %}',
+                data: {'username': username},
+                success: function(data) {
+                    if (data.available) {
+                        $('#username-feedback').html('<small class="text-success"><i class="fas fa-check-circle"></i> Username available</small>');
+                        $('#username').removeClass('is-invalid').addClass('is-valid');
+                    } else {
+                        $('#username-feedback').html('<small class="text-danger"><i class="fas fa-times-circle"></i> Username already taken</small>');
+                        $('#username').removeClass('is-valid').addClass('is-invalid');
+                        $('#username')[0].setCustomValidity('Username already taken');
+                    }
+                },
+                error: function() {
+                    $('#username-feedback').html('<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Could not verify username</small>');
+                }
+            });
+        }
+    });
+
+    // Check email availability
+    $('#email').on('blur', function() {
+        const email = $(this).val();
+        if (email.length >= 5 && email.includes('@')) {
+            $.ajax({
+                url: '{% url "check_email_availability" %}',
+                data: {'email': email},
+                success: function(data) {
+                    if (data.available) {
+                        $('#email-feedback').html('<small class="text-success"><i class="fas fa-check-circle"></i> Email available</small>');
+                        $('#email').removeClass('is-invalid').addClass('is-valid');
+                    } else {
+                        $('#email-feedback').html('<small class="text-danger"><i class="fas fa-times-circle"></i> Email already registered</small>');
+                        $('#email').removeClass('is-valid').addClass('is-invalid');
+                        $('#email')[0].setCustomValidity('Email already registered');
+                    }
+                },
+                error: function() {
+                    $('#email-feedback').html('<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Could not verify email</small>');
+                }
+            });
+        }
+    });
+
+    // Password strength validation
+    $('#password1').on('keyup blur', function() {
+        const password = $(this).val();
+        let strength = 0;
+        let feedback = '';
+        
+        if (password.length >= 8) strength++;
+        if (password.match(/[a-z]/)) strength++;
+        if (password.match(/[A-Z]/)) strength++;
+        if (password.match(/[0-9]/)) strength++;
+        if (password.match(/[^a-zA-Z0-9]/)) strength++;
+        
+        switch(strength) {
+            case 0:
+            case 1:
+            case 2:
+                feedback = '<small class="text-danger"><i class="fas fa-times-circle"></i> Weak password</small>';
+                break;
+            case 3:
+                feedback = '<small class="text-warning"><i class="fas fa-exclamation-triangle"></i> Medium password</small>';
+                break;
+            case 4:
+            case 5:
+                feedback = '<small class="text-success"><i class="fas fa-check-circle"></i> Strong password</small>';
+                break;
+        }
+        
+        $('#password1').siblings('.form-text').html(feedback);
+    });
+
+    // Password confirmation validation
+    $('#password2').on('keyup blur', function() {
+        const password1 = $('#password1').val();
+        const password2 = $(this).val();
+        
+        if (password2.length > 0) {
+            if (password1 === password2) {
+                $(this).removeClass('is-invalid').addClass('is-valid');
+                $('#password-match-feedback').html('<small class="text-success"><i class="fas fa-check-circle"></i> Passwords match</small>');
+                $(this)[0].setCustomValidity('');
+            } else {
+                $(this).removeClass('is-valid').addClass('is-invalid');
+                $('#password-match-feedback').html('<small class="text-danger"><i class="fas fa-times-circle"></i> Passwords do not match</small>');
+                $(this)[0].setCustomValidity('Passwords do not match');
+            }
+        }
+    });
+
+    // Auto-fill emergency contact with parent info if empty
+    $('#guardian_phone').on('blur', function() {
+        if (!$('#emergency_contact_phone').val()) {
+            $('#emergency_contact_phone').val($(this).val());
+            validateField(document.getElementById('emergency_contact_phone'));
+        }
+    });
+
+    $('#father_name').on('blur', function() {
+        if (!$('#emergency_contact_name').val()) {
+            $('#emergency_contact_name').val($(this).val());
+            validateField(document.getElementById('emergency_contact_name'));
+        }
+    });
+
+    // Format phone numbers
+    $('input[type="tel"]').on('blur', function() {
+        let phone = $(this).val().trim();
+        
+        // Basic Kenyan phone number formatting
+        if (phone && !phone.startsWith('+')) {
+            if (phone.startsWith('0')) {
+                phone = '+254' + phone.substring(1);
+            } else if (phone.startsWith('7') || phone.startsWith('1')) {
+                phone = '+254' + phone;
+            }
+            $(this).val(phone);
+        }
+    });
+
+    // Date of birth validation
+    $('#date_of_birth').on('change', function() {
+        validateDateOfBirth();
+        validateField(this);
+    });
+
+    // File upload validation
+    $('#student_photo').on('change', function() {
+        validateFileUpload();
+        validateField(this);
+    });
+
+    // Form submission validation
+    $('#admissionForm').on('submit', function(e) {
+        // Validate all fields
+        let formIsValid = true;
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                formIsValid = false;
+            }
+        });
+
+        // Custom validations
+        if (!validateDateOfBirth()) {
+            formIsValid = false;
+        }
+        
+        if (!validateFileUpload()) {
+            formIsValid = false;
+        }
+
+        // Check if username is available
+        if ($('#username').hasClass('is-invalid')) {
+            formIsValid = false;
+            $('#username-feedback').html('<small class="text-danger"><i class="fas fa-times-circle"></i> Please choose a different username</small>');
+        }
+
+        // Check if email is available
+        if ($('#email').hasClass('is-invalid')) {
+            formIsValid = false;
+            $('#email-feedback').html('<small class="text-danger"><i class="fas fa-times-circle"></i> Please use a different email</small>');
+        }
+
+        if (!formIsValid) {
+            e.preventDefault();
+            // Scroll to first invalid field
+            const firstInvalid = form.querySelector('.is-invalid');
+            if (firstInvalid) {
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalid.focus();
+            }
+            alert('Please fix the errors in the form before submitting.');
+            return false;
+        }
+
+        // Show loading state
+        $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+    });
+
+    // Reset form handler
+    $('#resetBtn').on('click', function() {
+        // Clear all validation states
+        inputs.forEach(input => {
+            input.classList.remove('is-valid', 'is-invalid');
+        });
+        
+        // Clear feedback messages
+        $('#username-feedback').empty();
+        $('#email-feedback').empty();
+        $('#password-match-feedback').empty();
+        
+        // Enable submit button
+        $('#submitBtn').prop('disabled', false).html('<i class="fas fa-user-plus"></i> Submit Admission');
+    });
+
+    // Character counters for textareas
+    $('textarea').on('input', function() {
+        const maxLength = $(this).attr('maxlength');
+        const currentLength = $(this).val().length;
+        if (maxLength) {
+            const counter = $(this).siblings('.form-text');
+            if (counter.length && !counter.text().includes('Maximum')) {
+                counter.after(`<small class="text-muted float-right">${currentLength}/${maxLength}</small>`);
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

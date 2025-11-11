@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | All Students{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Students</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>All Students</li>
+                </ul>
+            </div>
+            <!-- Student Table Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>All Students Data</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form class="mg-b-20" method="GET">
+                        <div class="row gutters-8">
+                            <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <input type="text" name="search" placeholder="Search by Roll ..." class="form-control" value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-4 col-lg-3 col-12 form-group">
+                                <input type="text" name="class" placeholder="Search by Class ..." class="form-control" value="{{ request.GET.class }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <select name="section" class="form-control">
+                                    <option value="">All Sections</option>
+                                    {% for section in sections %}
+                                    <option value="{{ section.id }}" {% if request.GET.section == section.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ section.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-1-xxxl col-xl-2 col-lg-3 col-12 form-group">
+                                <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="studentsTable" class="table display data-table text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input checkAll">
+                                            <label class="form-check-label">Roll</label>
+                                        </div>
+                                    </th>
+                                    <th>Photo</th>
+                                    <th>Name</th>
+                                    <th>Gender</th>
+                                    <th>Class</th>
+                                    <th>Section</th>
+                                    <th>Father</th>
+                                    <th>Mother</th>
+                                    <th>Phone</th>
+                                    <th>Email</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input">
+                                            <label class="form-check-label">#{{ student.roll_number }}</label>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if student.photo %}
+                                        <img src="{{ student.photo.url }}" alt="student" class="rounded-circle" width="40" height="40">
+                                        {% else %}
+                                        <img src="{% static 'img/figure/student2.png' %}" alt="student" class="rounded-circle" width="40" height="40">
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ student.first_name }} {{ student.last_name }}</strong>
+                                        <br><small class="text-muted">ID: {{ student.student_id }}</small>
+                                    </td>
+                                    <td>
+                                        {% if student.gender == 'M' %}
+                                            <span class="badge badge-primary">Male</span>
+                                        {% elif student.gender == 'F' %}
+                                            <span class="badge badge-success">Female</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Other</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ student.current_class.name|default:"Not Assigned" }}</td>
+                                    <td>{{ student.current_section.name|default:"Not Assigned" }}</td>
+                                    <td>{{ student.father_name|default:"-" }}</td>
+                                    <td>{{ student.mother_name|default:"-" }}</td>
+                                    <td>{{ student.guardian_phone|default:"-" }}</td>
+                                    <td>{{ student.guardian_email|default:"-" }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'student_details' student.student_id %}">
+                                                    <i class="fas fa-eye text-info"></i> View Details
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'update_student' student.student_id %}">
+                                                    <i class="fas fa-edit text-warning"></i> Edit
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'delete_student' student.student_id %}">
+                                                    <i class="fas fa-trash text-danger"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="11" class="text-center py-4">
+                                        <div class="empty-state">
+                                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                            <h4>No Students Found</h4>
+                                            <p class="text-muted">No students match your search criteria.</p>
+                                            <a href="{% url 'admit_form' %}" class="btn btn-primary">
+                                                <i class="fas fa-plus"></i> Add New Student
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <!-- Student Table Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Wait for the table to be completely loaded
+        setTimeout(function() {
+            initializeDataTable();
+        }, 100);
+    });
+    
+    function initializeDataTable() {
+        var table = $('#studentsTable');
+        
+        if (!table.length) {
+            console.log('Table not found');
+            return;
+        }
+    
+        // Check if already initialized
+        if ($.fn.dataTable.isDataTable(table)) {
+            console.log('DataTable already initialized, destroying...');
+            table.DataTable().destroy();
+        }
+    
+        // Initialize with error handling
+        try {
+            var dataTable = table.DataTable({
+                "pageLength": 25,
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                "responsive": true,
+                "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "language": {
+                    "search": "Search:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                    "infoEmpty": "Showing 0 to 0 of 0 students",
+                    "infoFiltered": "(filtered from _MAX_ total students)",
+                    "zeroRecords": "No matching students found",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "columnDefs": [
+                    {
+                        "targets": [0, 10],
+                        "orderable": false,
+                        "searchable": false
+                    },
+                    {
+                        "targets": 1,
+                        "orderable": false,
+                        "searchable": false
+                    }
+                ],
+                "order": [[2, 'asc']]
+            });
+    
+            console.log('DataTable initialized successfully');
+            setupCustomFilters(dataTable);
+            
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    }
+    
+    function setupCustomFilters(dataTable) {
+        // Search functionality with debounce
+        let timeout;
+        $('input[name="search"]').on('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                dataTable.columns(2).search(this.value).draw();
+            }, 300);
+        });
+    
+        $('input[name="class"]').on('keyup', function() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                dataTable.columns(4).search(this.value).draw();
+            }, 300);
+        });
+    
+        $('select[name="section"]').on('change', function() {
+            dataTable.columns(5).search(this.value).draw();
+        });
+    
+        // Check all functionality
+        $('.checkAll').on('change', function() {
+            $('tbody input[type="checkbox"]').prop('checked', this.checked);
+        });
+    }
+    </script>
+
+<style>
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.table img.rounded-circle {
+    object-fit: cover;
+}
+</style>
+{% endblock %}
