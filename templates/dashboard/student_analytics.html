@@ -1,0 +1,321 @@
+<!-- templates/dashboard/student_analytics.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Analytics - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Student Analytics</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Student Analytics</li>
+                </ul>
+            </div>
+
+            <div class="row gutters-20">
+                <!-- Statistics Cards -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-fb hover-fb">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Total Students</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ total_students }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-twitter hover-twitter">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-male"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Male Students</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ gender_stats.male }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-gplus hover-gplus">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-female"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Female Students</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ gender_stats.female }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-linkedin hover-linkedin">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Recent Admissions</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ total_admission_count }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts and Detailed Analytics -->
+            <div class="row gutters-20">
+                <!-- Class Distribution Chart -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Students by Class</h3>
+                                </div>
+                            </div>
+                            <div class="doughnut-chart-wrap">
+                                <canvas id="classDistributionChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gender Distribution Chart -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Gender Distribution</h3>
+                                </div>
+                            </div>
+                            <div class="doughnut-chart-wrap">
+                                <canvas id="genderDistributionChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admission Trends Chart -->
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Admission Trends (Last 6 Months)</h3>
+                                </div>
+                            </div>
+                            <div class="bar-chart-wrap">
+                                <canvas id="admissionTrendsChart" width="400" height="150"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Statistics Table -->
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Class-wise Student Distribution</h3>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Class</th>
+                                            <th>Male Students</th>
+                                            <th>Female Students</th>
+                                            <th>Total Students</th>
+                                            <th>Percentage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if class_gender_stats %}
+                                            {% for stat in class_gender_stats %}
+                                            <tr>
+                                                <td>{{ stat.class_name }}</td>
+                                                <td>{{ stat.male_count }}</td>
+                                                <td>{{ stat.female_count }}</td>
+                                                <td>{{ stat.total_count }}</td>
+                                                <td>{{ stat.percentage }}%</td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="5" class="text-center">No data available</td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        // Class Distribution Chart
+        const classCtx = document.getElementById('classDistributionChart').getContext('2d');
+        const classChart = new Chart(classCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    {% for stat in class_stats %}
+                        '{{ stat.class_name }}'{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ],
+                datasets: [{
+                    data: [
+                        {% for stat in class_stats %}
+                            {{ stat.total_count }}{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ],
+                    backgroundColor: [
+                        '#4361ee', '#3a0ca3', '#7209b7', '#f72585', 
+                        '#4cc9f0', '#560bad', '#b5179e', '#4895ef'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Students by Class'
+                    }
+                }
+            }
+        });
+
+        // Gender Distribution Chart
+        const genderCtx = document.getElementById('genderDistributionChart').getContext('2d');
+        const genderChart = new Chart(genderCtx, {
+            type: 'pie',
+            data: {
+                labels: ['Male', 'Female', 'Other'],
+                datasets: [{
+                    data: [
+                        {{ gender_stats.male }},
+                        {{ gender_stats.female }},
+                        {{ gender_stats.other }}
+                    ],
+                    backgroundColor: ['#4361ee', '#f72585', '#4cc9f0'],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Gender Distribution'
+                    }
+                }
+            }
+        });
+
+        // In the admission trends chart section of your template:
+// Admission Trends Chart
+const trendsCtx = document.getElementById('admissionTrendsChart').getContext('2d');
+const trendsChart = new Chart(trendsCtx, {
+    type: 'line',
+    data: {
+        labels: [
+            {% for trend in admission_trends %}
+                '{{ trend.month }}'{% if not forloop.last %},{% endif %}
+            {% empty %}
+                'No Data'
+            {% endfor %}
+        ],
+        datasets: [{
+            label: 'New Admissions',
+            data: [
+                {% for trend in admission_trends %}
+                    {{ trend.count }}{% if not forloop.last %},{% endif %}
+                {% empty %}
+                    0
+                {% endfor %}
+            ],
+            borderColor: '#4361ee',
+            backgroundColor: 'rgba(67, 97, 238, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            title: {
+                display: true,
+                text: 'Monthly Admission Trends'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Number of Students'
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: 'Month'
+                }
+            }
+        }
+    }
+});
+    });
+</script>
+{% endblock %}

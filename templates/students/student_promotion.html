@@ -109,7 +109,7 @@
                                         </thead>
                                         <tbody>
                                             {% for student in students %}
-                                            <tr class="student-row" data-class="{{ student.current_class.id }}">
+                                            <tr class="student-row" data-class="{{ student.current_class.id }}" data-student-id="{{ student.id }}">
                                                 <td>
                                                     <input type="checkbox" name="students" value="{{ student.id }}" class="student-checkbox">
                                                 </td>
@@ -119,8 +119,8 @@
                                                 <td>
                                                     <div class="student-info">
                                                         <div class="student-avatar">
-                                                            {% if student.profile_picture %}
-                                                            <img src="{{ student.profile_picture.url }}" alt="{{ student.get_full_name }}">
+                                                            {% if student.photo %}
+                                                            <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}">
                                                             {% else %}
                                                             <div class="avatar-placeholder">
                                                                 <i class="fas fa-user-graduate"></i>
@@ -128,8 +128,8 @@
                                                             {% endif %}
                                                         </div>
                                                         <div class="student-details">
-                                                            <h6 class="student-name">{{ student.get_full_name }}</h6>
-                                                            <span class="student-email">{{ student.email }}</span>
+                                                            <h6 class="student-name">{{ student.first_name }} {{ student.last_name }}</h6>
+                                                            <span class="student-email">{{ student.email|default:"No email" }}</span>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -137,7 +137,7 @@
                                                     <span class="badge badge-class">{{ student.current_class.name }}</span>
                                                 </td>
                                                 <td>
-                                                    <span class="badge badge-section">{{ student.current_section.name }}</span>
+                                                    <span class="badge badge-section">{{ student.current_section.name|default:"No section" }}</span>
                                                 </td>
                                                 <td>
                                                     {% if student.academic_year %}
@@ -171,6 +171,20 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Selected Students Panel -->
+                    <div class="card height-auto mt-4" id="selectedStudentsPanel" style="display: none;">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Selected Students <span class="badge badge-primary" id="selectedCountBadge">0</span></h3>
+                                </div>
+                            </div>
+                            <div class="selected-students-list" id="selectedStudentsList">
+                                <!-- Selected students will be dynamically added here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Promotion Form -->
@@ -183,8 +197,12 @@
                                 </div>
                             </div>
                             
-                            <form method="POST" id="promotionForm">
+                            <!-- MAIN FORM - This will actually submit -->
+                            <form method="POST" id="promotionForm" action="{% url 'student_promotion' %}">
                                 {% csrf_token %}
+                                
+                                <!-- Hidden container for selected students -->
+                                <div id="selectedStudentsHidden" style="display: none;"></div>
                                 
                                 <div class="selected-students-summary mb-4">
                                     <div class="summary-card">
@@ -247,10 +265,10 @@
                                 </div>
                                 
                                 <div class="form-group mt-5">
-                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="promoteBtn" disabled>
+                                    <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="promoteBtn" disabled>
                                         <i class="fas fa-graduation-cap"></i> Promote Students
                                     </button>
-                                    <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
+                                    <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
                                         <i class="fas fa-redo"></i> Reset Form
                                     </button>
                                 </div>
@@ -279,7 +297,7 @@
                                         <i class="fas fa-check-circle"></i>
                                     </div>
                                     <div class="stat-content">
-                                        <h4 id="activeStudentsCount">{{ students.count }}</h4>
+                                        <h4>{{ students.count }}</h4>
                                         <p>Active Students</p>
                                     </div>
                                 </div>
@@ -292,6 +310,99 @@
                                         <p>Available Classes</p>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotion History Table -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Recent Promotions</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'promotion_history' %}">
+                                            <i class="fas fa-history"></i> View Full History
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Student</th>
+                                            <th>From</th>
+                                            <th>To</th>
+                                            <th>Academic Year</th>
+                                            <th>Promoted By</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for promotion in recent_promotions %}
+                                        <tr>
+                                            <td>{{ promotion.promotion_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <div class="student-info">
+                                                    <div class="student-avatar">
+                                                        {% if promotion.student.photo %}
+                                                        <img src="{{ promotion.student.photo.url }}" alt="{{ promotion.student.get_full_name }}">
+                                                        {% else %}
+                                                        <div class="avatar-placeholder">
+                                                            <i class="fas fa-user-graduate"></i>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="student-details">
+                                                        <h6 class="student-name">{{ promotion.student.first_name }} {{ promotion.student.last_name }}</h6>
+                                                        <span class="student-email">{{ promotion.student.student_id }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-class">{{ promotion.from_class.name }}</span>
+                                                {% if promotion.from_section %}
+                                                <span class="badge badge-section">{{ promotion.from_section.name }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success">{{ promotion.to_class.name }}</span>
+                                                {% if promotion.to_section %}
+                                                <span class="badge badge-section">{{ promotion.to_section.name }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-year">{{ promotion.academic_year.name }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">{{ promotion.promoted_by.get_full_name|default:promotion.promoted_by.username }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <div class="empty-state">
+                                                    <div class="empty-icon">
+                                                        <i class="fas fa-history"></i>
+                                                    </div>
+                                                    <h4>No Promotion History</h4>
+                                                    <p>No promotions have been recorded yet.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -321,7 +432,8 @@
                     <p><strong>To:</strong> <span id="confirmNew">New class and section</span></p>
                     <p><strong>Academic Year:</strong> <span id="confirmYear">Selected academic year</span></p>
                 </div>
-                <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+                <div id="selectedStudentsConfirmation"></div>
+                <p class="text-warning mt-3"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
@@ -339,15 +451,23 @@
 {% block extra_js %}
 <script>
 $(document).ready(function() {
-    // CSRF token setup
-    function getCSRFToken() {
-        return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    }
+    // Store student data for quick access
+    const studentData = {};
+    {% for student in students %}
+    studentData[{{ student.id }}] = {
+        name: "{{ student.first_name }} {{ student.last_name }}",
+        studentId: "{{ student.student_id }}",
+        currentClass: "{{ student.current_class.name }}",
+        currentSection: "{{ student.current_section.name|default:'No section' }}",
+        photo: "{% if student.photo %}{{ student.photo.url }}{% else %}none{% endif %}"
+    };
+    {% endfor %}
 
     // Student selection functionality
     $('#selectAll').on('change', function() {
         $('.student-checkbox').prop('checked', this.checked);
         updateSelectedCount();
+        updateSelectedStudentsList();
         updatePromotionPreview();
     });
 
@@ -359,6 +479,7 @@ $(document).ready(function() {
             $('#selectAll').prop('checked', allChecked);
         }
         updateSelectedCount();
+        updateSelectedStudentsList();
         updatePromotionPreview();
     });
 
@@ -368,6 +489,7 @@ $(document).ready(function() {
         $('.student-checkbox').prop('checked', true);
         $('#selectAll').prop('checked', true);
         updateSelectedCount();
+        updateSelectedStudentsList();
         updatePromotionPreview();
     });
 
@@ -377,6 +499,7 @@ $(document).ready(function() {
         $('.student-checkbox').prop('checked', false);
         $('#selectAll').prop('checked', false);
         updateSelectedCount();
+        updateSelectedStudentsList();
         updatePromotionPreview();
     });
 
@@ -384,12 +507,60 @@ $(document).ready(function() {
     function updateSelectedCount() {
         const selectedCount = $('.student-checkbox:checked').length;
         $('#selectedCount').text(selectedCount);
+        $('#selectedCountBadge').text(selectedCount);
         
         if (selectedCount > 0) {
             $('#promoteBtn').prop('disabled', false);
+            $('#selectedStudentsPanel').show();
         } else {
             $('#promoteBtn').prop('disabled', true);
+            $('#selectedStudentsPanel').hide();
         }
+    }
+
+    // Update selected students list
+    function updateSelectedStudentsList() {
+        const selectedStudentsList = $('#selectedStudentsList');
+        selectedStudentsList.empty();
+        
+        $('.student-checkbox:checked').each(function() {
+            const studentId = $(this).val();
+            const student = studentData[studentId];
+            
+            if (student) {
+                const studentElement = `
+                    <div class="selected-student-item" data-student-id="${studentId}">
+                        <div class="student-info">
+                            <div class="student-avatar">
+                                ${student.photo !== 'none' ? 
+                                    `<img src="${student.photo}" alt="${student.name}">` :
+                                    `<div class="avatar-placeholder">
+                                        <i class="fas fa-user-graduate"></i>
+                                    </div>`
+                                }
+                            </div>
+                            <div class="student-details">
+                                <h6 class="student-name">${student.name}</h6>
+                                <span class="student-info-text">${student.studentId} • ${student.currentClass}</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-danger deselect-student" data-student-id="${studentId}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                selectedStudentsList.append(studentElement);
+            }
+        });
+
+        // Add deselect functionality
+        $('.deselect-student').on('click', function() {
+            const studentId = $(this).data('student-id');
+            $(`.student-checkbox[value="${studentId}"]`).prop('checked', false);
+            updateSelectedCount();
+            updateSelectedStudentsList();
+            updatePromotionPreview();
+        });
     }
 
     // Search functionality
@@ -456,42 +627,81 @@ $(document).ready(function() {
         }
     }
 
-    // Form submission with confirmation
-    $('#promotionForm').on('submit', function(e) {
-        e.preventDefault();
-        
+    // Promote button click - Show confirmation modal
+    $('#promoteBtn').on('click', function() {
         const selectedCount = $('.student-checkbox:checked').length;
-        const newClass = $('#newClass option:selected').text();
-        const newSection = $('#newSection option:selected').text();
-        const academicYear = $('#academicYear option:selected').text();
+        const newClass = $('#newClass').val();
+        const newSection = $('#newSection').val();
+        const academicYear = $('#academicYear').val();
+        
+        console.log('Validation check:', {
+            selectedCount: selectedCount,
+            newClass: newClass,
+            newSection: newSection,
+            academicYear: academicYear
+        });
         
         if (selectedCount === 0) {
-            alert('Please select at least one student to promote.');
+            showAlert('Please select at least one student to promote.', 'warning');
             return;
         }
         
-        if (!newClass || !newSection || !academicYear) {
-            alert('Please select new class, section, and academic year.');
+        if (!newClass) {
+            showAlert('Please select a new class.', 'warning');
             return;
         }
         
-        // Get current classes for confirmation
+        if (!newSection) {
+            showAlert('Please select a new section.', 'warning');
+            return;
+        }
+        
+        if (!academicYear) {
+            showAlert('Please select an academic year.', 'warning');
+            return;
+        }
+        
+        // Get current classes and student names for confirmation
         const currentClasses = [];
+        const selectedStudentNames = [];
         $('.student-checkbox:checked').each(function() {
+            const studentId = $(this).val();
+            const student = studentData[studentId];
             const className = $(this).closest('tr').find('.badge-class').text();
-            if (!currentClasses.includes(className)) {
+            
+            if (student && !currentClasses.includes(className)) {
                 currentClasses.push(className);
+            }
+            if (student) {
+                selectedStudentNames.push(student.name);
             }
         });
         
+        const newClassName = $('#newClass option:selected').text();
+        const newSectionName = $('#newSection option:selected').text();
+        const academicYearName = $('#academicYear option:selected').text();
+        
         $('#confirmCount').text(selectedCount);
         $('#confirmCurrent').text(currentClasses.join(', '));
-        $('#confirmNew').text(`${newClass} - ${newSection}`);
-        $('#confirmYear').text(academicYear);
+        $('#confirmNew').text(`${newClassName} - ${newSectionName}`);
+        $('#confirmYear').text(academicYearName);
+        
+        // Show selected students in confirmation
+        let studentsList = '<div class="selected-students-confirmation mt-3"><strong>Selected Students:</strong><div class="confirmation-students-list">';
+        selectedStudentNames.slice(0, 5).forEach(name => {
+            studentsList += `<div class="confirmation-student"><i class="fas fa-user-graduate"></i> ${name}</div>`;
+        });
+        if (selectedStudentNames.length > 5) {
+            studentsList += `<div class="confirmation-student text-muted">... and ${selectedStudentNames.length - 5} more students</div>`;
+        }
+        studentsList += '</div></div>';
+        
+        $('#selectedStudentsConfirmation').html(studentsList);
+        
         $('#confirmationModal').modal('show');
     });
 
-    // Confirm promotion
+    // Confirm promotion - This actually submits the form
     $('#confirmPromotion').on('click', function() {
         const promoteBtn = $(this);
         const originalText = promoteBtn.html();
@@ -500,8 +710,19 @@ $(document).ready(function() {
         promoteBtn.prop('disabled', true);
         promoteBtn.html('<i class="fas fa-spinner fa-spin"></i> Promoting...');
         
+        // Create hidden inputs for selected students
+        const hiddenContainer = $('#selectedStudentsHidden');
+        hiddenContainer.empty();
+        
+        $('.student-checkbox:checked').each(function() {
+            const studentId = $(this).val();
+            hiddenContainer.append(`<input type="hidden" name="students" value="${studentId}">`);
+        });
+        
+        console.log('Submitting form with students:', $('.student-checkbox:checked').length);
+        
         // Submit the form
-        $('#promotionForm').off('submit').submit();
+        $('#promotionForm').submit();
     });
 
     // Reset form
@@ -509,11 +730,51 @@ $(document).ready(function() {
         $('.student-checkbox').prop('checked', false);
         $('#selectAll').prop('checked', false);
         updateSelectedCount();
+        updateSelectedStudentsList();
         $('#promotionPreview').hide();
         $('#newClass').val('');
         $('#newSection').val('');
         $('#academicYear').val('');
     });
+
+    // Clear confirmation modal when hidden
+    $('#confirmationModal').on('hidden.bs.modal', function() {
+        $('#selectedStudentsConfirmation').empty();
+        $('#confirmPromotion').prop('disabled', false).html('<i class="fas fa-check"></i> Confirm Promotion');
+    });
+
+    // Alert function
+    function showAlert(message, type = 'info') {
+        // Remove existing alerts
+        $('.alert-dismissible').alert('close');
+        
+        const alertClass = type === 'warning' ? 'alert-warning' : 
+                          type === 'error' ? 'alert-danger' : 
+                          type === 'success' ? 'alert-success' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <strong>
+                    <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 
+                                     type === 'error' ? 'exclamation-circle' : 
+                                     type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    ${type.charAt(0).toUpperCase() + type.slice(1)}!
+                </strong>
+                ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        
+        // Prepend to messages container
+        $('.row:first').prepend(alertHtml);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            $('.alert').alert('close');
+        }, 5000);
+    }
 
     // Initialize
     updateSelectedCount();
@@ -521,6 +782,131 @@ $(document).ready(function() {
 </script>
 
 <style>
+/* Selected Students Panel Styles */
+.selected-student-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.selected-student-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.selected-student-item .student-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.selected-student-item .student-details h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.selected-student-item .student-info-text {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.deselect-student {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Confirmation modal styles */
+.confirmation-students-list {
+    max-height: 150px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.confirmation-student {
+    padding: 5px 0;
+    border-bottom: 1px solid #f8f9fa;
+    font-size: 14px;
+}
+
+.confirmation-student:last-child {
+    border-bottom: none;
+}
+
+/* Selected Students Panel Styles */
+.selected-student-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.selected-student-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+}
+
+.selected-student-item .student-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.selected-student-item .student-details h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.selected-student-item .student-info-text {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.deselect-student {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* Promotion History Table */
+.badge-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .selected-student-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .selected-student-item .student-info {
+        width: 100%;
+    }
+    
+    .deselect-student {
+        align-self: flex-end;
+    }
+}
+
 :root {
     --primary: #4361ee;
     --secondary: #6c757d;
@@ -534,6 +920,7 @@ $(document).ready(function() {
     --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     --transition: all 0.3s ease;
 }
+
 
 /* Student Info Styles */
 .student-info {

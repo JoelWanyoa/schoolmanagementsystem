@@ -102,6 +102,12 @@
                     <li class="nav-item">
                         <a href="{% url 'add_expense' %}" class="nav-link"><i class="fas fa-angle-right"></i>Add Expense</a>
                     </li>
+                    <!-- In your sidebar or navigation -->
+                    <li class="nav-item">
+                        <a href="{% url 'fee_reminders' %}" class="nav-link">
+                            <i class="fas fa-angle-right"></i>Fee Reminders
+                        </a>
+                    </li>
                 </ul>
             </li>
 
@@ -136,37 +142,37 @@
             {% endif %}
 
             <!-- Teacher Only Sections -->
-            {% if request.user.teacher %}
-            <li class="nav-item sidebar-nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>My Classes</span></a>
-                <ul class="nav sub-group-menu">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Class Schedule</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>My Students</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Attendance</a>
-                    </li>
-                </ul>
-            </li>
+{% if request.user.teacher %}
+<li class="nav-item sidebar-nav-item">
+    <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>My Classes</span></a>
+    <ul class="nav sub-group-menu">
+        <li class="nav-item">
+            <a href="{% url 'teacher_class_schedule' %}" class="nav-link"><i class="fas fa-angle-right"></i>Class Schedule</a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_my_students' %}" class="nav-link"><i class="fas fa-angle-right"></i>My Students</a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_attendance' %}" class="nav-link"><i class="fas fa-angle-right"></i>Attendance</a>
+        </li>
+    </ul>
+</li>
 
-            <li class="nav-item sidebar-nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-open-book"></i><span>Teaching</span></a>
-                <ul class="nav sub-group-menu">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Assignments</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Exam Results</a>
-                    </li>
-                </ul>
-            </li>
-            {% endif %}
+<li class="nav-item sidebar-nav-item">
+    <a href="#" class="nav-link"><i class="flaticon-open-book"></i><span>Teaching</span></a>
+    <ul class="nav sub-group-menu">
+        <li class="nav-item">
+            <a href="{% url 'teacher_subjects' %}" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_assignments' %}" class="nav-link"><i class="fas fa-angle-right"></i>Assignments</a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'teacher_exam_results' %}" class="nav-link"><i class="fas fa-angle-right"></i>Exam Results</a>
+        </li>
+    </ul>
+</li>
+{% endif %}
 
             <!-- Student Only Sections -->
             {% if request.user.student %}

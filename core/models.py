@@ -54,48 +54,6 @@ class Class(models.Model):
     ]
     
     GRADE_LEVELS = [
-        ('PP1', 'Pre-Primary 1'),
-        ('PP2', 'Pre-Primary 2'),
-        ('1', 'Grade 1'),
-        ('2', 'Grade 2'),
-        ('3', 'Grade 3'),
-        ('4', 'Grade 4'),
-        ('5', 'Grade 5'),
-        ('6', 'Grade 6'),
-        ('7', 'Grade 7'),
-        ('8', 'Grade 8'),
-        ('9', 'Grade 9'),
-    ]
-    
-    name = models.CharField(max_length=50)
-    code = models.CharField(max_length=10, unique=True)
-    level_category = models.CharField(max_length=20, choices=LEVEL_CATEGORIES)
-    grade_level = models.CharField(max_length=3, choices=GRADE_LEVELS)
-    capacity = models.IntegerField(default=30)
-    class_teacher = models.ForeignKey('Teacher', on_delete=models.SET_NULL, null=True, blank=True)
-    
-    class Meta:
-        ordering = ['level_category', 'grade_level']
-        verbose_name_plural = 'Classes'
-    
-    def __str__(self):
-        return f"{self.get_level_category_display()} - {self.get_grade_level_display()}"
-    
-    def save(self, *args, **kwargs):
-        if not self.name:
-            self.name = f"{self.get_level_category_display()} - {self.get_grade_level_display()}"
-        if not self.code:
-            self.code = f"{self.level_category}_{self.grade_level}"
-        super().save(*args, **kwargs)
-
-class Class(models.Model):
-    LEVEL_CATEGORIES = [
-        ('ECDE', 'Early Childhood Development Education'),
-        ('PRIMARY', 'Primary'),
-        ('JUNIOR_SECONDARY', 'Junior Secondary'),
-    ]
-    
-    GRADE_LEVELS = [
         # ECDE Levels
         ('PP1', 'Pre-Primary 1'),
         ('PP2', 'Pre-Primary 2'),
@@ -225,6 +183,11 @@ class Student(models.Model):
     # Add these fields for online status
     is_online = models.BooleanField(default=False)
     last_activity = models.DateTimeField(default=timezone.now)
+
+    current_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True, related_name='students')
+    current_section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, related_name='students')
+    roll_number = models.CharField(max_length=10)
+    admission_date = models.DateField(default=timezone.now)
     
     class Meta:
         ordering = ['current_class', 'roll_number']
@@ -360,8 +323,6 @@ class Teacher(models.Model):
                 new_id = 1
             self.teacher_id = f"TCH-{year}-{new_id:04d}"
         super().save(*args, **kwargs)
-
-# ... (keep all other models the same)
 
 class AdmissionForm(models.Model):
     STATUS_CHOICES = [
@@ -524,17 +485,20 @@ class AdmissionForm(models.Model):
 
 class Attendance(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    date = models.DateField(default=timezone.now)
-    status = models.BooleanField(default=True)  # True for Present, False for Absent
+    date = models.DateField()
+    status = models.BooleanField(default=True)  # True for present, False for absent
     remarks = models.TextField(blank=True)
+    marked_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         unique_together = ['student', 'date']
-        ordering = ['-date', 'student']
+        ordering = ['-date', 'student__roll_number']
     
     def __str__(self):
         status = "Present" if self.status else "Absent"
-        return f"{self.student} - {self.date} - {status}"
+        return f"{self.student.full_name} - {self.date} - {status}"
 
 class Exam(models.Model):
     EXAM_TYPES = [
@@ -554,6 +518,86 @@ class Exam(models.Model):
     
     def __str__(self):
         return f"{self.name} - {self.subject} - {self.class_name}"
+
+class Assignment(models.Model):
+    ASSIGNMENT_TYPES = (
+        ('HOMEWORK', 'Homework'),
+        ('PROJECT', 'Project'),
+        ('QUIZ', 'Quiz'),
+        ('ESSAY', 'Essay'),
+        ('PRESENTATION', 'Presentation'),
+    )
+    
+    STATUS_CHOICES = (
+        ('DRAFT', 'Draft'),
+        ('PUBLISHED', 'Published'),
+        ('CLOSED', 'Closed'),
+    )
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    class_level = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='assignments')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='assignments')
+    assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPES, default='HOMEWORK')
+    total_marks = models.DecimalField(max_digits=6, decimal_places=2, default=100)
+    due_date = models.DateTimeField()
+    attachment = models.FileField(upload_to='assignments/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.title} - {self.class_level.name}"
+    
+    @property
+    def is_overdue(self):
+        return timezone.now() > self.due_date
+    
+    @property
+    def submitted_count(self):
+        """Count how many students have submitted this assignment"""
+        return self.submissions.filter(submitted=True).count()
+    
+    @property
+    def total_students(self):
+        """Get total number of students in the class"""
+        if hasattr(self.class_level, 'students'):
+            return self.class_level.students.filter(is_active=True).count()
+        return 0
+    
+    @property
+    def submission_rate(self):
+        """Calculate submission rate as percentage"""
+        if self.total_students > 0:
+            return (self.submitted_count / self.total_students) * 100
+        return 0
+
+class AssignmentSubmission(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name='submissions')
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='assignment_submissions')
+    submission_file = models.FileField(upload_to='assignment_submissions/', blank=True, null=True)
+    submission_text = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    marks_obtained = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    feedback = models.TextField(blank=True)
+    submitted = models.BooleanField(default=False)
+    
+    class Meta:
+        unique_together = ['assignment', 'student']
+        ordering = ['-submitted_at']
+    
+    def __str__(self):
+        return f"{self.student.full_name} - {self.assignment.title}"
+    
+    @property
+    def is_late(self):
+        if self.submitted_at and self.assignment.due_date:
+            return self.submitted_at > self.assignment.due_date
+        return False
 
 class ExamResult(models.Model):
     exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
@@ -586,6 +630,24 @@ class ExamResult(models.Model):
                 self.grade = 'F'
         super().save(*args, **kwargs)
 
+class PromotionHistory(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='promotions')
+    from_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='promoted_from')
+    from_section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name='promoted_from_section')
+    to_class = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='promoted_to')
+    to_section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True, blank=True, related_name='promoted_to_section')
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    promotion_date = models.DateTimeField(auto_now_add=True)
+    promoted_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name_plural = "Promotion History"
+        ordering = ['-promotion_date']
+    
+    def __str__(self):
+        return f"{self.student.full_name} - {self.from_class.name} to {self.to_class.name}"
+
+        
 class Fee(models.Model):
     STATUS_CHOICES = (
         ('paid', 'Paid'),
@@ -642,6 +704,27 @@ class Fee(models.Model):
     
     def get_fee_type_display(self):
         return dict(self.FEE_TYPES).get(self.fee_type, self.fee_type)
+
+class Reminder(models.Model):
+    REMINDER_METHODS = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+        ('both', 'Both'),
+    ]
+    
+    fee = models.ForeignKey(Fee, on_delete=models.CASCADE, related_name='reminders')
+    student_name = models.CharField(max_length=200)
+    fee_type = models.CharField(max_length=100)
+    sent_date = models.DateTimeField(auto_now_add=True)
+    sent_via = models.CharField(max_length=50, choices=REMINDER_METHODS, default='email')
+    status = models.CharField(max_length=20, default='sent')
+    notes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-sent_date']
+    
+    def __str__(self):
+        return f"Reminder for {self.student_name} - {self.sent_date.strftime('%Y-%m-%d %H:%M')}"
 
 class Expense(models.Model):
     EXPENSE_TYPES = (

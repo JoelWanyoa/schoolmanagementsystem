@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Subjects - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                        <li class="breadcrumb-item active">My Subjects</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">My Subjects</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects Overview -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ subjects.count }}</h4>
+                            <p class="text-muted mb-0">Total Subjects</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="flaticon-open-book text-primary h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ teacher_classes.count }}</h4>
+                            <p class="text-muted mb-0">Classes Teaching</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="flaticon-classmates text-success h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subjects List -->
+    <div class="row">
+        {% for subject in subjects %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card subject-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h4 class="card-title mb-1">{{ subject.name }}</h4>
+                            <p class="text-muted mb-0">{{ subject.subject_code }}</p>
+                        </div>
+                        <span class="badge bg-primary">{{ subject.get_subject_type_display }}</span>
+                    </div>
+                    
+                    <p class="card-text text-muted">{{ subject.description|default:"No description available." }}</p>
+                    
+                    <div class="subject-meta">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5 class="mb-0">5</h5>
+                                <small class="text-muted">Classes</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="mb-0">125</h5>
+                                <small class="text-muted">Students</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="mb-0">12</h5>
+                                <small class="text-muted">Lessons</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="progress mb-2">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 75%" 
+                                 aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+                                75% Completion
+                            </div>
+                        </div>
+                        <small class="text-muted">Curriculum Progress</small>
+                    </div>
+                    
+                    <div class="mt-3 d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-book-open me-1"></i> Lesson Plans
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-tasks me-1"></i> Assignments
+                        </a>
+                        <a href="{% url 'teacher_exam_results' %}?subject={{ subject.id }}" 
+                           class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-chart-line me-1"></i> Results
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="flaticon-open-book display-1 text-muted"></i>
+                    <h4 class="mt-3">No Subjects Assigned</h4>
+                    <p class="text-muted">You haven't been assigned to teach any subjects yet.</p>
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.subject-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid #e3eaef;
+}
+.subject-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.subject-meta {
+    border-top: 1px solid #e3eaef;
+    border-bottom: 1px solid #e3eaef;
+    padding: 15px 0;
+    margin: 15px 0;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Add click handlers for subject cards
+    $('.subject-card').click(function() {
+        // Navigate to subject details or lesson plans
+        window.location.href = $(this).find('.btn-outline-primary').attr('href');
+    });
+    
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

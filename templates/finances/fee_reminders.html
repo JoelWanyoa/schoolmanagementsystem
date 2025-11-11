@@ -1,0 +1,1371 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Fee Reminders - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcrumbs Area Start -->
+            <div class="breadcrumbs-area">
+                <h3>Fee Reminders</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_fees' %}">Fees</a></li>
+                    <li>Fee Reminders</li>
+                </ul>
+            </div>
+            <!-- Breadcrumbs Area End -->
+
+            <!-- Display Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <strong>
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i> Error!
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle"></i> Success!
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i> Warning!
+                            {% elif message.tags == 'info' %}
+                                <i class="fas fa-info-circle"></i> Info!
+                            {% endif %}
+                        </strong>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Statistics Cards -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-fb hover-fb">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Overdue Fees</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ total_overdue }}</div>
+                            <div class="social-amount">Kes. {{ total_overdue_amount|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-twitter hover-twitter">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Due This Week</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ total_upcoming }}</div>
+                            <div class="social-amount">Kes. {{ total_upcoming_amount|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-gplus hover-gplus">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">All Unpaid</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ total_unpaid }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-linkedin hover-linkedin">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Today's Date</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ today|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Quick Actions</h6>
+                                <div>
+                                    <a href="{% url 'all_fees' %}" class="fw-btn-fill text-center btn-primary btn-sm">
+                                        <i class="fas fa-money-bill-wave"></i> Manage Fees
+                                    </a>
+                                    <button class="fw-btn-fill text-center btn-success btn-sm ml-2" id="sendAllRemindersBtn">
+                                        <i class="fas fa-paper-plane"></i> Send All Reminders
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Search & Filter</h3>
+                                </div>
+                            </div>
+                            <form method="GET" class="mg-b-20">
+                                <div class="row gutters-8">
+                                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                        <input type="text" name="search" class="form-control" placeholder="Search by student name or ID" value="{{ search_query|default:'' }}">
+                                    </div>
+                                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                        <select name="class" class="form-control">
+                                            <option value="">All Classes</option>
+                                            {% for class in classes %}
+                                            <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"i" %}selected{% endif %}>
+                                                {{ class.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-2-xxxl col-xl-2 col-lg-2 col-12 form-group">
+                                        <select name="status" class="form-control">
+                                            <option value="">All Status</option>
+                                            <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>Overdue Only</option>
+                                            <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming Only</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-2-xxxl col-xl-2 col-lg-2 col-12 form-group">
+                                        <button type="submit" class="fw-btn-fill btn-gradient-yellow w-100">
+                                            <i class="fas fa-search"></i> SEARCH
+                                        </button>
+                                    </div>
+                                    <div class="col-2-xxxl col-xl-2 col-lg-2 col-12 form-group">
+                                        <a href="{% url 'fee_reminders' %}" class="fw-btn-fill text-center btn-secondary w-100">
+                                            <i class="fas fa-redo"></i> RESET
+                                        </a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row gutters-20">
+                <!-- Overdue Fees Section -->
+                <div class="col-xl-8 col-lg-7">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>
+                                        <i class="fas fa-exclamation-triangle text-danger mr-2"></i>
+                                        Overdue Fees
+                                        <span class="badge badge-danger ml-2" id="overdueCount">{{ overdue_fees.count }}</span>
+                                    </h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="selectAllOverdueMenu">
+                                            <i class="fas fa-check-square text-success"></i> Select All
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="deselectAllOverdueMenu">
+                                            <i class="fas fa-times-circle text-danger"></i> Deselect All
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#" id="selectVisibleOverdueMenu">
+                                            <i class="fas fa-eye text-info"></i> Select Visible
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="selectByClassMenu">
+                                            <i class="fas fa-users text-primary"></i> Select by Class
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if overdue_fees %}
+                            <!-- Bulk Actions Panel -->
+                            <div class="bulk-actions-panel mb-3" id="bulkActionsPanel" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-muted mr-3" id="selectedCount">0 fees selected</span>
+                                        <div class="bulk-action-buttons">
+                                            <button type="button" class="btn btn-outline-primary btn-sm mr-2" id="selectAllBtn">
+                                                <i class="fas fa-check-square"></i> Select All
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="deselectAllBtn">
+                                                <i class="fas fa-times-circle"></i> Deselect All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="bulk-actions">
+                                        <form method="POST" action="{% url 'send_bulk_reminders' %}" id="bulkReminderForm" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="fee_ids" id="bulkFeeIds">
+                                            <button type="submit" class="btn btn-primary btn-sm" id="sendBulkReminders">
+                                                <i class="fas fa-paper-plane"></i> Send Reminders to Selected
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-success btn-sm ml-2" id="markSelectedPaid">
+                                            <i class="fas fa-check"></i> Mark Selected Paid
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap" id="overdueTable">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="selectAllOverdue">
+                                                    <label class="form-check-label">ID</label>
+                                                </div>
+                                            </th>
+                                            <th>Student Details</th>
+                                            <th>Fee Information</th>
+                                            <th>Due Status</th>
+                                            <th>Contact Info</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fee in overdue_fees %}
+                                        <tr class="overdue-row" data-student-name="{{ fee.student.first_name }} {{ fee.student.last_name }}" data-student-id="{{ fee.student.student_id }}" data-class="{{ fee.student.current_class.name }}">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input fee-checkbox" value="{{ fee.id }}" data-fee-id="{{ fee.id }}" data-class="{{ fee.student.current_class.name }}">
+                                                    <label class="form-check-label">#{{ fee.id }}</label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="student-info">
+                                                    <div class="student-avatar">
+                                                        {% if fee.student.photo %}
+                                                        <img src="{{ fee.student.photo.url }}" alt="{{ fee.student.full_name }}" class="rounded-circle" width="40" height="40">
+                                                        {% else %}
+                                                        <img src="{% static 'img/figure/student2.png' %}" alt="student" class="rounded-circle" width="40" height="40">
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="student-details">
+                                                        <h6 class="student-name">{{ fee.student.first_name }} {{ fee.student.last_name }}</h6>
+                                                        <div class="student-meta">
+                                                            <span class="student-id">{{ fee.student.student_id }}</span>
+                                                            <span class="student-class">{{ fee.student.current_class.name }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="fee-info">
+                                                    <span class="fee-type badge badge-info">{{ fee.get_fee_type_display }}</span>
+                                                    <div class="fee-amount">Kes. {{ fee.amount }}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="due-status">
+                                                    <div class="due-date text-danger">{{ fee.due_date }}</div>
+                                                    <div class="days-overdue">
+                                                        <span class="badge badge-danger">
+                                                            {{ today|timesince:fee.due_date }} overdue
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="contact-info">
+                                                    {% if fee.student.guardian_phone %}
+                                                    <div class="contact-item">
+                                                        <i class="fas fa-phone"></i>
+                                                        {{ fee.student.guardian_phone }}
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if fee.student.guardian_email %}
+                                                    <div class="contact-item">
+                                                        <i class="fas fa-envelope"></i>
+                                                        {{ fee.student.guardian_email }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                        <span class="flaticon-more-button-of-three-dots"></span>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <form method="POST" action="{% url 'send_fee_reminder' fee.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-paper-plane text-primary"></i> Send Reminder
+                                                            </button>
+                                                        </form>
+                                                        <a class="dropdown-item" href="{% url 'mark_paid' fee.id %}">
+                                                            <i class="fas fa-check text-success"></i> Mark as Paid
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'fee_detail' fee.id %}">
+                                                            <i class="fas fa-eye text-info"></i> View Details
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="#">
+                                                            <i class="fas fa-edit text-warning"></i> Edit Fee
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h4>No Overdue Fees</h4>
+                                <p class="text-muted">Great! All fees are up to date.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Fees Section -->
+                    <div class="card height-auto mt-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>
+                                        <i class="fas fa-clock text-warning mr-2"></i>
+                                        Due This Week
+                                        <span class="badge badge-warning ml-2" id="upcomingCount">{{ upcoming_fees.count }}</span>
+                                    </h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="selectAllUpcomingMenu">
+                                            <i class="fas fa-check-square text-success"></i> Select All
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="deselectAllUpcomingMenu">
+                                            <i class="fas fa-times-circle text-danger"></i> Deselect All
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#" id="selectVisibleUpcomingMenu">
+                                            <i class="fas fa-eye text-info"></i> Select Visible
+                                        </a>
+                                        <a class="dropdown-item" href="#" id="selectByClassUpcomingMenu">
+                                            <i class="fas fa-users text-primary"></i> Select by Class
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if upcoming_fees %}
+                            <!-- Bulk Actions Panel for Upcoming Fees -->
+                            <div class="bulk-actions-panel mb-3" id="bulkActionsPanelUpcoming" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-muted mr-3" id="selectedCountUpcoming">0 fees selected</span>
+                                        <div class="bulk-action-buttons">
+                                            <button type="button" class="btn btn-outline-primary btn-sm mr-2" id="selectAllUpcomingBtn">
+                                                <i class="fas fa-check-square"></i> Select All
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="deselectAllUpcomingBtn">
+                                                <i class="fas fa-times-circle"></i> Deselect All
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="bulk-actions">
+                                        <form method="POST" action="{% url 'send_bulk_reminders' %}" id="bulkReminderFormUpcoming" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="fee_ids" id="bulkFeeIdsUpcoming">
+                                            <button type="submit" class="btn btn-primary btn-sm" id="sendBulkRemindersUpcoming">
+                                                <i class="fas fa-paper-plane"></i> Send Reminders to Selected
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-success btn-sm ml-2" id="markSelectedPaidUpcoming">
+                                            <i class="fas fa-check"></i> Mark Selected Paid
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap" id="upcomingTable">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" id="selectAllUpcoming">
+                                                    <label class="form-check-label">ID</label>
+                                                </div>
+                                            </th>
+                                            <th>Student Details</th>
+                                            <th>Fee Information</th>
+                                            <th>Due Status</th>
+                                            <th>Contact Info</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fee in upcoming_fees %}
+                                        <tr class="upcoming-row" data-student-name="{{ fee.student.first_name }} {{ fee.student.last_name }}" data-student-id="{{ fee.student.student_id }}" data-class="{{ fee.student.current_class.name }}">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input fee-checkbox-upcoming" value="{{ fee.id }}" data-fee-id="{{ fee.id }}" data-class="{{ fee.student.current_class.name }}">
+                                                    <label class="form-check-label">#{{ fee.id }}</label>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="student-info">
+                                                    <div class="student-avatar">
+                                                        {% if fee.student.photo %}
+                                                        <img src="{{ fee.student.photo.url }}" alt="{{ fee.student.full_name }}" class="rounded-circle" width="40" height="40">
+                                                        {% else %}
+                                                        <img src="{% static 'img/figure/student2.png' %}" alt="student" class="rounded-circle" width="40" height="40">
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="student-details">
+                                                        <h6 class="student-name">{{ fee.student.first_name }} {{ fee.student.last_name }}</h6>
+                                                        <div class="student-meta">
+                                                            <span class="student-id">{{ fee.student.student_id }}</span>
+                                                            <span class="student-class">{{ fee.student.current_class.name }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="fee-info">
+                                                    <span class="fee-type badge badge-info">{{ fee.get_fee_type_display }}</span>
+                                                    <div class="fee-amount">Kes. {{ fee.amount }}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="due-status">
+                                                    <div class="due-date {% if fee.due_date == today %}text-warning font-weight-bold{% endif %}">
+                                                        {{ fee.due_date }}
+                                                    </div>
+                                                    <div class="days-left">
+                                                        <span class="badge badge-warning">
+                                                            Due in {{ fee.due_date|timeuntil:today }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="contact-info">
+                                                    {% if fee.student.guardian_phone %}
+                                                    <div class="contact-item">
+                                                        <i class="fas fa-phone"></i>
+                                                        {{ fee.student.guardian_phone }}
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if fee.student.guardian_email %}
+                                                    <div class="contact-item">
+                                                        <i class="fas fa-envelope"></i>
+                                                        {{ fee.student.guardian_email }}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                        <span class="flation-more-button-of-three-dots"></span>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <form method="POST" action="{% url 'send_fee_reminder' fee.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-paper-plane text-primary"></i> Send Reminder
+                                                            </button>
+                                                        </form>
+                                                        <a class="dropdown-item" href="{% url 'mark_paid' fee.id %}">
+                                                            <i class="fas fa-check text-success"></i> Mark as Paid
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item" href="{% url 'fee_detail' fee.id %}">
+                                                            <i class="fas fa-eye text-info"></i> View Details
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <div class="empty-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h4>No Upcoming Fees</h4>
+                                <p class="text-muted">No fees due in the next 7 days.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Sent Reminders -->
+                <div class="col-xl-4 col-lg-5">
+                    <!-- Quick Stats -->
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Reminder Summary</h3>
+                            </div>
+                            <div class="reminder-stats">
+                                <div class="stat-item">
+                                    <div class="stat-icon overdue">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ total_overdue }}</h4>
+                                        <p>Overdue Fees</p>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon upcoming">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ total_upcoming }}</h4>
+                                        <p>Due This Week</p>
+                                    </div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-icon total">
+                                        <i class="fas fa-list"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <h4>{{ total_unpaid }}</h4>
+                                        <p>Total Unpaid</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sent Reminders History -->
+                    <div class="card height-auto mt-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Recent Reminders</h3>
+                            </div>
+                            <div class="reminders-history">
+                                {% if recent_reminders %}
+                                    {% for reminder in recent_reminders %}
+                                    <div class="reminder-item">
+                                        <div class="reminder-icon">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </div>
+                                        <div class="reminder-content">
+                                            <h6>{{ reminder.student_name }}</h6>
+                                            <p>Fee: {{ reminder.fee_type }}</p>
+                                            <small class="text-muted">{{ reminder.sent_date|timesince }} ago</small>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="empty-state small">
+                                        <div class="empty-icon">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </div>
+                                        <h6>No Recent Reminders</h6>
+                                        <p class="text-muted">Sent reminders will appear here</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card height-auto mt-4">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h3>Quick Actions</h3>
+                            </div>
+                            <div class="quick-actions">
+                                <a href="{% url 'all_fees' %}" class="quick-action-item">
+                                    <div class="action-icon">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h6>Manage All Fees</h6>
+                                        <p>View and manage all fee records</p>
+                                    </div>
+                                </a>
+                                <a href="#" class="quick-action-item" id="sendAllRemindersSidebar">
+                                    <div class="action-icon">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h6>Send All Reminders</h6>
+                                        <p>Send reminders for all overdue fees</p>
+                                    </div>
+                                </a>
+                                <a href="{% url 'add_fee' %}" class="quick-action-item">
+                                    <div class="action-icon">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <div class="action-content">
+                                        <h6>Add New Fee</h6>
+                                        <p>Create a new fee record</p>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send All Reminders Confirmation Modal -->
+<div class="modal fade" id="sendAllRemindersModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send All Reminders</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-icon">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <p>Are you sure you want to send reminders for all <strong>{{ overdue_fees.count }}</strong> overdue fees?</p>
+                <div class="confirmation-details">
+                    <p>This will send reminders to all parents/guardians of students with overdue fees.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'send_bulk_reminders' %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="fee_ids" value="all">
+                    <button type="submit" class="btn btn-primary">Send All Reminders</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Select by Class Modal for Overdue -->
+<div class="modal fade" id="selectByClassModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Fees by Class</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Select all overdue fees for a specific class:</p>
+                <div class="form-group">
+                    <select class="form-control" id="classSelection">
+                        <option value="">Select a Class</option>
+                        {% for class in classes %}
+                        <option value="{{ class.name }}">{{ class.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmClassSelection">Select Class</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Select by Class Modal for Upcoming -->
+<div class="modal fade" id="selectByClassUpcomingModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Fees by Class</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Select all upcoming fees for a specific class:</p>
+                <div class="form-group">
+                    <select class="form-control" id="classSelectionUpcoming">
+                        <option value="">Select a Class</option>
+                        {% for class in classes %}
+                        <option value="{{ class.name }}">{{ class.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmClassSelectionUpcoming">Select Class</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    console.log('Document ready - initializing checkboxes');
+    
+    // Force show all checkboxes
+    $('.form-check-input').each(function() {
+        $(this).css({
+            'opacity': '1',
+            'visibility': 'visible',
+            'display': 'block',
+            'width': '18px',
+            'height': '18px',
+            'position': 'relative'
+        });
+    });
+
+    // ========== OVERDUE FEES FUNCTIONALITY ==========
+    
+    // Simple check all functionality for overdue
+    $('#selectAllOverdue').on('change', function() {
+        console.log('Select all overdue changed:', this.checked);
+        var isChecked = $(this).prop('checked');
+        $('.fee-checkbox').prop('checked', isChecked);
+        updateSelectedCount();
+    });
+
+    // Individual checkbox change for overdue
+    $(document).on('change', '.fee-checkbox', function() {
+        console.log('Individual overdue checkbox changed');
+        updateSelectedCount();
+    });
+
+    // Update selected count and bulk actions panel for overdue
+    function updateSelectedCount() {
+        var checkedCount = $('.fee-checkbox:checked').length;
+        console.log('Overdue checked count:', checkedCount);
+        
+        var selectedCountElement = $('#selectedCount');
+        var bulkActionsPanel = $('#bulkActionsPanel');
+        var sendBulkButton = $('#sendBulkReminders');
+        var markSelectedButton = $('#markSelectedPaid');
+        
+        if (checkedCount > 0) {
+            selectedCountElement.text(checkedCount + ' fee(s) selected');
+            bulkActionsPanel.show();
+            sendBulkButton.prop('disabled', false);
+            markSelectedButton.prop('disabled', false);
+            
+            // Update hidden input with selected fee IDs
+            var selectedIds = [];
+            $('.fee-checkbox:checked').each(function() {
+                selectedIds.push($(this).data('fee-id'));
+            });
+            $('#bulkFeeIds').val(selectedIds.join(','));
+            console.log('Selected overdue IDs:', selectedIds);
+        } else {
+            selectedCountElement.text('0 fees selected');
+            bulkActionsPanel.hide();
+            sendBulkButton.prop('disabled', true);
+            markSelectedButton.prop('disabled', true);
+        }
+    }
+
+    // Select All from dropdown menu for overdue
+    $('#selectAllOverdueMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Select all overdue menu clicked');
+        $('.fee-checkbox').prop('checked', true);
+        $('#selectAllOverdue').prop('checked', true);
+        updateSelectedCount();
+    });
+
+    // Deselect All from dropdown menu for overdue
+    $('#deselectAllOverdueMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Deselect all overdue menu clicked');
+        $('.fee-checkbox').prop('checked', false);
+        $('#selectAllOverdue').prop('checked', false);
+        updateSelectedCount();
+    });
+
+    // Select Visible from dropdown menu for overdue
+    $('#selectVisibleOverdueMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Select visible overdue menu clicked');
+        $('.overdue-row:visible .fee-checkbox').prop('checked', true);
+        updateSelectedCount();
+    });
+
+    // Select by Class from dropdown menu for overdue
+    $('#selectByClassMenu').on('click', function(e) {
+        e.preventDefault();
+        $('#selectByClassModal').modal('show');
+    });
+
+    // Confirm class selection for overdue
+    $('#confirmClassSelection').on('click', function() {
+        var selectedClass = $('#classSelection').val();
+        if (selectedClass) {
+            $('.fee-checkbox').prop('checked', false);
+            $('.fee-checkbox[data-class="' + selectedClass + '"]').prop('checked', true);
+            updateSelectedCount();
+            $('#selectByClassModal').modal('hide');
+        }
+    });
+
+    // Bulk action buttons for overdue
+    $('#selectAllBtn').on('click', function() {
+        $('.fee-checkbox').prop('checked', true);
+        $('#selectAllOverdue').prop('checked', true);
+        updateSelectedCount();
+    });
+
+    $('#deselectAllBtn').on('click', function() {
+        $('.fee-checkbox').prop('checked', false);
+        $('#selectAllOverdue').prop('checked', false);
+        updateSelectedCount();
+    });
+
+    // ========== UPCOMING FEES FUNCTIONALITY ==========
+    
+    // Simple check all functionality for upcoming
+    $('#selectAllUpcoming').on('change', function() {
+        console.log('Select all upcoming changed:', this.checked);
+        var isChecked = $(this).prop('checked');
+        $('.fee-checkbox-upcoming').prop('checked', isChecked);
+        updateSelectedCountUpcoming();
+    });
+
+    // Individual checkbox change for upcoming
+    $(document).on('change', '.fee-checkbox-upcoming', function() {
+        console.log('Individual upcoming checkbox changed');
+        updateSelectedCountUpcoming();
+    });
+
+    // Update selected count and bulk actions panel for upcoming
+    function updateSelectedCountUpcoming() {
+        var checkedCount = $('.fee-checkbox-upcoming:checked').length;
+        console.log('Upcoming checked count:', checkedCount);
+        
+        var selectedCountElement = $('#selectedCountUpcoming');
+        var bulkActionsPanel = $('#bulkActionsPanelUpcoming');
+        var sendBulkButton = $('#sendBulkRemindersUpcoming');
+        var markSelectedButton = $('#markSelectedPaidUpcoming');
+        
+        if (checkedCount > 0) {
+            selectedCountElement.text(checkedCount + ' fee(s) selected');
+            bulkActionsPanel.show();
+            sendBulkButton.prop('disabled', false);
+            markSelectedButton.prop('disabled', false);
+            
+            // Update hidden input with selected fee IDs
+            var selectedIds = [];
+            $('.fee-checkbox-upcoming:checked').each(function() {
+                selectedIds.push($(this).data('fee-id'));
+            });
+            $('#bulkFeeIdsUpcoming').val(selectedIds.join(','));
+            console.log('Selected upcoming IDs:', selectedIds);
+        } else {
+            selectedCountElement.text('0 fees selected');
+            bulkActionsPanel.hide();
+            sendBulkButton.prop('disabled', true);
+            markSelectedButton.prop('disabled', true);
+        }
+    }
+
+    // Select All from dropdown menu for upcoming
+    $('#selectAllUpcomingMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Select all upcoming menu clicked');
+        $('.fee-checkbox-upcoming').prop('checked', true);
+        $('#selectAllUpcoming').prop('checked', true);
+        updateSelectedCountUpcoming();
+    });
+
+    // Deselect All from dropdown menu for upcoming
+    $('#deselectAllUpcomingMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Deselect all upcoming menu clicked');
+        $('.fee-checkbox-upcoming').prop('checked', false);
+        $('#selectAllUpcoming').prop('checked', false);
+        updateSelectedCountUpcoming();
+    });
+
+    // Select Visible from dropdown menu for upcoming
+    $('#selectVisibleUpcomingMenu').on('click', function(e) {
+        e.preventDefault();
+        console.log('Select visible upcoming menu clicked');
+        $('.upcoming-row:visible .fee-checkbox-upcoming').prop('checked', true);
+        updateSelectedCountUpcoming();
+    });
+
+    // Select by Class from dropdown menu for upcoming
+    $('#selectByClassUpcomingMenu').on('click', function(e) {
+        e.preventDefault();
+        $('#selectByClassUpcomingModal').modal('show');
+    });
+
+    // Confirm class selection for upcoming
+    $('#confirmClassSelectionUpcoming').on('click', function() {
+        var selectedClass = $('#classSelectionUpcoming').val();
+        if (selectedClass) {
+            $('.fee-checkbox-upcoming').prop('checked', false);
+            $('.fee-checkbox-upcoming[data-class="' + selectedClass + '"]').prop('checked', true);
+            updateSelectedCountUpcoming();
+            $('#selectByClassUpcomingModal').modal('hide');
+        }
+    });
+
+    // Bulk action buttons for upcoming
+    $('#selectAllUpcomingBtn').on('click', function() {
+        $('.fee-checkbox-upcoming').prop('checked', true);
+        $('#selectAllUpcoming').prop('checked', true);
+        updateSelectedCountUpcoming();
+    });
+
+    $('#deselectAllUpcomingBtn').on('click', function() {
+        $('.fee-checkbox-upcoming').prop('checked', false);
+        $('#selectAllUpcoming').prop('checked', false);
+        updateSelectedCountUpcoming();
+    });
+
+    // Send all reminders buttons (for overdue section)
+    $('#sendAllRemindersBtn, #sendAllRemindersSidebar').on('click', function(e) {
+        e.preventDefault();
+        $('#sendAllRemindersModal').modal('show');
+    });
+
+    // Mark selected as paid for overdue
+    $('#markSelectedPaid').on('click', function() {
+        var selectedIds = $('#bulkFeeIds').val();
+        if (selectedIds) {
+            if (confirm('Are you sure you want to mark the selected overdue fees as paid? This action cannot be undone.')) {
+                var form = $('<form>', {
+                    'method': 'POST',
+                    'action': "{% url 'mark_bulk_paid' %}"
+                });
+                
+                var csrfToken = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'csrfmiddlewaretoken',
+                    'value': '{{ csrf_token }}'
+                });
+                
+                var feeIdsInput = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'fee_ids',
+                    'value': selectedIds
+                });
+                
+                form.append(csrfToken, feeIdsInput);
+                $('body').append(form);
+                form.submit();
+            }
+        }
+    });
+
+    // Mark selected as paid for upcoming
+    $('#markSelectedPaidUpcoming').on('click', function() {
+        var selectedIds = $('#bulkFeeIdsUpcoming').val();
+        if (selectedIds) {
+            if (confirm('Are you sure you want to mark the selected upcoming fees as paid? This action cannot be undone.')) {
+                var form = $('<form>', {
+                    'method': 'POST',
+                    'action': "{% url 'mark_bulk_paid' %}"
+                });
+                
+                var csrfToken = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'csrfmiddlewaretoken',
+                    'value': '{{ csrf_token }}'
+                });
+                
+                var feeIdsInput = $('<input>', {
+                    'type': 'hidden',
+                    'name': 'fee_ids',
+                    'value': selectedIds
+                });
+                
+                form.append(csrfToken, feeIdsInput);
+                $('body').append(form);
+                form.submit();
+            }
+        }
+    });
+
+    // Enhanced Client-side search functionality for overdue
+    $('input[name="search"]').on('input', function() {
+        var searchTerm = $(this).val().toLowerCase();
+        var visibleCount = 0;
+        
+        $('.overdue-row').each(function() {
+            var studentName = $(this).data('student-name').toLowerCase();
+            var studentId = $(this).data('student-id').toLowerCase();
+            var studentClass = $(this).data('class').toLowerCase();
+            
+            if (studentName.includes(searchTerm) || studentId.includes(searchTerm) || studentClass.includes(searchTerm)) {
+                $(this).show();
+                visibleCount++;
+            } else {
+                $(this).hide();
+            }
+        });
+        
+        $('#overdueCount').text(visibleCount);
+    });
+
+    // Initialize
+    updateSelectedCount();
+    updateSelectedCountUpcoming();
+    console.log('Initialization complete');
+});
+</script>
+
+<style>
+/* Force checkbox visibility with important flags */
+/* Completely reset checkbox styling */
+/* Add this to your CSS to prevent duplicate checkboxes */
+.form-check-input::before,
+.form-check-input::after {
+    display: none !important;
+}
+
+.form-check-input {
+    all: unset !important;
+    -webkit-appearance: checkbox !important;
+    -moz-appearance: checkbox !important;
+    appearance: checkbox !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-block !important;
+    position: relative !important;
+    margin-right: 8px !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.form-check {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+}
+
+.form-check-label {
+    margin-left: 5px !important;
+    cursor: pointer !important;
+}
+
+/* Bulk Actions Panel */
+.bulk-actions-panel {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-state i {
+    opacity: 0.5;
+}
+
+.badge {
+    font-size: 0.75em;
+}
+
+.table img.rounded-circle {
+    object-fit: cover;
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.student-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.student-details h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.student-meta {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.student-id {
+    color: #6c757d;
+}
+
+.student-class {
+    color: #4361ee;
+    font-weight: 500;
+}
+
+.fee-info {
+    text-align: center;
+}
+
+.fee-amount {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-top: 4px;
+}
+
+.due-status {
+    text-align: center;
+}
+
+.due-date {
+    font-weight: 500;
+}
+
+.contact-info {
+    font-size: 12px;
+}
+
+.contact-item {
+    margin-bottom: 4px;
+}
+
+.contact-item i {
+    width: 16px;
+    margin-right: 4px;
+    color: #6c757d;
+}
+
+/* Reminder Stats */
+.reminder-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+}
+
+.stat-icon.overdue { background: #e74c3c; }
+.stat-icon.upcoming { background: #f39c12; }
+.stat-icon.total { background: #3498db; }
+
+.stat-content h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.stat-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+/* Reminders History */
+.reminders-history {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.reminder-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.reminder-item:last-child {
+    border-bottom: none;
+}
+
+.reminder-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #4361ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.reminder-content h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.reminder-content p {
+    margin: 2px 0;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quick-action-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.quick-action-item:hover {
+    background: #e9ecef;
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-1px);
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #4361ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.action-content h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.action-content p {
+    margin: 2px 0;
+    font-size: 12px;
+    color: #6c757d;
+}
+
+/* Row Styling */
+.overdue-row {
+    background-color: rgba(231, 76, 60, 0.02);
+    transition: all 0.2s ease;
+}
+
+.overdue-row:hover {
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+.upcoming-row {
+    background-color: rgba(243, 156, 18, 0.02);
+}
+
+.upcoming-row:hover {
+    background-color: rgba(243, 156, 18, 0.05);
+}
+
+.dropdown-menu {
+    min-width: 180px;
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+    margin-right: 5px;
+}
+</style>
+{% endblock %}

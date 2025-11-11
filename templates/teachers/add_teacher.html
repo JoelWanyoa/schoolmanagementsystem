@@ -1,0 +1,538 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Teacher - Petra Academy{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background: white;
+        border-radius: 10px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid #4361ee;
+    }
+    
+    .form-section h4 {
+        color: #4361ee;
+        margin-bottom: 20px;
+        font-weight: 600;
+    }
+    
+    .photo-upload {
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .photo-upload:hover {
+        border-color: #4361ee;
+        background-color: #f8f9ff;
+    }
+    
+    .photo-preview {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 10px;
+        display: none;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .password-toggle {
+        cursor: pointer;
+        color: #4361ee;
+    }
+    
+    .subject-checkboxes {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>All Teachers</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Teachers</li>
+                    <li>Add Teacher</li>
+                </ul>
+            </div>
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Add New Teacher</h1>
+        <a href="{% url 'all_teachers' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Teachers
+        </a>
+    </div>
+
+    <!-- Success/Error Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-12">
+            <form method="POST" enctype="multipart/form-data" id="addTeacherForm">
+                {% csrf_token %}
+                
+                <!-- Personal Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-user-circle mr-2"></i>Personal Information</h4>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <!-- Photo Upload -->
+                            <div class="form-group">
+                                <label class="font-weight-bold">Teacher Photo</label>
+                                <div class="photo-upload" onclick="document.getElementById('photo').click()">
+                                    <i class="fas fa-camera fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted mb-2">Click to upload photo</p>
+                                    <small class="text-muted">JPG, PNG (Max 2MB)</small>
+                                    <input type="file" id="photo" name="photo" accept="image/*" class="d-none" onchange="previewImage(this)">
+                                </div>
+                                <img id="photoPreview" class="photo-preview mt-3 img-thumbnail" alt="Photo preview">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="first_name" class="font-weight-bold required-field">First Name</label>
+                                        <input type="text" class="form-control" id="first_name" name="first_name" 
+                                               value="{{ request.POST.first_name }}" required>
+                                        <small class="form-text text-muted">Teacher's first name</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="last_name" class="font-weight-bold required-field">Last Name</label>
+                                        <input type="text" class="form-control" id="last_name" name="last_name" 
+                                               value="{{ request.POST.last_name }}" required>
+                                        <small class="form-text text-muted">Teacher's last name</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="gender" class="font-weight-bold required-field">Gender</label>
+                                        <select class="form-control" id="gender" name="gender" required>
+                                            <option value="">Select Gender</option>
+                                            <option value="M" {% if request.POST.gender == 'M' %}selected{% endif %}>Male</option>
+                                            <option value="F" {% if request.POST.gender == 'F' %}selected{% endif %}>Female</option>
+                                            <option value="O" {% if request.POST.gender == 'O' %}selected{% endif %}>Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="date_of_birth" class="font-weight-bold required-field">Date of Birth</label>
+                                        <input type="date" class="form-control" id="date_of_birth" name="date_of_birth" 
+                                               value="{{ request.POST.date_of_birth }}" required max="{{ today|date:'Y-m-d' }}">
+                                        <small class="form-text text-muted">Teacher's date of birth</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="religion" class="font-weight-bold">Religion</label>
+                                        <input type="text" class="form-control" id="religion" name="religion" 
+                                               value="{{ request.POST.religion }}">
+                                        <small class="form-text text-muted">Optional</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="national_id" class="font-weight-bold">National ID</label>
+                                        <input type="text" class="form-control" id="national_id" name="national_id" 
+                                               value="{{ request.POST.national_id }}">
+                                        <small class="form-text text-muted">Optional</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-address-book mr-2"></i>Contact Information</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="address" class="font-weight-bold required-field">Address</label>
+                                <textarea class="form-control" id="address" name="address" rows="3" required>{{ request.POST.address }}</textarea>
+                                <small class="form-text text-muted">Full residential address</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="phone" class="font-weight-bold required-field">Phone Number</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               value="{{ request.POST.phone }}" required>
+                                        <small class="form-text text-muted">Primary contact number</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="email" class="font-weight-bold required-field">Email Address</label>
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               value="{{ request.POST.email }}" required>
+                                        <small class="form-text text-muted">Primary email address</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="emergency_contact" class="font-weight-bold">Emergency Contact</label>
+                                        <input type="text" class="form-control" id="emergency_contact" name="emergency_contact" 
+                                               value="{{ request.POST.emergency_contact }}">
+                                        <small class="form-text text-muted">Emergency contact person and number</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional Information -->
+                <div class="form-section">
+                    <h4><i class="fas fa-briefcase mr-2"></i>Professional Information</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="qualification" class="font-weight-bold required-field">Qualification</label>
+                                <input type="text" class="form-control" id="qualification" name="qualification" 
+                                       value="{{ request.POST.qualification }}" required>
+                                <small class="form-text text-muted">e.g., Bachelor of Education, TSC Certified, etc.</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="specialization" class="font-weight-bold required-field">Specialization</label>
+                                <input type="text" class="form-control" id="specialization" name="specialization" 
+                                       value="{{ request.POST.specialization }}" required>
+                                <small class="form-text text-muted">e.g., Mathematics, Science, Languages, etc.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="experience" class="font-weight-bold required-field">Experience (Years)</label>
+                                <input type="number" class="form-control" id="experience" name="experience" 
+                                       value="{{ request.POST.experience|default:'0' }}" min="0" max="50" required>
+                                <small class="form-text text-muted">Years of teaching experience</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="teaching_level" class="font-weight-bold required-field">Teaching Level</label>
+                                <select class="form-control" id="teaching_level" name="teaching_level" required>
+                                    <option value="">Select Level</option>
+                                    <option value="ECDE" {% if request.POST.teaching_level == 'ECDE' %}selected{% endif %}>ECDE</option>
+                                    <option value="PRIMARY" {% if request.POST.teaching_level == 'PRIMARY' %}selected{% endif %}>Primary</option>
+                                    <option value="JUNIOR_SECONDARY" {% if request.POST.teaching_level == 'JUNIOR_SECONDARY' %}selected{% endif %}>Junior Secondary</option>
+                                    <option value="ALL" {% if request.POST.teaching_level == 'ALL' %}selected{% endif %}>All Levels</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="joining_date" class="font-weight-bold required-field">Joining Date</label>
+                                <input type="date" class="form-control" id="joining_date" name="joining_date" 
+                                       value="{{ request.POST.joining_date|default:today|date:'Y-m-d' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="salary" class="font-weight-bold required-field">Monthly Salary (KES)</label>
+                                <input type="number" class="form-control" id="salary" name="salary" 
+                                       value="{{ request.POST.salary|default:'0' }}" min="0" step="0.01" required>
+                                <small class="form-text text-muted">Gross monthly salary</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="tsc_number" class="font-weight-bold">TSC Number</label>
+                                <input type="text" class="form-control" id="tsc_number" name="tsc_number" 
+                                       value="{{ request.POST.tsc_number }}">
+                                <small class="form-text text-muted">Teachers Service Commission number (if applicable)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subjects Taught -->
+                <div class="form-section">
+                    <h4><i class="fas fa-book mr-2"></i>Subjects Taught</h4>
+                    <div class="form-group">
+                        <label class="font-weight-bold">Select Subjects</label>
+                        <div class="subject-checkboxes">
+                            {% for subject in subjects %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="subjects" 
+                                       value="{{ subject.id }}" id="subject_{{ subject.id }}"
+                                       {% if subject.id|stringformat:"i" in request.POST.getlist|default:"" %}checked{% endif %}>
+                                <label class="form-check-label" for="subject_{{ subject.id }}">
+                                    {{ subject.name }} ({{ subject.code }})
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No subjects available. Please add subjects first.</p>
+                            {% endfor %}
+                        </div>
+                        <small class="form-text text-muted">Select all subjects this teacher will teach</small>
+                    </div>
+                </div>
+
+                <!-- Login Credentials -->
+                <div class="form-section">
+                    <h4><i class="fas fa-key mr-2"></i>Login Credentials</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="username" class="font-weight-bold required-field">Username</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="username" name="username" 
+                                           value="{{ request.POST.username }}" required>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="generateUsername()">
+                                            <i class="fas fa-sync-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted" id="usernameHelp">Will be used for login</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="teacher_id" class="font-weight-bold">Teacher ID</label>
+                                <input type="text" class="form-control" id="teacher_id" name="teacher_id" 
+                                       value="{{ request.POST.teacher_id }}" readonly>
+                                <small class="form-text text-muted">Auto-generated teacher ID</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="password1" class="font-weight-bold required-field">Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password1" name="password1" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text password-toggle" onclick="togglePassword('password1')">
+                                            <i class="fas fa-eye"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Minimum 8 characters</small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="password2" class="font-weight-bold required-field">Confirm Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password2" name="password2" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text password-toggle" onclick="togglePassword('password2')">
+                                            <i class="fas fa-eye"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">Re-enter the password</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Note:</strong> The teacher will receive their login credentials via email (if email service is configured).
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-section">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                <i class="fas fa-save mr-2"></i>Add Teacher
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'all_teachers' %}" class="btn btn-outline-secondary btn-lg btn-block">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set today's date for date inputs
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('joining_date').max = today;
+    
+    // Generate Teacher ID
+    function generateTeacherId() {
+        const year = new Date().getFullYear();
+        // In a real scenario, you might want to get the next available ID from the server
+        const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+        return `TCH-${year}-${randomNum}`;
+    }
+    
+    // Generate username from first and last name
+    function generateUsername() {
+        const firstName = document.getElementById('first_name').value.toLowerCase().replace(/\s+/g, '');
+        const lastName = document.getElementById('last_name').value.toLowerCase().replace(/\s+/g, '');
+        
+        if (firstName && lastName) {
+            let username = firstName + '.' + lastName;
+            // Remove special characters
+            username = username.replace(/[^a-z0-9.]/g, '');
+            document.getElementById('username').value = username;
+            
+            // Check availability
+            checkUsernameAvailability(username);
+        }
+    }
+    
+    // Check username availability
+    function checkUsernameAvailability(username) {
+        if (username.length < 3) return;
+        
+        fetch(`/check-username-availability/?username=${username}`)
+            .then(response => response.json())
+            .then(data => {
+                const helpText = document.getElementById('usernameHelp');
+                if (data.available) {
+                    helpText.innerHTML = '<span class="text-success">✓ Username is available</span>';
+                } else {
+                    helpText.innerHTML = '<span class="text-danger">✗ Username is already taken</span>';
+                }
+            });
+    }
+    
+    // Toggle password visibility
+    function togglePassword(fieldId) {
+        const field = document.getElementById(fieldId);
+        const icon = field.parentNode.querySelector('.fa-eye');
+        
+        if (field.type === 'password') {
+            field.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            field.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+    
+    // Preview image before upload
+    function previewImage(input) {
+        const preview = document.getElementById('photoPreview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    
+    // Auto-generate teacher ID when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!document.getElementById('teacher_id').value) {
+            document.getElementById('teacher_id').value = generateTeacherId();
+        }
+        
+        // Check username availability on input
+        document.getElementById('username').addEventListener('input', function() {
+            checkUsernameAvailability(this.value);
+        });
+        
+        // Auto-generate username when names are filled
+        document.getElementById('first_name').addEventListener('blur', generateUsername);
+        document.getElementById('last_name').addEventListener('blur', generateUsername);
+    });
+    
+    // Form validation
+    document.getElementById('addTeacherForm').addEventListener('submit', function(e) {
+        const password1 = document.getElementById('password1').value;
+        const password2 = document.getElementById('password2').value;
+        
+        if (password1 !== password2) {
+            e.preventDefault();
+            alert('Passwords do not match!');
+            return false;
+        }
+        
+        if (password1.length < 8) {
+            e.preventDefault();
+            alert('Password must be at least 8 characters long!');
+            return false;
+        }
+        
+        // Check if at least one subject is selected
+        const subjects = document.querySelectorAll('input[name="subjects"]:checked');
+        if (subjects.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one subject!');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

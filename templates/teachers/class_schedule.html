@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Class Schedule - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                        <li class="breadcrumb-item active">Class Schedule</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Class Schedule</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Overview -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="header-title">Weekly Timetable</h4>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button class="btn btn-outline-success btn-sm">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+
+                    {% if schedule %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-centered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Monday</th>
+                                    <th>Tuesday</th>
+                                    <th>Wednesday</th>
+                                    <th>Thursday</th>
+                                    <th>Friday</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Sample timetable structure -->
+                                <tr>
+                                    <td class="fw-bold">8:00 - 9:00</td>
+                                    <td>
+                                        <div class="schedule-item bg-primary text-white p-2 rounded">
+                                            <strong>Mathematics</strong><br>
+                                            Grade 7A<br>
+                                            Room 101
+                                        </div>
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="schedule-item bg-success text-white p-2 rounded">
+                                            <strong>Science</strong><br>
+                                            Grade 8B<br>
+                                            Room 102
+                                        </div>
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="schedule-item bg-primary text-white p-2 rounded">
+                                            <strong>Mathematics</strong><br>
+                                            Grade 7A<br>
+                                            Room 101
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">9:00 - 10:00</td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="schedule-item bg-info text-white p-2 rounded">
+                                            <strong>English</strong><br>
+                                            Grade 7B<br>
+                                            Room 103
+                                        </div>
+                                    </td>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="schedule-item bg-warning text-dark p-2 rounded">
+                                            <strong>Social Studies</strong><br>
+                                            Grade 8A<br>
+                                            Room 104
+                                        </div>
+                                    </td>
+                                    <td>-</td>
+                                </tr>
+                                <!-- Add more time slots as needed -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Current Day Schedule -->
+                    <div class="mt-4">
+                        <h5 class="mb-3">Today's Schedule ({{ today|date:"l, F j, Y" }})</h5>
+                        <div class="row">
+                            {% for item in schedule %}
+                            <div class="col-md-6 col-lg-4 mb-3">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="card-title mb-1">{{ item.subject.name|default:"General" }}</h6>
+                                                <p class="text-muted mb-1">{{ item.class_level.name }}</p>
+                                                <small class="text-muted">{{ item.room }}</small>
+                                            </div>
+                                            <span class="badge bg-primary">
+                                                {{ item.start_time|time:"H:i" }} - {{ item.end_time|time:"H:i" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="flaticon-calendar display-1 text-muted"></i>
+                        <h4 class="mt-3">No Schedule Available</h4>
+                        <p class="text-muted">Your class schedule hasn't been set up yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+.schedule-item {
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+.schedule-item:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Add click handlers for schedule items
+    $('.schedule-item').click(function() {
+        alert('Class details would appear here in a real application.');
+    });
+    
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+});
+</script>
+{% endblock %}

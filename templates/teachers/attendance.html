@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Attendance Management - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+
+            <!-- Breadcrumbs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Attendance Management</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                    <li>Attendance</li>
+                </ul>
+            </div>
+            <!-- Breadcrumbs Area End Here -->
+
+            <!-- Flash Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Attendance Stats -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="flaticon-classmates text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Students</div>
+                                    <div class="item-number"><span class="counter">{{ total_students }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="fas fa-user-check text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Present Today</div>
+                                    <div class="item-number"><span class="counter">{{ present_count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-red">
+                                    <i class="fas fa-user-times text-red"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Absent Today</div>
+                                    <div class="item-number"><span class="counter">{{ absent_count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="fas fa-clock text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Not Marked</div>
+                                    <div class="item-number"><span class="counter">{{ total_students|add:"-today_attendance.count" }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Form -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Mark Student Attendance</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#" onclick="markAllPresent()">
+                                    <i class="fas fa-check-circle text-success"></i> Mark All Present
+                                </a>
+                                <a class="dropdown-item" href="#" onclick="markAllAbsent()">
+                                    <i class="fas fa-times-circle text-danger"></i> Mark All Absent
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-download text-primary"></i> Export Attendance
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" id="attendanceForm" class="new-added-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Attendance Date *</label>
+                                <input type="date" class="form-control" id="date" name="date" 
+                                       value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark w-100" onclick="loadDateAttendance()">
+                                    <i class="fas fa-sync mr-2"></i> Load Attendance
+                                </button>
+                            </div>
+                        </div>
+
+                        {% if students %}
+                        <div class="table-responsive">
+                            <table class="table display text-nowrap">
+                                <thead>
+                                    <tr>
+                                        <th>Student Information</th>
+                                        <th>Class</th>
+                                        <th>Roll No</th>
+                                        <th>Attendance Status</th>
+                                        <th>Remarks</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    {% with student_attendance=today_attendance|dictsort:"student.id" %}
+                                    {% for att in student_attendance %}
+                                        {% if att.student.id == student.id %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if student.photo %}
+                                                    <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                                         class="rounded-circle" width="45" height="45">
+                                                    {% else %}
+                                                    <div class="bg-primary text-white rounded-circle mr-3" style="width: 45px; height: 45px; line-height: 45px; text-align: center; font-size: 16px;">
+                                                        {{ student.first_name|first }}{{ student.last_name|first }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ student.full_name }}</h6>
+                                                        <small class="text-muted">{{ student.student_id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-info">{{ student.current_class.name }}</span>
+                                            </td>
+                                            <td>{{ student.roll_number }}</td>
+                                            <td>
+                                                <div class="attendance-buttons">
+                                                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                        <label class="btn btn-outline-success btn-sm {% if att.status %}active{% endif %}">
+                                                            <input type="radio" name="student_{{ student.id }}" 
+                                                                   value="present" autocomplete="off" 
+                                                                   {% if att.status %}checked{% endif %}>
+                                                            <i class="fas fa-check mr-1"></i> Present
+                                                        </label>
+                                                        <label class="btn btn-outline-danger btn-sm {% if not att.status %}active{% endif %}">
+                                                            <input type="radio" name="student_{{ student.id }}" 
+                                                                   value="absent" autocomplete="off"
+                                                                   {% if not att.status %}checked{% endif %}>
+                                                            <i class="fas fa-times mr-1"></i> Absent
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <input type="text" class="form-control form-control-sm" 
+                                                       placeholder="Optional remarks" 
+                                                       name="remarks_{{ student.id }}"
+                                                       value="{{ att.remarks|default:'' }}">
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% empty %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if student.photo %}
+                                                <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                                     class="rounded-circle" width="45" height="45">
+                                                {% else %}
+                                                <div class="bg-primary text-white rounded-circle mr-3" style="width: 45px; height: 45px; line-height: 45px; text-align: center; font-size: 16px;">
+                                                    {{ student.first_name|first }}{{ student.last_name|first }}
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ student.full_name }}</h6>
+                                                    <small class="text-muted">{{ student.student_id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-info">{{ student.current_class.name }}</span>
+                                        </td>
+                                        <td>{{ student.roll_number }}</td>
+                                        <td>
+                                            <div class="attendance-buttons">
+                                                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                                    <label class="btn btn-outline-success btn-sm">
+                                                        <input type="radio" name="student_{{ student.id }}" 
+                                                               value="present" autocomplete="off">
+                                                        <i class="fas fa-check mr-1"></i> Present
+                                                    </label>
+                                                    <label class="btn btn-outline-danger btn-sm active">
+                                                        <input type="radio" name="student_{{ student.id }}" 
+                                                               value="absent" autocomplete="off" checked>
+                                                        <i class="fas fa-times mr-1"></i> Absent
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   placeholder="Optional remarks" 
+                                                   name="remarks_{{ student.id }}">
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-12 form-group">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    <i class="fas fa-save mr-2"></i> Save Attendance
+                                </button>
+                                <button type="button" class="btn-fill-lg bg-light-blue btn-hover-yellow" onclick="markAllPresent()">
+                                    <i class="fas fa-check-circle mr-2"></i> Mark All Present
+                                </button>
+                                <button type="button" class="btn-fill-lg bg-light-red btn-hover-yellow" onclick="markAllAbsent()">
+                                    <i class="fas fa-times-circle mr-2"></i> Mark All Absent
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Students Found</h4>
+                            <p class="text-muted">There are no students assigned to your classes.</p>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function loadDateAttendance() {
+        const date = document.getElementById('date').value;
+        if (date) {
+            window.location.href = `?date=${date}`;
+        }
+    }
+
+    function markAllPresent() {
+        $('input[value="present"]').prop('checked', true);
+        $('.btn-group-toggle .btn').removeClass('active btn-success btn-danger');
+        $('.btn-group-toggle .btn').addClass('btn-outline-success btn-outline-danger');
+        $('input[value="present"]').closest('label').removeClass('btn-outline-success').addClass('active btn-success');
+        $('input[value="absent"]').closest('label').removeClass('btn-danger').addClass('btn-outline-danger');
+    }
+
+    function markAllAbsent() {
+        $('input[value="absent"]').prop('checked', true);
+        $('.btn-group-toggle .btn').removeClass('active btn-success btn-danger');
+        $('.btn-group-toggle .btn').addClass('btn-outline-success btn-outline-danger');
+        $('input[value="absent"]').closest('label').removeClass('btn-outline-danger').addClass('active btn-danger');
+        $('input[value="present"]').closest('label').removeClass('btn-success').addClass('btn-outline-success');
+    }
+
+    $(document).ready(function() {
+        // Initialize button group functionality
+        $('.btn-group-toggle .btn').click(function() {
+            const group = $(this).closest('.btn-group');
+            group.find('.btn').removeClass('active btn-success btn-danger');
+            group.find('.btn').addClass('btn-outline-success btn-outline-danger');
+            
+            $(this).removeClass('btn-outline-success btn-outline-danger');
+            if ($(this).find('input[value="present"]').length) {
+                $(this).addClass('active btn-success');
+            } else {
+                $(this).addClass('active btn-danger');
+            }
+        });
+        
+        // Set today's date as default if not set
+        const dateInput = document.getElementById('date');
+        if (!dateInput.value) {
+            const now = new Date();
+            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            dateInput.value = localDate;
+        }
+
+        // Counter animation
+        $('.counter').each(function() {
+            $(this).prop('Counter', 0).animate({
+                Counter: $(this).text()
+            }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function(now) {
+                    $(this).text(Math.ceil(now));
+                }
+            });
+        });
+    });
+</script>
+
+<style>
+    .attendance-buttons .btn-group {
+        width: 100%;
+    }
+    
+    .attendance-buttons .btn {
+        width: 50%;
+        font-size: 12px;
+        padding: 8px 5px;
+    }
+    
+    .btn-success {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: white !important;
+    }
+    
+    .btn-danger {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    .btn-outline-success {
+        color: #28a745 !important;
+        border-color: #28a745 !important;
+    }
+    
+    .btn-outline-danger {
+        color: #dc3545 !important;
+        border-color: #dc3545 !important;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .bg-light-green { background-color: rgba(40, 167, 69, 0.1) !important; }
+    .bg-light-blue { background-color: rgba(0, 123, 255, 0.1) !important; }
+    .bg-light-red { background-color: rgba(220, 53, 69, 0.1) !important; }
+    .bg-light-yellow { background-color: rgba(255, 193, 7, 0.1) !important; }
+</style>
+{% endblock %}

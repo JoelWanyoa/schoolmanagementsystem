@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if assignment %}Edit{% else %}Create{% endif %} Assignment - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>{% if assignment %}Edit{% else %}Create{% endif %} Assignment</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                    <li><a href="{% url 'teacher_assignments' %}">Assignments</a></li>
+                    <li>{% if assignment %}Edit{% else %}Create{% endif %} Assignment</li>
+                </ul>
+            </div>
+
+            <!-- Flash Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>{% if assignment %}Edit Assignment{% else %}Create New Assignment{% endif %}</h3>
+                        </div>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" class="new-added-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Assignment Title -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Assignment Title *</label>
+                                <input type="text" name="title" class="form-control" 
+                                       value="{{ form.title.value|default:'' }}" required>
+                                {% if form.title.errors %}
+                                    <div class="text-danger">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Subject -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Subject *</label>
+                                <select name="subject" class="form-control" required>
+                                    <option value="">Select Subject</option>
+                                    {% for subject in teacher.subjects.all %}
+                                        <option value="{{ subject.id }}" 
+                                                {% if form.subject.value == subject.id %}selected{% endif %}>
+                                            {{ subject.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.subject.errors %}
+                                    <div class="text-danger">{{ form.subject.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Class Level -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Class *</label>
+                                <select name="class_level" class="form-control" required>
+                                    <option value="">Select Class</option>
+                                    {% for class in teacher_classes %}
+                                        <option value="{{ class.id }}" 
+                                                {% if form.class_level.value == class.id %}selected{% endif %}>
+                                            {{ class.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                                {% if form.class_level.errors %}
+                                    <div class="text-danger">{{ form.class_level.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Assignment Type -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Assignment Type *</label>
+                                <select name="assignment_type" class="form-control" required>
+                                    <option value="">Select Type</option>
+                                    <option value="HOMEWORK" {% if form.assignment_type.value == 'HOMEWORK' %}selected{% endif %}>Homework</option>
+                                    <option value="PROJECT" {% if form.assignment_type.value == 'PROJECT' %}selected{% endif %}>Project</option>
+                                    <option value="QUIZ" {% if form.assignment_type.value == 'QUIZ' %}selected{% endif %}>Quiz</option>
+                                    <option value="ESSAY" {% if form.assignment_type.value == 'ESSAY' %}selected{% endif %}>Essay</option>
+                                    <option value="PRESENTATION" {% if form.assignment_type.value == 'PRESENTATION' %}selected{% endif %}>Presentation</option>
+                                </select>
+                                {% if form.assignment_type.errors %}
+                                    <div class="text-danger">{{ form.assignment_type.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Due Date -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Due Date *</label>
+                                <input type="datetime-local" name="due_date" class="form-control" 
+                                       value="{{ form.due_date.value|default:'' }}" required>
+                                {% if form.due_date.errors %}
+                                    <div class="text-danger">{{ form.due_date.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Total Marks -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Total Marks *</label>
+                                <input type="number" name="total_marks" class="form-control" 
+                                       value="{{ form.total_marks.value|default:'100' }}" min="1" max="1000" required>
+                                {% if form.total_marks.errors %}
+                                    <div class="text-danger">{{ form.total_marks.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Status</label>
+                                <select name="status" class="form-control">
+                                    <option value="DRAFT" {% if form.status.value == 'DRAFT' %}selected{% endif %}>Draft</option>
+                                    <option value="PUBLISHED" {% if form.status.value == 'PUBLISHED' %}selected{% endif %}>Published</option>
+                                    <option value="CLOSED" {% if form.status.value == 'CLOSED' %}selected{% endif %}>Closed</option>
+                                </select>
+                                {% if form.status.errors %}
+                                    <div class="text-danger">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Attachment -->
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Attachment (Optional)</label>
+                                <input type="file" name="attachment" class="form-control">
+                                {% if assignment and assignment.attachment %}
+                                    <small class="form-text text-muted">
+                                        Current file: <a href="{{ assignment.attachment.url }}" target="_blank">{{ assignment.attachment.name }}</a>
+                                    </small>
+                                {% endif %}
+                                {% if form.attachment.errors %}
+                                    <div class="text-danger">{{ form.attachment.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Description -->
+                            <div class="col-12 form-group">
+                                <label>Description</label>
+                                <textarea name="description" class="form-control" rows="6" 
+                                          placeholder="Enter assignment description, instructions, and requirements...">{{ form.description.value|default:'' }}</textarea>
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Buttons -->
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    {% if assignment %}Update Assignment{% else %}Create Assignment{% endif %}
+                                </button>
+                                <a href="{% url 'teacher_assignments' %}" class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Set minimum datetime for due date to current time
+    document.addEventListener('DOMContentLoaded', function() {
+        const dueDateInput = document.querySelector('input[name="due_date"]');
+        const now = new Date();
+        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        
+        if (!dueDateInput.value) {
+            // Set default due date to 7 days from now
+            const defaultDueDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const defaultLocalDateTime = new Date(defaultDueDate.getTime() - defaultDueDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            dueDateInput.value = defaultLocalDateTime;
+        }
+        
+        dueDateInput.min = localDateTime;
+    });
+</script>
+{% endblock %}

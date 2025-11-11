@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Results - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                        <li class="breadcrumb-item active">Exam Results</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">Exam Results Management</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <label for="classFilter" class="form-label">Class</label>
+                            <select class="form-select" id="classFilter" onchange="filterResults()">
+                                <option value="">All Classes</option>
+                                {% for class in teacher_classes %}
+                                <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ class.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="subjectFilter" class="form-label">Subject</label>
+                            <select class="form-select" id="subjectFilter" onchange="filterResults()">
+                                <option value="">All Subjects</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if subject_filter == subject.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="examTypeFilter" class="form-label">Exam Type</label>
+                            <select class="form-select" id="examTypeFilter" onchange="filterResults()">
+                                <option value="">All Types</option>
+                                <option value="midterm">Midterm</option>
+                                <option value="final">Final</option>
+                                <option value="quiz">Quiz</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="exportResults()">
+                                <i class="fas fa-download me-1"></i> Export Results
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ exam_results.count }}</h4>
+                            <p class="text-muted mb-0">Total Results</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-bar text-primary h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">
+                                {% if exam_results %}
+                                    {% widthratio exam_results|length 1 78.5 %}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted mb-0">Average Score</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage text-success h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">
+                                {% if exam_results %}
+                                    {% widthratio exam_results|length 4 1 %}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted mb-0">Top Performers</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-trophy text-warning h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">
+                                {% if exam_results %}
+                                    {% widthratio exam_results|length 6 1 %}
+                                {% else %}
+                                    0
+                                {% endif %}
+                            </h4>
+                            <p class="text-muted mb-0">Need Improvement</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-circle text-danger h2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Results Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="header-title">Exam Results</h4>
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadResultsModal">
+                            <i class="fas fa-upload me-1"></i> Upload Results
+                        </button>
+                    </div>
+
+                    {% if exam_results %}
+                    <div class="table-responsive">
+                        <table class="table table-centered table-striped" id="resultsTable">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Exam</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Position</th>
+                                    <th>Remarks</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in exam_results %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if result.student.photo %}
+                                            <img src="{{ result.student.photo.url }}" alt="{{ result.student.full_name }}" 
+                                                 class="rounded-circle avatar-sm me-2">
+                                            {% else %}
+                                            <div class="avatar-sm bg-soft-primary rounded-circle me-2">
+                                                <span class="avatar-title font-12 text-primary">
+                                                    {{ result.student.first_name|first }}{{ result.student.last_name|first }}
+                                                </span>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0 font-14">{{ result.student.full_name }}</h6>
+                                                <small class="text-muted">{{ result.student.roll_number }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ result.student.current_class.name }}</td>
+                                    <td>
+                                        {% if result.exam and result.exam.subject %}
+                                            {{ result.exam.subject.name }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if result.exam %}
+                                        <span class="badge bg-light text-dark">{{ result.exam.exam_type }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ result.exam.exam_date|date:"M d, Y" }}</small>
+                                        {% else %}
+                                        <span class="text-muted">No Exam Data</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <h5 class="mb-0 {% if result.marks >= 80 %}text-success{% elif result.marks >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ result.marks }}/100
+                                        </h5>
+                                        <div class="progress progress-sm mt-1">
+                                            <div class="progress-bar 
+                                                {% if result.marks >= 80 %}bg-success
+                                                {% elif result.marks >= 50 %}bg-warning
+                                                {% else %}bg-danger{% endif %}" 
+                                                role="progressbar" style="width: {{ result.marks }}%;" 
+                                                aria-valuenow="{{ result.marks }}" aria-valuemin="0" aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if result.marks >= 80 %}bg-success
+                                            {% elif result.marks >= 70 %}bg-info
+                                            {% elif result.marks >= 60 %}bg-primary
+                                            {% elif result.marks >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if result.marks >= 80 %}A
+                                            {% elif result.marks >= 70 %}B
+                                            {% elif result.marks >= 60 %}C
+                                            {% elif result.marks >= 50 %}D
+                                            {% else %}F{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold">{{ forloop.counter }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if result.marks >= 80 %}bg-success
+                                            {% elif result.marks >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}">
+                                            {% if result.marks >= 80 %}Excellent
+                                            {% elif result.marks >= 50 %}Good
+                                            {% else %}Needs Improvement{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="editResult({{ result.id }})">
+                                                        <i class="fas fa-edit me-2"></i>Edit Result
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-chart-line me-2"></i>View Analytics
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" onclick="deleteResult({{ result.id }})">
+                                                        <i class="fas fa-trash me-2"></i>Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-bar display-1 text-muted"></i>
+                        <h4 class="mt-3">No Exam Results Found</h4>
+                        <p class="text-muted">
+                            {% if class_filter or subject_filter %}
+                            No results found for the selected filters.
+                            {% else %}
+                            No exam results have been recorded yet.
+                            {% endif %}
+                        </p>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadResultsModal">
+                            <i class="fas fa-upload me-1"></i> Upload Results
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Results Modal -->
+<div class="modal fade" id="uploadResultsModal" tabindex="-1" aria-labelledby="uploadResultsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadResultsModalLabel">Upload Exam Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadResultsForm">
+                    <div class="mb-3">
+                        <label for="resultsFile" class="form-label">Upload CSV File</label>
+                        <input type="file" class="form-control" id="resultsFile" accept=".csv" required>
+                        <div class="form-text">
+                            Download the <a href="#" onclick="downloadTemplate()">template file</a> for proper formatting.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="uploadExam" class="form-label">Select Exam</label>
+                        <select class="form-select" id="uploadExam" required>
+                            <option value="">Select Exam</option>
+                            <!-- Populate with available exams -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="uploadResults()">Upload Results</button>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterResults() {
+    const classId = document.getElementById('classFilter').value;
+    const subjectId = document.getElementById('subjectFilter').value;
+    const examType = document.getElementById('examTypeFilter').value;
+    
+    const url = new URL(window.location.href);
+    
+    if (classId) url.searchParams.set('class', classId);
+    else url.searchParams.delete('class');
+    
+    if (subjectId) url.searchParams.set('subject', subjectId);
+    else url.searchParams.delete('subject');
+    
+    if (examType) url.searchParams.set('type', examType);
+    else url.searchParams.delete('type');
+    
+    window.location.href = url.toString();
+}
+
+function exportResults() {
+    alert('Export functionality would be implemented here.');
+    // Typically this would generate a CSV or PDF report
+}
+
+function downloadTemplate() {
+    alert('Template download would be implemented here.');
+}
+
+function uploadResults() {
+    const form = document.getElementById('uploadResultsForm');
+    if (form.checkValidity()) {
+        alert('Results uploaded successfully!');
+        $('#uploadResultsModal').modal('hide');
+        form.reset();
+        location.reload();
+    } else {
+        form.reportValidity();
+    }
+}
+
+function editResult(resultId) {
+    alert(`Edit result ${resultId} - This would open an edit modal.`);
+}
+
+function deleteResult(resultId) {
+    if (confirm('Are you sure you want to delete this result?')) {
+        alert(`Result ${resultId} deleted successfully!`);
+        location.reload();
+    }
+}
+
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Initialize DataTables if you have the library
+    if ($.fn.DataTable) {
+        $('#resultsTable').DataTable({
+            pageLength: 25,
+            responsive: true
+        });
+    }
+});
+</script>
+{% endblock %}

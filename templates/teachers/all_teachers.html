@@ -20,39 +20,324 @@
                 </ul>
             </div>
 
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             <div class="card height-auto">
                 <div class="card-body">
                     <div class="heading-layout1">
                         <div class="item-title">
                             <h3>All Teachers</h3>
                         </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'add_teacher' %}"><i class="fas fa-plus text-dark-pastel-green"></i>Add New Teacher</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-file-export text-orange-peel"></i>Export</a>
+                            </div>
+                        </div>
                     </div>
-                    
+
+                    <!-- Search and Filter Section -->
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <form method="GET" class="form-inline">
+                                <div class="input-group">
+                                    <input type="text" name="search" class="form-control" placeholder="Search teachers..." value="{{ search_query }}">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-outline-primary" type="submit">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a href="{% url 'add_teacher' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus mr-2"></i>Add New Teacher
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Cards -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-magenta">
+                                            <i class="fas fa-chalkboard-teacher text-magenta"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Total Teachers</div>
+                                            <div class="item-number"><span class="counter" data-num="{{ total_teachers }}">{{ total_teachers }}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-blue">
+                                            <i class="fas fa-user-check text-blue"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Active</div>
+                                            <div class="item-number"><span class="counter" data-num="{{ active_teachers }}">{{ active_teachers }}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-yellow">
+                                            <i class="fas fa-male text-yellow"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Male</div>
+                                            <div class="item-number"><span class="counter" data-num="{{ male_teachers }}">{{ male_teachers }}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-green">
+                                            <i class="fas fa-female text-green"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Female</div>
+                                            <div class="item-number"><span class="counter" data-num="{{ female_teachers }}">{{ female_teachers }}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
+                        {% if teachers %}
                         <table class="table display text-nowrap">
                             <thead>
                                 <tr>
-                                    <th>Teacher ID</th>
-                                    <th>Name</th>
-                                    <th>Subject</th>
+                                    <th>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input checkAll">
+                                            <label class="form-check-label">ID</label>
+                                        </div>
+                                    </th>
+                                    <th>Teacher</th>
+                                    <th>Subjects</th>
                                     <th>Qualification</th>
                                     <th>Phone</th>
+                                    <th>Status</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {% for teacher in teachers %}
                                 <tr>
-                                    <td colspan="6" class="text-center">
-                                        <p>Teacher data will be displayed here once you add teachers through the admin panel.</p>
-                                        <a href="{% url 'add_teacher' %}" class="btn btn-primary">Add New Teacher</a>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input">
+                                            <label class="form-check-label">{{ teacher.teacher_id }}</label>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="item-img">
+                                                {% if teacher.photo %}
+                                                    <img src="{{ teacher.photo.url }}" alt="teacher" class="rounded-circle" width="40" height="40">
+                                                {% else %}
+                                                    <img src="{% static 'img/default-teacher.png' %}" alt="teacher" class="rounded-circle" width="40" height="40">
+                                                {% endif %}
+                                            </div>
+                                            <div class="item-content ml-3">
+                                                <a href="{% url 'teacher_details' teacher.teacher_id %}" class="text-primary font-weight-bold">
+                                                    {{ teacher.first_name }} {{ teacher.last_name }}
+                                                </a>
+                                                <div class="item-desc">
+                                                    <span class="badge badge-info">{{ teacher.teaching_level }}</span>
+                                                    <small class="text-muted">{{ teacher.email }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% for subject in teacher.subjects.all|slice:":3" %}
+                                            <span class="badge badge-light">{{ subject.name }}</span>
+                                        {% endfor %}
+                                        {% if teacher.subjects.count > 3 %}
+                                            <span class="badge badge-secondary">+{{ teacher.subjects.count|add:"-3" }} more</span>
+                                        {% endif %}
+                                        {% if not teacher.subjects.all %}
+                                            <span class="text-muted">No subjects</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-dark">{{ teacher.qualification }}</div>
+                                        <small class="text-muted">{{ teacher.specialization }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-dark">{{ teacher.phone }}</div>
+                                        <small class="text-muted">{{ teacher.experience }} yrs exp</small>
+                                    </td>
+                                    <td>
+                                        {% if teacher.is_active %}
+                                            <span class="badge badge-success">Active</span>
+                                        {% else %}
+                                            <span class="badge badge-danger">Inactive</span>
+                                        {% endif %}
+                                        <div class="text-muted small">
+                                            Since {{ teacher.joining_date|date:"M Y" }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'teacher_details' teacher.teacher_id %}">
+                                                    <i class="fas fa-eye text-dark-pastel-green"></i>View Details
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-edit text-blue"></i>Edit
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-envelope text-orange-peel"></i>Send Message
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                {% if teacher.is_active %}
+                                                <a class="dropdown-item text-warning" href="#">
+                                                    <i class="fas fa-user-times"></i>Deactivate
+                                                </a>
+                                                {% else %}
+                                                <a class="dropdown-item text-success" href="#">
+                                                    <i class="fas fa-user-check"></i>Activate
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <div class="empty-state">
+                                <i class="fas fa-chalkboard-teacher fa-4x text-muted mb-3"></i>
+                                <h3 class="text-muted">No Teachers Found</h3>
+                                <p class="text-muted mb-4">
+                                    {% if search_query %}
+                                        No teachers found matching your search criteria "{{ search_query }}".
+                                    {% else %}
+                                        There are no teachers in the system yet.
+                                    {% endif %}
+                                </p>
+                                <a href="{% url 'add_teacher' %}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-plus mr-2"></i>Add Your First Teacher
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
+
+                    <!-- Pagination -->
+                    {% if teachers.has_other_pages %}
+                    <div class="pagination-wrap mt-4">
+                        <nav>
+                            <ul class="pagination">
+                                {% if teachers.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ teachers.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% for num in teachers.paginator.page_range %}
+                                    {% if teachers.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if teachers.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ teachers.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Check all functionality
+    $('.checkAll').on('click', function() {
+        $('.form-check-input').prop('checked', this.checked);
+    });
+
+    // Counter animation
+    $('.counter').each(function() {
+        $(this).prop('Counter', 0).animate({
+            Counter: $(this).text()
+        }, {
+            duration: 2000,
+            easing: 'swing',
+            step: function(now) {
+                $(this).text(Math.ceil(now));
+            }
+        });
+    });
+
+    // Search functionality
+    $('#searchInput').on('keyup', function() {
+        const value = $(this).val().toLowerCase();
+        $('table tbody tr').filter(function() {
+            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+        });
+    });
+</script>
 {% endblock %}

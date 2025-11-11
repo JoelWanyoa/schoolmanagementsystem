@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ assignment.title }} - Assignment Details{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Assignment Details</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                    <li><a href="{% url 'teacher_assignments' %}">Assignments</a></li>
+                    <li>{{ assignment.title }}</li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <!-- Assignment Info -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>{{ assignment.title }}</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">
+                                        <span class="flaticon-more-button-of-three-dots"></span>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'assignment_edit' assignment.id %}">
+                                            <i class="fas fa-edit text-blue"></i> Edit
+                                        </a>
+                                        {% if submitted_count > 0 %}
+                                        <a class="dropdown-item" href="{% url 'assignment_download_submissions' assignment.id %}">
+                                            <i class="fas fa-download text-orange-peel"></i> Download Submissions
+                                        </a>
+                                        {% endif %}
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item text-danger" href="{% url 'assignment_delete' assignment.id %}">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="assignment-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Subject:</strong> 
+                                            {% if assignment.subject %}
+                                                {{ assignment.subject.name }}
+                                            {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                            {% endif %}
+                                        </p>
+                                        <p><strong>Class:</strong> 
+                                            {% if assignment.class_level %}
+                                                {{ assignment.class_level.name }}
+                                            {% else %}
+                                                <span class="text-muted">Not assigned</span>
+                                            {% endif %}
+                                        </p>
+                                        <p><strong>Type:</strong> {{ assignment.get_assignment_type_display }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Due Date:</strong> 
+                                            <span class="{% if assignment.is_overdue %}text-danger{% else %}text-success{% endif %}">
+                                                {{ assignment.due_date|date:"M d, Y H:i" }}
+                                            </span>
+                                        </p>
+                                        <p><strong>Total Marks:</strong> {{ assignment.total_marks }}</p>
+                                        <p><strong>Status:</strong> 
+                                            <span class="badge badge-{% if assignment.status == 'PUBLISHED' %}success{% elif assignment.status == 'DRAFT' %}warning{% else %}secondary{% endif %}">
+                                                {{ assignment.get_status_display }}
+                                            </span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {% if assignment.description %}
+                                <div class="assignment-description mt-3">
+                                    <h5>Description & Instructions</h5>
+                                    <div class="bg-light p-3 rounded">
+                                        {{ assignment.description|linebreaks }}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if assignment.attachment %}
+                                <div class="assignment-attachment mt-3">
+                                    <h5>Attachment</h5>
+                                    <a href="{{ assignment.attachment.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                        <i class="fas fa-download mr-2"></i>Download Attachment
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submission Stats -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Submission Statistics</h4>
+                            
+                            <div class="dashboard-summery-one mg-t-20">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-green">
+                                            <i class="fas fa-users text-green"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Total Students</div>
+                                            <div class="item-number">
+                                                <span id="total-students-counter">{{ total_students|default:0 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-blue">
+                                            <i class="fas fa-paper-plane text-blue"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Submitted</div>
+                                            <div class="item-number">
+                                                <span id="submitted-counter">{{ submitted_count|default:0 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-yellow">
+                                            <i class="fas fa-clipboard-check text-yellow"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Graded</div>
+                                            <div class="item-number">
+                                                <span id="graded-counter">{{ graded_count|default:0 }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if total_students > 0 %}
+                            <div class="progress-box mt-4">
+                                <h4 class="card-title">Submission Progress</h4>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: {% widthratio submitted_count total_students 100 %}%;"></div>
+                                </div>
+                                <p class="progress-text">
+                                    {{ submitted_count }}/{{ total_students }} students submitted
+                                    ({% widthratio submitted_count total_students 100 %}%)
+                                </p>
+                            </div>
+
+                            {% if submitted_count > 0 %}
+                            <div class="progress-box mt-3">
+                                <h4 class="card-title">Grading Progress</h4>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" role="progressbar" 
+                                         style="width: {% widthratio graded_count submitted_count 100 %}%;"></div>
+                                </div>
+                                <p class="progress-text">
+                                    {{ graded_count }}/{{ submitted_count }} submissions graded
+                                    ({% widthratio graded_count submitted_count 100 %}%)
+                                </p>
+                            </div>
+                            {% endif %}
+                            {% else %}
+                            <div class="alert alert-warning mt-4">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                No students enrolled in this class yet.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submissions Table -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <h3>Student Submissions</h3>
+                        <div class="item-title">
+                            <span class="badge badge-primary">{{ submissions.count }} Records</span>
+                        </div>
+                    </div>
+
+                    {% if submissions.exists %}
+                    <div class="table-responsive">
+                        <table class="table display text-nowrap">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Roll No</th>
+                                    <th>Submission Date</th>
+                                    <th>Marks</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for submission in submissions %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if submission.student.photo %}
+                                            <img src="{{ submission.student.photo.url }}" alt="{{ submission.student.full_name }}" 
+                                                 class="rounded-circle" width="40" height="40">
+                                            {% else %}
+                                            <div class="avatar bg-primary text-white rounded-circle mr-2" style="width: 40px; height: 40px; line-height: 40px; text-align: center;">
+                                                {{ submission.student.first_name|first }}{{ submission.student.last_name|first }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ submission.student.full_name }}</h6>
+                                                <small class="text-muted">{{ submission.student.student_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ submission.student.roll_number }}</td>
+                                    <td>
+                                        {% if submission.submitted %}
+                                            {{ submission.submitted_at|date:"M d, Y H:i" }}
+                                            {% if submission.is_late %}
+                                                <span class="badge badge-danger ml-1">Late</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Not submitted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if submission.marks_obtained %}
+                                            <span class="font-weight-bold text-{% if submission.marks_obtained >= 80 %}success{% elif submission.marks_obtained >= 50 %}warning{% else %}danger{% endif %}">
+                                                {{ submission.marks_obtained }}/{{ assignment.total_marks }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if submission.submitted %}
+                                            {% if submission.marks_obtained %}
+                                                <span class="badge badge-success">Graded</span>
+                                            {% else %}
+                                                <span class="badge badge-warning">Pending Grade</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge badge-secondary">Not Submitted</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                {% if submission.submitted %}
+                                                    {% if submission.submission_file %}
+                                                    <a class="dropdown-item" href="{{ submission.submission_file.url }}" target="_blank">
+                                                        <i class="fas fa-download text-dark-pastel-green"></i> Download
+                                                    </a>
+                                                    {% endif %}
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-edit text-blue"></i> Grade
+                                                    </a>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-comment text-orange-peel"></i> Feedback
+                                                    </a>
+                                                {% else %}
+                                                    <a class="dropdown-item text-muted" href="#">
+                                                        <i class="fas fa-clock"></i> Not Submitted
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Submissions Yet</h5>
+                        <p class="text-muted">
+                            {% if total_students > 0 %}
+                                Students haven't submitted any work for this assignment yet.
+                            {% else %}
+                                There are no students enrolled in this class to submit assignments.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simple counter animation without jQuery dependencies
+    $(document).ready(function() {
+        // Function to animate counter
+        function animateCounter(element, target) {
+            let current = 0;
+            const increment = target / 50; // Adjust speed here
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.text(target);
+                    clearInterval(timer);
+                } else {
+                    element.text(Math.floor(current));
+                }
+            }, 30);
+        }
+
+        // Animate each counter
+        const totalStudents = parseInt($('#total-students-counter').text()) || 0;
+        const submittedCount = parseInt($('#submitted-counter').text()) || 0;
+        const gradedCount = parseInt($('#graded-counter').text()) || 0;
+
+        animateCounter($('#total-students-counter'), totalStudents);
+        animateCounter($('#submitted-counter'), submittedCount);
+        animateCounter($('#graded-counter'), gradedCount);
+    });
+</script>
+{% endblock %}

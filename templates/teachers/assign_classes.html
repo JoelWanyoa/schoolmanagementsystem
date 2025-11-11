@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Classes - {{ teacher.full_name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Assign Classes to Teacher</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_teachers' %}">Teachers</a></li>
+                    <li><a href="{% url 'teacher_details' teacher.teacher_id %}">{{ teacher.full_name }}</a></li>
+                    <li>Assign Classes</li>
+                </ul>
+            </div>
+
+            <!-- Flash Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1 mb-4">
+                        <div class="item-title">
+                            <h3>Assign Classes to {{ teacher.full_name }}</h3>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="new-added-form">
+                        {% csrf_token %}
+
+                        <!-- Current Classes -->
+                        {% if current_classes %}
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h4 class="text-primary mb-3">Currently Assigned Classes</h4>
+                                <div class="row">
+                                    {% for class_obj in current_classes %}
+                                    <div class="col-xl-4 col-lg-6 col-12 mb-2">
+                                        <div class="alert alert-info p-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>{{ class_obj.name }}</strong><br>
+                                                    <small class="text-muted">
+                                                        {{ class_obj.get_level_category_display }} - {{ class_obj.get_grade_level_display }}
+                                                    </small><br>
+                                                    <small>Students: {{ class_obj.students.count }}</small>
+                                                </div>
+                                                <i class="fas fa-check-circle text-success fa-lg"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Available Classes -->
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="text-success mb-3">Available Classes</h4>
+                                <p class="text-muted mb-4">Select the classes you want to assign to {{ teacher.full_name }}:</p>
+
+                                {% if available_classes %}
+                                <div class="table-responsive">
+                                    <table class="table display text-nowrap" id="classTable">
+                                        <thead>
+                                            <tr>
+                                                <th>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" id="selectAll">
+                                                        <label class="form-check-label" for="selectAll">Select All</label>
+                                                    </div>
+                                                </th>
+                                                <th>Class Name</th>
+                                                <th>Level</th>
+                                                <th>Grade</th>
+                                                <th>Current Teacher</th>
+                                                <th>Students</th>
+                                                <th>Capacity</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for class_obj in available_classes %}
+                                            <tr class="{% if class_obj in current_classes %}selected-row{% endif %}">
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" name="classes" value="{{ class_obj.id }}" 
+                                                               class="form-check-input class-checkbox"
+                                                               {% if class_obj in current_classes %}checked{% endif %}>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <strong>{{ class_obj.name }}</strong><br>
+                                                    <small class="text-muted">Code: {{ class_obj.code }}</small>
+                                                </td>
+                                                <td><span class="badge badge-primary">{{ class_obj.get_level_category_display }}</span></td>
+                                                <td>{{ class_obj.get_grade_level_display }}</td>
+                                                <td>
+                                                    {% if class_obj.class_teacher %}
+                                                        <span class="text-warning">{{ class_obj.class_teacher.full_name }}</span>
+                                                    {% else %}
+                                                        <span class="text-success">Available</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td><span class="badge badge-info">{{ class_obj.students.count }}</span></td>
+                                                <td>{{ class_obj.capacity }}</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                                    <h4 class="text-muted">No Classes Available</h4>
+                                    <p class="text-muted">All classes are currently assigned to teachers.</p>
+                                    <a href="{% url 'teacher_details' teacher.teacher_id %}" class="btn btn-primary">
+                                        Back to Teacher Details
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        {% if available_classes %}
+                        <div class="row mt-4">
+                            <div class="col-12 form-group">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    <i class="fas fa-save mr-2"></i> Save Class Assignments
+                                </button>
+                                <a href="{% url 'teacher_details' teacher.teacher_id %}" 
+                                   class="btn-fill-lg bg-blue-dark btn-hover-yellow ml-3">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mt-4">
+                <div class="col-xl-3 col-sm-6 col-12 mb-3">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="fas fa-chalkboard text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Current Classes</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-count="{{ current_classes.count }}">{{ current_classes.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12 mb-3">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="fas fa-users text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Students</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-count="{{ total_students }}">{{ total_students }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12 mb-3">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="fas fa-book text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Subjects</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-count="{{ teacher.subjects.count }}">{{ teacher.subjects.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12 mb-3">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-red">
+                                    <i class="fas fa-graduation-cap text-red"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Experience</div>
+                                    <div class="item-number">
+                                        <span class="counter" data-count="{{ teacher.experience }}">{{ teacher.experience }}</span> yrs
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+
+    // Animate counters
+    $('.counter').each(function() {
+        const $this = $(this);
+        const target = parseInt($this.attr('data-count')) || 0;
+        $({ count: 0 }).animate({ count: target }, {
+            duration: 800,
+            step: function() { $this.text(Math.floor(this.count)); },
+            complete: function() { $this.text(target); }
+        });
+    });
+
+    // Select All functionality
+    $('#selectAll').on('change', function() {
+        const checked = $(this).prop('checked');
+        $('.class-checkbox').prop('checked', checked);
+        highlightRows();
+    });
+
+    $('.class-checkbox').on('change', function() {
+        const total = $('.class-checkbox').length;
+        const checked = $('.class-checkbox:checked').length;
+        $('#selectAll').prop('checked', checked === total);
+        $('#selectAll').prop('indeterminate', checked > 0 && checked < total);
+        highlightRows();
+    });
+
+    // Clickable rows
+    $('#classTable tbody').on('click', 'tr', function(e) {
+        if (!$(e.target).is('input[type=checkbox], label')) {
+            const checkbox = $(this).find('.class-checkbox');
+            checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
+        }
+    });
+
+    function highlightRows() {
+        $('#classTable tbody tr').each(function() {
+            const checkbox = $(this).find('.class-checkbox');
+            $(this).toggleClass('selected-row', checkbox.prop('checked'));
+        });
+    }
+
+    highlightRows();
+
+    // Confirm empty selection
+    $('form').on('submit', function() {
+        const checked = $('.class-checkbox:checked').length;
+        if (checked === 0) {
+            return confirm("No classes selected. This will remove all current class assignments. Continue?");
+        }
+        return true;
+    });
+
+});
+</script>
+
+<style>
+    /* Checkbox display */
+    .form-check-input {
+        width: 18px !important;
+        height: 18px !important;
+        opacity: 1 !important;
+        position: static !important;
+        cursor: pointer;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+    }
+    .form-check-label {
+        margin-left: 5px;
+        cursor: pointer;
+    }
+
+    /* Table hover & selected row */
+    #classTable tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+    #classTable tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    .selected-row {
+        background-color: #e6f7e6 !important;
+    }
+</style>
+{% endblock %}

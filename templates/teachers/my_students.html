@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Students - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+    <!-- Page Header -->
+    <div class="row">
+        <div class="col-12">
+            <div class="page-title-box">
+                <div class="page-title-right">
+                    <ol class="breadcrumb m-0">
+                        <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                        <li class="breadcrumb-item active">My Students</li>
+                    </ol>
+                </div>
+                <h4 class="page-title">My Students</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label for="classFilter" class="form-label">Filter by Class</label>
+                            <select class="form-select" id="classFilter" onchange="filterStudents()">
+                                <option value="">All Classes</option>
+                                {% for class in teacher_classes %}
+                                <option value="{{ class.id }}" {% if class_filter == class.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ class.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchStudent" class="form-label">Search Students</label>
+                            <input type="text" class="form-control" id="searchStudent" placeholder="Search by name...">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="searchStudents()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="header-title">Student List</h4>
+                        <span class="badge bg-primary">{{ students.count }} Students</span>
+                    </div>
+
+                    {% if students %}
+                    <div class="table-responsive">
+                        <table class="table table-centered table-striped" id="studentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Photo</th>
+                                    <th>Student Name</th>
+                                    <th>Student ID</th>
+                                    <th>Class</th>
+                                    <th>Roll No</th>
+                                    <th>Contact</th>
+                                    <th>Attendance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        {% if student.photo %}
+                                        <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                             class="rounded-circle avatar-sm" data-toggle="tooltip" 
+                                             title="{{ student.full_name }}">
+                                        {% else %}
+                                        <div class="avatar-sm bg-soft-primary rounded-circle">
+                                            <span class="avatar-title font-16 text-primary">
+                                                {{ student.first_name|first }}{{ student.last_name|first }}
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <h6 class="mb-1">{{ student.full_name }}</h6>
+                                        <small class="text-muted">{{ student.gender }}</small>
+                                    </td>
+                                    <td>{{ student.student_id }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ student.current_class.name }}</span>
+                                    </td>
+                                    <td>{{ student.roll_number }}</td>
+                                    <td>
+                                        <small class="text-muted d-block">{{ student.phone|default:"No phone" }}</small>
+                                        <small class="text-muted">{{ student.email|default:"No email" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">85%</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-eye me-2"></i>View Profile
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="{% url 'teacher_attendance' %}">
+                                                        <i class="fas fa-clipboard-check me-2"></i>Mark Attendance
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-chart-line me-2"></i>View Performance
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#">
+                                                        <i class="fas fa-envelope me-2"></i>Send Message
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="flaticon-classmates display-1 text-muted"></i>
+                        <h4 class="mt-3">No Students Found</h4>
+                        <p class="text-muted">
+                            {% if class_filter %}
+                            No students found in the selected class.
+                            {% else %}
+                            You don't have any students assigned to your classes.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterStudents() {
+    const classId = document.getElementById('classFilter').value;
+    const url = new URL(window.location.href);
+    
+    if (classId) {
+        url.searchParams.set('class', classId);
+    } else {
+        url.searchParams.delete('class');
+    }
+    
+    window.location.href = url.toString();
+}
+
+function searchStudents() {
+    const searchTerm = document.getElementById('searchStudent').value.toLowerCase();
+    const rows = document.querySelectorAll('#studentsTable tbody tr');
+    
+    rows.forEach(row => {
+        const studentName = row.cells[1].textContent.toLowerCase();
+        if (studentName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+    
+    // Enable search on enter key
+    $('#searchStudent').on('keyup', function(e) {
+        if (e.key === 'Enter') {
+            searchStudents();
+        }
+    });
+});
+</script>
+{% endblock %}

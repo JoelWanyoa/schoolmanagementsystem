@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assignments - Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Assignments</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                    <li>Assignments</li>
+                </ul>
+            </div>
+
+            <!-- Flash Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card height-auto">
+                <div class="card-body">
+
+                    <!-- Header -->
+                    <div class="heading-layout1 mb-3 d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">Assignment Management</h3>
+                        <a href="{% url 'assignment_create' %}" class="btn btn-primary">
+                            <i class="fas fa-plus mr-2"></i> Create New Assignment
+                        </a>
+                    </div>
+
+                    <!-- Stats Section -->
+                    <div class="row mb-4">
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-magenta">
+                                            <i class="fas fa-tasks text-magenta"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Total</div>
+                                            <div class="item-number"><span class="counter">{{ total_assignments }}</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-blue">
+                                            <i class="fas fa-clipboard-check text-blue"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Pending Grading</div>
+                                            <div class="item-number">{{ pending_count }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-green">
+                                            <i class="fas fa-paper-plane text-green"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Submitted</div>
+                                            <div class="item-number">{{ submitted_count }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-sm-6 col-12">
+                            <div class="dashboard-summery-one">
+                                <div class="row align-items-center">
+                                    <div class="col-6">
+                                        <div class="item-icon bg-light-red">
+                                            <i class="fas fa-exclamation-triangle text-red"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="item-content">
+                                            <div class="item-title">Overdue</div>
+                                            <div class="item-number">{{ overdue_count }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assignment Table -->
+                    <div class="table-responsive">
+                        {% if assignments %}
+                        <table class="table display text-nowrap">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Assignment</th>
+                                    <th>Subject</th>
+                                    <th>Class</th>
+                                    <th>Due Date</th>
+                                    <th>Submissions</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignments %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'assignment_detail' assignment.id %}" class="text-primary font-weight-bold">
+                                            {{ assignment.title }}
+                                        </a><br>
+                                        <small class="text-muted">Created: {{ assignment.created_at|date:"M d, Y" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if assignment.subject %}
+                                            <span class="badge badge-info">{{ assignment.subject.name }}</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No Subject</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if assignment.class_level %}
+                                            <span class="badge badge-light">{{ assignment.class_level.name }}</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No Class</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="font-weight-bold {% if assignment.is_overdue %}text-danger{% else %}text-success{% endif %}">
+                                            {{ assignment.due_date|date:"M d, Y H:i" }}
+                                        </span>
+                                    </td>
+                                    <!-- In the assignments table, replace the submissions progress section with: -->
+<td>
+    <div class="progress" style="height: 10px;">
+        <div class="progress-bar bg-success" role="progressbar"
+            style="width: {% if assignment.total_students > 0 %}{% widthratio assignment.submitted_count assignment.total_students 100 %}{% else %}0{% endif %}%;"></div>
+    </div>
+    <small class="text-muted">
+        {{ assignment.submitted_count }}/{% if assignment.total_students %}{{ assignment.total_students }}{% else %}0{% endif %}
+    </small>
+</td>
+                                    <td>
+                                        {% if assignment.is_overdue %}
+                                            <span class="badge badge-danger">Overdue</span>
+                                        {% else %}
+                                            <span class="badge badge-{% if assignment.status == 'PUBLISHED' %}success{% elif assignment.status == 'DRAFT' %}warning{% else %}secondary{% endif %}">
+                                                {{ assignment.get_status_display }}
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'assignment_detail' assignment.id %}">
+                                                    <i class="fas fa-eye text-dark-pastel-green"></i> View
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'assignment_download_submissions' assignment.id %}">
+                                                    <i class="fas fa-download text-orange-peel"></i> Download Submissions
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'assignment_edit' assignment.id %}">
+                                                    <i class="fas fa-edit text-blue"></i> Edit
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item text-danger" href="{% url 'assignment_delete' assignment.id %}">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tasks fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">No Assignments Found</h4>
+                            <p>You haven't created any assignments yet.</p>
+                            <a href="{% url 'assignment_create' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus mr-2"></i>Create First Assignment
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if assignments.has_other_pages %}
+                    <div class="pagination-wrap mt-4">
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if assignments.has_previous %}
+                                <li class="page-item"><a class="page-link" href="?page={{ assignments.previous_page_number }}">&laquo;</a></li>
+                                {% endif %}
+                                {% for num in assignments.paginator.page_range %}
+                                    {% if assignments.number == num %}
+                                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                    {% else %}
+                                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if assignments.has_next %}
+                                <li class="page-item"><a class="page-link" href="?page={{ assignments.next_page_number }}">&raquo;</a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animate dashboard counters
+    $('.counter').each(function() {
+        $(this).prop('Counter', 0).animate({
+            Counter: $(this).text()
+        }, {
+            duration: 2000,
+            easing: 'swing',
+            step: function(now) {
+                $(this).text(Math.ceil(now));
+            }
+        });
+    });
+</script>
+{% endblock %}

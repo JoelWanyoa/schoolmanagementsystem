@@ -230,3 +230,44 @@ class ParentForm(forms.ModelForm):
         model = Parent
         fields = '__all__'
         exclude = ['user', 'created_at', 'updated_at']
+
+class AssignmentForm(forms.ModelForm):
+    due_date = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        input_formats=['%Y-%m-%dT%H:%M']
+    )
+    
+    class Meta:
+        model = Assignment
+        fields = ['title', 'description', 'subject', 'class_level', 'assignment_type', 
+                 'total_marks', 'due_date', 'attachment', 'status']
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        self.teacher = kwargs.pop('teacher', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.teacher:
+            # Filter subjects to only those the teacher teaches
+            self.fields['subject'].queryset = self.teacher.subjects.all()
+            
+            # Filter classes - show classes teacher teaches OR all classes if none assigned
+            teacher_classes = Class.objects.filter(class_teacher=self.teacher)
+            if teacher_classes.exists():
+                self.fields['class_level'].queryset = teacher_classes
+            else:
+                # Fallback: show all classes if teacher has no assigned classes
+                self.fields['class_level'].queryset = Class.objects.all()
+                
+            # Add helpful text
+            self.fields['class_level'].help_text = "Select the class for this assignment"
+
+class AssignmentSubmissionForm(forms.ModelForm):
+    class Meta:
+        model = AssignmentSubmission
+        fields = ['submission_file', 'submission_text']
+        widgets = {
+            'submission_text': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Type your submission here...'}),
+        }

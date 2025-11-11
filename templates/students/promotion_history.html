@@ -1,0 +1,565 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Promotion History - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Promotion History</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_students' %}">Students</a></li>
+                    <li><a href="{% url 'student_promotion' %}">Student Promotion</a></li>
+                    <li>Promotion History</li>
+                </ul>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+            <div class="row">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <strong>
+                            {% if message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i> Error!
+                            {% elif message.tags == 'success' %}
+                                <i class="fas fa-check-circle"></i> Success!
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i> Warning!
+                            {% elif message.tags == 'info' %}
+                                <i class="fas fa-info-circle"></i> Info!
+                            {% endif %}
+                        </strong>
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Statistics Cards -->
+<div class="row gutters-20 mb-4">
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card dashboard-card-seven">
+            <div class="social-media bg-fb hover-fb">
+                <div class="media media-none--lg">
+                    <div class="social-icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <div class="media-body space-sm">
+                        <h6 class="item-title">Total Promotions</h6>
+                    </div>
+                </div>
+                <div class="social-like">{{ total_promotions_count }}</div>
+                {% if filtered_count != total_promotions_count %}
+                <small class="filtered-text">({{ filtered_count }} filtered)</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card dashboard-card-seven">
+            <div class="social-media bg-twitter hover-twitter">
+                <div class="media media-none--lg">
+                    <div class="social-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="media-body space-sm">
+                        <h6 class="item-title">Students Promoted</h6>
+                    </div>
+                </div>
+                <div class="social-like">{{ unique_students_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card dashboard-card-seven">
+            <div class="social-media bg-gplus hover-gplus">
+                <div class="media media-none--lg">
+                    <div class="social-icon">
+                        <i class="fas fa-chalkboard"></i>
+                    </div>
+                    <div class="media-body space-sm">
+                        <h6 class="item-title">Classes Involved</h6>
+                    </div>
+                </div>
+                <div class="social-like">{{ classes_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-sm-6 col-12">
+        <div class="card dashboard-card-seven">
+            <div class="social-media bg-linkedin hover-linkedin">
+                <div class="media media-none--lg">
+                    <div class="social-icon">
+                        <i class="fas fa-calendar"></i>
+                    </div>
+                    <div class="media-body space-sm">
+                        <h6 class="item-title">This Month</h6>
+                    </div>
+                </div>
+                <div class="social-like">{{ this_month_count }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h4>Filter Promotions</h4>
+                            </div>
+                            <form method="GET" class="filter-form">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Class</label>
+                                            <select name="class" class="form-control">
+                                                <option value="">All Classes</option>
+                                                {% for class in classes %}
+                                                <option value="{{ class.id }}" {% if request.GET.class == class.id|stringformat:"i" %}selected{% endif %}>
+                                                    {{ class.name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Student</label>
+                                            <input type="text" name="student" class="form-control" placeholder="Search student..." value="{{ request.GET.student }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Date</label>
+                                            <input type="date" name="date" class="form-control" value="{{ request.GET.date }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>&nbsp;</label>
+                                            <div class="btn-group w-100">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-filter"></i> Filter
+                                                </button>
+                                                <a href="{% url 'promotion_history' %}" class="btn btn-secondary">
+                                                    <i class="fas fa-redo"></i> Reset
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Promotion History Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Promotion History</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'student_promotion' %}">
+                                            <i class="fas fa-graduation-cap"></i> New Promotion
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#" id="exportPromotions">
+                                            <i class="fas fa-download"></i> Export Data
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap" id="promotionTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Student</th>
+                                            <th>From Class</th>
+                                            <th>To Class</th>
+                                            <th>Academic Year</th>
+                                            <th>Promoted By</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for promotion in promotions %}
+                                        <tr>
+                                            <td>
+                                                <div class="promotion-date">
+                                                    <strong>{{ promotion.promotion_date|date:"M d, Y" }}</strong>
+                                                    <small class="text-muted">{{ promotion.promotion_date|date:"h:i A" }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="student-info">
+                                                    <div class="student-avatar">
+                                                        {% if promotion.student.photo %}
+                                                        <img src="{{ promotion.student.photo.url }}" alt="{{ promotion.student.get_full_name }}">
+                                                        {% else %}
+                                                        <div class="avatar-placeholder">
+                                                            <i class="fas fa-user-graduate"></i>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="student-details">
+                                                        <h6 class="student-name">{{ promotion.student.first_name }} {{ promotion.student.last_name }}</h6>
+                                                        <span class="student-email">{{ promotion.student.student_id }}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="class-info">
+                                                    <span class="badge badge-class">{{ promotion.from_class.name }}</span>
+                                                    {% if promotion.from_section %}
+                                                    <small class="text-muted d-block">{{ promotion.from_section.name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="class-info">
+                                                    <span class="badge badge-success">{{ promotion.to_class.name }}</span>
+                                                    {% if promotion.to_section %}
+                                                    <small class="text-muted d-block">{{ promotion.to_section.name }}</small>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-year">{{ promotion.academic_year.name }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="user-info">
+                                                    <span class="user-name">{{ promotion.promoted_by.get_full_name|default:promotion.promoted_by.username }}</span>
+                                                    <small class="text-muted d-block">{{ promotion.promoted_by.email }}</small>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-info view-promotion" data-toggle="tooltip" title="View Details" data-promotion-id="{{ promotion.id }}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-warning revert-promotion" data-toggle="tooltip" title="Revert Promotion" data-promotion-id="{{ promotion.id }}">
+                                                        <i class="fas fa-undo"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <div class="empty-icon">
+                                                        <i class="fas fa-history"></i>
+                                                    </div>
+                                                    <h4>No Promotion History</h4>
+                                                    <p>No promotions have been recorded yet.</p>
+                                                    <a href="{% url 'student_promotion' %}" class="btn btn-primary">
+                                                        <i class="fas fa-graduation-cap"></i> Promote Students
+                                                    </a>
+                                                </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            {% if promotions.has_other_pages %}
+                            <div class="pagination-wrapper mt-4">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center">
+                                        {% if promotions.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ promotions.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        {% endif %}
+
+                                        {% for num in promotions.paginator.page_range %}
+                                            {% if promotions.number == num %}
+                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                            {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+
+                                        {% if promotions.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ promotions.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </nav>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Promotion Details Modal -->
+<div class="modal fade" id="promotionDetailsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Promotion Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="promotionDetailsContent">
+                <!-- Details will be loaded here via AJAX -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize tooltips
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // View promotion details
+    $('.view-promotion').on('click', function() {
+        const promotionId = $(this).data('promotion-id');
+        
+        // Show loading state
+        $('#promotionDetailsContent').html(`
+            <div class="text-center py-4">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-2">Loading promotion details...</p>
+            </div>
+        `);
+        
+        $('#promotionDetailsModal').modal('show');
+        
+        // In a real implementation, you would make an AJAX call here
+        // For now, we'll just show a message
+        setTimeout(() => {
+            $('#promotionDetailsContent').html(`
+                <div class="promotion-details">
+                    <p>Promotion details would be loaded here via AJAX.</p>
+                    <p>This would include comprehensive information about the promotion.</p>
+                </div>
+            `);
+        }, 1000);
+    });
+
+    // Revert promotion
+    $('.revert-promotion').on('click', function() {
+        const promotionId = $(this).data('promotion-id');
+        
+        if (confirm('Are you sure you want to revert this promotion? This action cannot be undone.')) {
+            // Show loading
+            $(this).html('<i class="fas fa-spinner fa-spin"></i>');
+            $(this).prop('disabled', true);
+            
+            // In a real implementation, you would make an AJAX call here
+            setTimeout(() => {
+                alert('Promotion reversion would be implemented here.');
+                location.reload();
+            }, 1000);
+        }
+    });
+
+    // Export promotions
+    $('#exportPromotions').on('click', function(e) {
+        e.preventDefault();
+        
+        // Get current filters
+        const filters = new URLSearchParams(window.location.search);
+        
+        // Redirect to export URL (you would create this view)
+        window.location.href = '{% url "promotion_history" %}?export=csv&' + filters.toString();
+    });
+
+    // DataTable initialization (if using DataTables)
+    if ($.fn.DataTable) {
+        $('#promotionTable').DataTable({
+            pageLength: 25,
+            order: [[0, 'desc']],
+            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search promotions...",
+                lengthMenu: "_MENU_"
+            }
+        });
+    }
+});
+</script>
+
+<style>
+.promotion-date {
+    text-align: center;
+}
+
+.promotion-date strong {
+    display: block;
+    font-size: 14px;
+}
+
+.promotion-date small {
+    font-size: 12px;
+}
+
+.student-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.student-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 16px;
+}
+
+.student-details h6 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.student-email {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.class-info {
+    text-align: center;
+}
+
+.user-info {
+    text-align: center;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.badge-class {
+    background-color: rgba(67, 97, 238, 0.1);
+    color: #4361ee;
+    border: 1px solid #4361ee;
+}
+
+.badge-success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.badge-year {
+    background-color: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+    border: 1px solid #f39c12;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-icon {
+    font-size: 60px;
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.filter-form .form-group {
+    margin-bottom: 0;
+}
+
+.pagination-wrapper .pagination {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .student-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 5px;
+    }
+    
+    .class-info, .user-info {
+        text-align: left;
+    }
+    
+    .btn-group-sm .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+</style>
+{% endblock %}

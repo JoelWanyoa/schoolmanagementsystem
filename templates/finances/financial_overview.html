@@ -1,280 +1,373 @@
-{% extends 'base.html' %} {% load static %} {% block title %}Financial
-Overview{% endblock %} {% block content %}
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Financial Analytics - Petra Education Centre{% endblock %}
+
+{% block content %}
 <div id="wrapper" class="wrapper bg-ash">
-  {% include 'includes/header.html' %}
-
-  <div class="dashboard-page-one">
-    {% include 'includes/sidebar.html' %}
-    <div class="dashboard-content-one">
-      <!-- Breadcubs Area Start Here -->
-      <div class="breadcrumbs-area">
-        <h3>Financial Overview</h3>
-        <ul>
-          <li>
-            <a href="{% url 'dashboard' %}">Home</a>
-          </li>
-          <li>Financial Overview</li>
-        </ul>
-      </div>
-      <!-- Breadcubs Area End Here -->
-
-      <!-- Financial Summary Cards Start Here -->
-      <div class="row">
-        <div class="col-xl-3 col-sm-6 mb-4">
-          <div class="card border-left-primary shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div
-                    class="text-xs font-weight-bold text-primary text-uppercase mb-1"
-                  >
-                    Total Revenue
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    Kes. {{ total_revenue|floatformat:2 }}
-                  </div>
-                </div>
-                <div class="col-auto">
-                  <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
-                </div>
-              </div>
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Financial Analytics</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li>Financial Analytics</li>
+                </ul>
             </div>
-          </div>
-        </div>
 
-        <div class="col-xl-3 col-sm-6 mb-4">
-          <div class="card border-left-success shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div
-                    class="text-xs font-weight-bold text-success text-uppercase mb-1"
-                  >
-                    Total Expenses
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    Kes. {{ total_expenses|floatformat:2 }}
-                  </div>
+            <!-- Statistics Cards -->
+            <div class="row gutters-20">
+                <!-- Total Revenue -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-fb hover-fb">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Total Revenue</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">Kes. {{ total_revenue|floatformat:2 }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-auto">
-                  <i class="fas fa-receipt fa-2x text-gray-300"></i>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-xl-3 col-sm-6 mb-4">
-          <div class="card border-left-info shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div
-                    class="text-xs font-weight-bold text-info text-uppercase mb-1"
-                  >
-                    Net Profit
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    Kes. {{ net_profit|floatformat:2 }}
-                  </div>
+                <!-- Total Expenses -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-twitter hover-twitter">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Total Expenses</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">Kes. {{ total_expenses|floatformat:2 }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-auto">
-                  <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+
+                <!-- Net Profit -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-gplus hover-gplus">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Net Profit</h6>
+                                </div>
+                            </div>
+                            <div class="social-like {% if net_profit < 0 %}text-danger{% else %}text-white{% endif %}">
+                                Kes. {{ net_profit|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        <div class="col-xl-3 col-sm-6 mb-4">
-          <div class="card border-left-warning shadow h-100 py-2">
-            <div class="card-body">
-              <div class="row no-gutters align-items-center">
-                <div class="col mr-2">
-                  <div
-                    class="text-xs font-weight-bold text-warning text-uppercase mb-1"
-                  >
-                    Pending Payments
-                  </div>
-                  <div class="h5 mb-0 font-weight-bold text-gray-800">
-                    {{ pending_payments }}
-                  </div>
+                <!-- Pending Payments -->
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card dashboard-card-seven">
+                        <div class="social-media bg-linkedin hover-linkedin">
+                            <div class="media media-none--lg">
+                                <div class="social-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="media-body space-sm">
+                                    <h6 class="item-title">Pending Payments</h6>
+                                </div>
+                            </div>
+                            <div class="social-like">{{ pending_payments }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-auto">
-                  <i class="fas fa-clock fa-2x text-gray-300"></i>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Quick Actions</h6>
+                                <div>
+                                    <a href="{% url 'add_expense' %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-plus"></i> Add Expense
+                                    </a>
+                                    <a href="{% url 'add_fee' %}" class="btn btn-success btn-sm ml-2">
+                                        <i class="fas fa-plus"></i> Add Fee
+                                    </a>
+                                    <a href="{% url 'expense_management' %}" class="btn btn-info btn-sm ml-2">
+                                        <i class="fas fa-cog"></i> Manage Expenses
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
-        </div>
-      </div>
-      <!-- Financial Summary Cards End Here -->
 
-      <!-- Charts and Detailed Overview Start Here -->
-      <div class="row">
-        <!-- Expense Chart -->
-        <div class="col-xl-8 col-lg-7">
-          <div class="card shadow mb-4">
-            <div
-              class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-            >
-              <h6 class="m-0 font-weight-bold text-primary">
-                Expense Overview
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="chart-area">
-                <canvas id="expenseChart"></canvas>
-              </div>
-            </div>
-          </div>
-        </div>
+            <!-- Charts and Analytics -->
+            <div class="row gutters-20">
+                <!-- Monthly Expense Chart -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Monthly Expenses</h3>
+                                </div>
+                            </div>
+                            <div class="bar-chart-wrap">
+                                <canvas id="monthlyExpenseChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Expense by Category -->
-        <div class="col-xl-4 col-lg-5">
-          <div class="card shadow mb-4">
-            <div
-              class="card-header py-3 d-flex flex-row align-items-center justify-content-between"
-            >
-              <h6 class="m-0 font-weight-bold text-primary">
-                Expense by Category
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="chart-pie pt-4 pb-2">
-                <canvas id="expensePieChart"></canvas>
-              </div>
-              <div class="mt-4 text-center small">
-                {% for category in expense_categories %}
-                <span class="mr-2">
-                  <i
-                    class="fas fa-circle"
-                    style="color: {{ category.color }}"
-                  ></i>
-                  {{ category.name }}
-                </span>
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+                <!-- Expense by Category -->
+                <div class="col-xl-6 col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Expense by Category</h3>
+                                </div>
+                            </div>
+                            <div class="doughnut-chart-wrap">
+                                <canvas id="expenseCategoryChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-      <!-- Recent Transactions -->
-      <div class="card shadow mb-4">
-        <div class="card-header py-3">
-          <h6 class="m-0 font-weight-bold text-primary">Recent Transactions</h6>
+                <!-- Expense Breakdown - FIXED -->
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Expense Breakdown</h3>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Percentage</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if expense_breakdown %}
+                                            {% for category in expense_breakdown %}
+                                            <tr>
+                                                <td>
+                                                    <i class="fas fa-circle mr-2" style="color: {{ category.color }}"></i>
+                                                    {{ category.name }}
+                                                </td>
+                                                <td class="font-weight-bold">
+                                                    Kes. {{ category.amount|floatformat:2 }}
+                                                </td>
+                                                <td>
+                                                    {{ category.percentage }}%
+                                                </td>
+                                                <td>
+                                                    <span class="badge badge-{% if category.amount > 0 %}success{% else %}secondary{% endif %}">
+                                                        {% if category.amount > 0 %}Active{% else %}No Expenses{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                            <tr>
+                                                <td colspan="4" class="text-center py-4">
+                                                    <i class="fas fa-chart-pie fa-2x text-muted mb-2"></i>
+                                                    <p class="text-muted">No expense data available</p>
+                                                    <a href="{% url 'add_expense' %}" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-plus"></i> Add First Expense
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                    </tbody>
+                                    {% if expense_breakdown %}
+                                    <tfoot>
+                                        <tr class="bg-light">
+                                            <td class="font-weight-bold">Total</td>
+                                            <td class="font-weight-bold">Kes. {{ total_expenses|floatformat:2 }}</td>
+                                            <td class="font-weight-bold">100%</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                    {% endif %}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Recent Transactions</h3>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Description</th>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for transaction in recent_transactions %}
+                                        <tr>
+                                            <td>{{ transaction.date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <div class="font-weight-bold">{{ transaction.name }}</div>
+                                                <small class="text-muted">{{ transaction.description|default:"No description" }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-light">{{ transaction.get_expense_type_display }}</span>
+                                            </td>
+                                            <td class="font-weight-bold text-dark">
+                                                Kes. {{ transaction.amount|floatformat:2 }}
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-{% if transaction.status == 'paid' %}success{% else %}warning{% endif %}">
+                                                    {{ transaction.status|title }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">
+                                                <i class="fas fa-receipt fa-2x text-muted mb-2"></i>
+                                                <p class="text-muted">No transactions found</p>
+                                                <a href="{% url 'add_expense' %}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-plus"></i> Add First Expense
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table
-              class="table table-bordered"
-              id="dataTable"
-              width="100%"
-              cellspacing="0"
-            >
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Category</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for transaction in recent_transactions %}
-                <tr>
-                  <td>{{ transaction.date|date:"M d, Y" }}</td>
-                  <td>{{ transaction.description }}</td>
-                  <td>{{ transaction.category }}</td>
-                  <td>Kes. {{ transaction.amount|floatformat:2 }}</td>
-                  <td>
-                    <span class="badge badge-{{ transaction.status_class }}">
-                      {{ transaction.status }}
-                    </span>
-                  </td>
-                </tr>
-                {% empty %}
-                <tr>
-                  <td colspan="5" class="text-center">No transactions found</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
-{% endblock %} {% block scripts %}
-<script>
-  // Expense Chart
-  var ctx = document.getElementById('expenseChart').getContext('2d');
-  var expenseChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-          labels: {{ monthly_labels|safe }},
-          datasets: [{
-              label: 'Expenses',
-              data: {{ monthly_expenses|safe }},
-              backgroundColor: 'rgba(78, 115, 223, 0.05)',
-              borderColor: 'rgba(78, 115, 223, 1)',
-              pointRadius: 3,
-              pointBackgroundColor: 'rgba(78, 115, 223, 1)',
-              pointBorderColor: 'rgba(78, 115, 223, 1)',
-              pointHoverRadius: 3,
-              pointHoverBackgroundColor: 'rgba(78, 115, 223, 1)',
-              pointHoverBorderColor: 'rgba(78, 115, 223, 1)',
-              pointHitRadius: 10,
-              pointBorderWidth: 2,
-              fill: true
-          }]
-      },
-      options: {
-          maintainAspectRatio: false,
-          layout: {
-              padding: {
-                  left: 10,
-                  right: 25,
-                  top: 25,
-                  bottom: 0
-              }
-          }
-      }
-  });
+{% endblock %}
 
-  // Expense Pie Chart
-  var ctx2 = document.getElementById('expensePieChart').getContext('2d');
-  var expensePieChart = new Chart(ctx2, {
-      type: 'doughnut',
-      data: {
-          labels: {{ category_labels|safe }},
-          datasets: [{
-              data: {{ category_data|safe }},
-              backgroundColor: {{ category_colors|safe }},
-              hoverBackgroundColor: {{ category_colors|safe }},
-              hoverBorderColor: "rgba(234, 236, 244, 1)",
-          }],
-      },
-      options: {
-          maintainAspectRatio: false,
-          tooltips: {
-              backgroundColor: "rgb(255,255,255)",
-              bodyFontColor: "#858796",
-              borderColor: '#dddfeb',
-              borderWidth: 1,
-              xPadding: 15,
-              yPadding: 15,
-              displayColors: false,
-              caretPadding: 10,
-          },
-          legend: {
-              display: false
-          },
-          cutoutPercentage: 80,
-      },
-  });
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        // Parse JSON data safely
+        function parseJsonSafely(jsonString, defaultValue) {
+            try {
+                return JSON.parse(jsonString);
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+                return defaultValue;
+            }
+        }
+
+        const monthlyLabels = parseJsonSafely('{{ monthly_labels|safe }}', ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']);
+        const monthlyExpenses = parseJsonSafely('{{ monthly_expenses|safe }}', [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        const categoryLabels = parseJsonSafely('{{ category_labels|safe }}', ['No Data']);
+        const categoryData = parseJsonSafely('{{ category_data|safe }}', [1]);
+        const categoryColors = parseJsonSafely('{{ category_colors|safe }}', ['#858796']);
+
+        console.log('Monthly Expenses Data:', monthlyExpenses);
+        console.log('Category Data:', categoryData);
+
+        // Monthly Expense Chart
+        const monthlyCtx = document.getElementById('monthlyExpenseChart').getContext('2d');
+        const monthlyChart = new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyLabels,
+                datasets: [{
+                    label: 'Monthly Expenses (KES)',
+                    data: monthlyExpenses,
+                    borderColor: '#4361ee',
+                    backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4361ee',
+                    pointBorderColor: '#fff',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KES ' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Expense Category Chart
+        const categoryCtx = document.getElementById('expenseCategoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: categoryLabels,
+                datasets: [{
+                    data: categoryData,
+                    backgroundColor: categoryColors,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    });
 </script>
 {% endblock %}

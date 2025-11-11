@@ -77,22 +77,35 @@
                         </div>
                     </form>
 
-                    <!-- Bulk Actions and Select All -->
+                    <!-- Bulk Actions and Select All - IMPROVED LIKE STUDENTS PAGE -->
                     <div class="row mb-3">
                         <div class="col-12">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check mr-3">
-                                    <input type="checkbox" class="form-check-input checkAll" id="selectAll">
-                                    <label class="form-check-label" for="selectAll">Select All</label>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check mr-3">
+                                        <input type="checkbox" class="form-check-input checkAll" id="selectAll">
+                                        <label class="form-check-label" for="selectAll">Select All</label>
+                                    </div>
+                                    <div class="selected-count mr-3" id="selectedCount" style="display: none;">
+                                        <span class="badge badge-primary">0 selected</span>
+                                    </div>
                                 </div>
                                 <div class="bulk-actions">
+                                    <!-- Hidden form for bulk actions -->
+                                    <form id="bulkActionForm" method="POST" action="{% url 'bulk_fee_actions' %}" style="display: none;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" id="bulkActionInput">
+                                        <input type="hidden" name="fee_ids" id="feeIdsInput">
+                                    </form>
                                     <select class="form-control form-control-sm d-inline-block w-auto mr-2" id="bulkActionSelect">
                                         <option value="">Bulk Actions</option>
                                         <option value="mark_paid">Mark as Paid</option>
                                         <option value="mark_unpaid">Mark as Unpaid</option>
-                                        <option value="delete">Delete</option>
+                                        <option value="send_reminder">Send Reminder</option>
+                                        <option value="export_selected">Export Selected</option>
+                                        <option value="delete">Delete Selected</option>
                                     </select>
-                                    <button type="button" class="btn btn-sm btn-gradient-yellow" id="applyBulkAction">Apply</button>
+                                    <button type="button" class="btn btn-sm btn-gradient-yellow" id="applyBulkAction" disabled>Apply</button>
                                 </div>
                             </div>
                         </div>
@@ -100,12 +113,13 @@
 
                     <!-- Fees Table -->
                     <div class="table-responsive">
-                        <table class="table display text-nowrap data-table">
+                        <table class="table display text-nowrap data-table" id="feesTable">
                             <thead>
                                 <tr>
-                                    <th>
+                                    <th width="50">
                                         <div class="form-check">
                                             <input type="checkbox" class="form-check-input checkAll" id="checkAllHeader">
+                                            <label class="form-check-label"></label>
                                         </div>
                                     </th>
                                     <th>ID</th>
@@ -127,6 +141,7 @@
                                     <td>
                                         <div class="form-check">
                                             <input type="checkbox" class="form-check-input fee-checkbox" value="{{ fee.id }}" data-fee-id="{{ fee.id }}">
+                                            <label class="form-check-label"></label>
                                         </div>
                                     </td>
                                     <td>#{{ fee.id|stringformat:"06d" }}</td>
@@ -294,114 +309,254 @@
     .form-check-input {
         margin-top: 0;
     }
+    .selected-count {
+        font-size: 0.875rem;
+    }
+    /* Improved checkbox styling */
+    .form-check-input:checked {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+    /* Row selection styling */
+    tr.selected {
+        background-color: rgba(67, 97, 238, 0.05) !important;
+    }
+    /* Bulk actions panel */
+    .bulk-actions-panel {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px 15px;
+        margin-bottom: 15px;
+    }
 </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Initialize DataTable
-    $('.data-table').DataTable({
-        "paging": false,
-        "searching": false,
-        "info": false,
-        "responsive": true,
-        "language": {
-            "emptyTable": "No fees records available"
-        },
-        "columnDefs": [
-            {
-                "targets": 0, // First column (checkboxes)
-                "orderable": false,
-                "searchable": false
-            },
-            {
-                "targets": 11, // Actions column
-                "orderable": false,
-                "searchable": false
+    // CSRF token setup for AJAX
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
-        ]
-    });
-    
-    // Select All functionality
-    $('.checkAll').on('change', function() {
-        var isChecked = $(this).prop('checked');
-        $('.fee-checkbox').prop('checked', isChecked);
-        updateBulkActionsState();
-    });
-    
-    // Individual checkbox change
-    $('.fee-checkbox').on('change', function() {
-        updateSelectAllState();
-        updateBulkActionsState();
-    });
-    
-    // Update Select All checkbox state
-    function updateSelectAllState() {
-        var allChecked = $('.fee-checkbox:checked').length === $('.fee-checkbox').length;
-        var someChecked = $('.fee-checkbox:checked').length > 0;
-        
-        $('.checkAll').prop('checked', allChecked);
-        $('.checkAll').prop('indeterminate', someChecked && !allChecked);
-    }
-    
-    // Update bulk actions state
-    function updateBulkActionsState() {
-        var checkedCount = $('.fee-checkbox:checked').length;
-        var bulkActions = $('#bulkActionSelect, #applyBulkAction');
-        
-        if (checkedCount > 0) {
-            bulkActions.prop('disabled', false);
-            $('#applyBulkAction').text('Apply (' + checkedCount + ')');
-        } else {
-            bulkActions.prop('disabled', true);
-            $('#applyBulkAction').text('Apply');
         }
+        return cookieValue;
     }
     
-    // Bulk actions apply
-    $('#applyBulkAction').on('click', function() {
-        var action = $('#bulkActionSelect').val();
-        var selectedFees = [];
-        
-        $('.fee-checkbox:checked').each(function() {
-            selectedFees.push($(this).data('fee-id'));
+    const csrftoken = getCookie('csrftoken');
+    
+    $(document).ready(function() {
+        // Simple Select All functionality
+        $('#selectAll, #checkAllHeader').on('change', function() {
+            var isChecked = $(this).prop('checked');
+            
+            // Select all checkboxes on the page
+            $('.fee-checkbox').prop('checked', isChecked);
+            
+            updateSelectedCount();
+            updateBulkActionsState();
+            updateRowSelection();
         });
-        
-        if (selectedFees.length === 0) {
-            alert('Please select at least one fee.');
-            return;
-        }
-        
-        if (!action) {
-            alert('Please select a bulk action.');
-            return;
-        }
-        
-        // Confirm action
-        var actionText = $('#bulkActionSelect option:selected').text();
-        if (confirm('Are you sure you want to ' + actionText.toLowerCase() + ' for ' + selectedFees.length + ' selected fee(s)?')) {
-            // For now, just show a message since we don't have bulk actions implemented
-            alert('Bulk action functionality would process: ' + action + ' on ' + selectedFees.length + ' fee(s).\n\nSelected fee IDs: ' + selectedFees.join(', '));
-            
-            // You can implement the actual bulk actions later by:
-            // 1. Creating a view for bulk actions in views.py
-            // 2. Adding the URL pattern in urls.py
-            // 3. Making an AJAX call here
-            
-            // Example for future implementation:
-            // performBulkAction(action, selectedFees);
-        }
-    });
     
-    // Search form enhancement
-    $('form').on('submit', function() {
-        // Add loading state
-        $('.fw-btn-fill').html('<i class="fas fa-spinner fa-spin"></i> Searching...');
-    });
+        // Individual checkbox change
+        $(document).on('change', '.fee-checkbox', function() {
+            updateSelectAllState();
+            updateSelectedCount();
+            updateBulkActionsState();
+            updateRowSelection();
+        });
     
-    // Initialize states
-    updateBulkActionsState();
-});
-</script>
+        // Update Select All checkbox state
+        function updateSelectAllState() {
+            var totalCheckboxes = $('.fee-checkbox').length;
+            var checkedCount = $('.fee-checkbox:checked').length;
+            
+            if (totalCheckboxes === 0) return;
+            
+            var allChecked = checkedCount === totalCheckboxes;
+            var someChecked = checkedCount > 0;
+            
+            $('.checkAll').prop('checked', allChecked);
+            $('.checkAll').prop('indeterminate', someChecked && !allChecked);
+        }
+    
+        // Update selected count display
+        function updateSelectedCount() {
+            var checkedCount = $('.fee-checkbox:checked').length;
+            var selectedCountElement = $('#selectedCount');
+            
+            if (checkedCount > 0) {
+                selectedCountElement.show().find('.badge').text(checkedCount + ' selected');
+            } else {
+                selectedCountElement.hide();
+            }
+        }
+    
+        // Update row selection styling
+        function updateRowSelection() {
+            $('tbody tr').removeClass('selected');
+            $('.fee-checkbox:checked').each(function() {
+                $(this).closest('tr').addClass('selected');
+            });
+        }
+    
+        // Update bulk actions state
+        function updateBulkActionsState() {
+            var checkedCount = $('.fee-checkbox:checked').length;
+            var bulkActionSelect = $('#bulkActionSelect');
+            var applyButton = $('#applyBulkAction');
+            
+            if (checkedCount > 0) {
+                bulkActionSelect.prop('disabled', false);
+                applyButton.prop('disabled', false).text('Apply (' + checkedCount + ')');
+            } else {
+                bulkActionSelect.prop('disabled', true);
+                applyButton.prop('disabled', true).text('Apply');
+            }
+        }
+    
+        // Bulk actions apply
+        $('#applyBulkAction').on('click', function() {
+            var action = $('#bulkActionSelect').val();
+            var selectedFees = [];
+            
+            $('.fee-checkbox:checked').each(function() {
+                selectedFees.push($(this).data('fee-id'));
+            });
+            
+            console.log('Selected fees:', selectedFees);
+            console.log('Action:', action);
+            
+            if (selectedFees.length === 0) {
+                showAlert('Please select at least one fee.', 'warning');
+                return;
+            }
+            
+            if (!action) {
+                showAlert('Please select a bulk action.', 'warning');
+                return;
+            }
+            
+            // Confirm action based on type
+            var actionText = $('#bulkActionSelect option:selected').text();
+            var confirmMessage = 'Are you sure you want to ' + actionText.toLowerCase() + ' for ' + selectedFees.length + ' selected fee(s)?';
+            
+            if (action === 'delete') {
+                confirmMessage = 'This will permanently delete ' + selectedFees.length + ' fee record(s). This action cannot be undone. Are you sure?';
+            }
+            
+            if (confirm(confirmMessage)) {
+                performBulkAction(action, selectedFees);
+            }
+        });
+    
+        // Perform bulk action with proper CSRF handling
+        function performBulkAction(action, feeIds) {
+            var $button = $('#applyBulkAction');
+            var originalText = $button.html();
+            
+            // Show loading state
+            $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+            
+            // Prepare form data
+            var formData = new FormData();
+            formData.append('action', action);
+            formData.append('csrfmiddlewaretoken', csrftoken);
+            
+            // Add each fee ID individually
+            feeIds.forEach(function(feeId) {
+                formData.append('fee_ids[]', feeId);
+            });
+            
+            console.log('Sending bulk action request...');
+            
+            // Make AJAX request
+            $.ajax({
+                url: '{% url "bulk_fee_actions" %}',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRFToken': csrftoken
+                },
+                success: function(response) {
+                    console.log('Bulk action response:', response);
+                    if (response.success) {
+                        showAlert(response.message, 'success');
+                        // Reload the page to see changes
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showAlert(response.message || 'An error occurred.', 'error');
+                        $button.prop('disabled', false).html(originalText);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Bulk action error:', error);
+                    console.error('Status:', status);
+                    console.error('XHR:', xhr);
+                    
+                    var errorMessage = 'Error: ' + error;
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    
+                    showAlert(errorMessage, 'error');
+                    $button.prop('disabled', false).html(originalText);
+                }
+            });
+        }
+    
+        // Alert function
+        function showAlert(message, type = 'info') {
+            var alertClass = type === 'warning' ? 'alert-warning' : 
+                            type === 'error' ? 'alert-danger' : 
+                            type === 'success' ? 'alert-success' : 'alert-info';
+            
+            var icon = type === 'warning' ? 'exclamation-triangle' :
+                      type === 'error' ? 'exclamation-circle' :
+                      type === 'success' ? 'check-circle' : 'info-circle';
+            
+            var alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <strong>
+                        <i class="fas fa-${icon}"></i>
+                        ${type.charAt(0).toUpperCase() + type.slice(1)}!
+                    </strong>
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            `;
+            
+            // Remove existing alerts and prepend new one
+            $('.alert-dismissible').alert('close');
+            $('.breadcrumbs-area').after(alertHtml);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+    
+        // Search form enhancement
+        $('form').on('submit', function() {
+            // Add loading state
+            $('.fw-btn-fill').html('<i class="fas fa-spinner fa-spin"></i> Searching...');
+        });
+    
+        // Initialize states
+        updateBulkActionsState();
+    });
+    </script>
 {% endblock %}

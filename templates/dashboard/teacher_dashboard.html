@@ -241,46 +241,53 @@
                 </div>
 
                 <!-- Today's Attendance -->
-                <div class="col-lg-6">
-                    <div class="card height-auto">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Today's Attendance</h3>
-                                </div>
-                            </div>
-                            <div class="attendance-summary text-center">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="present-count text-success">
-                                            <i class="fas fa-check-circle fa-2x"></i>
-                                            <h4>{{ present_today|default:0 }}</h4>
-                                            <small>Present</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="absent-count text-danger">
-                                            <i class="fas fa-times-circle fa-2x"></i>
-                                            <h4>{{ absent_today|default:0 }}</h4>
-                                            <small>Absent</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% with total_attendance=present_today|add:absent_today %}
-                                    {% if total_attendance > 0 %}
-                                        <div class="progress mt-3" style="height: 10px;">
-                                            <div class="progress-bar bg-success" style="width: {% widthratio present_today total_attendance 100 %}%"></div>
-                                            <div class="progress-bar bg-danger" style="width: {% widthratio absent_today total_attendance 100 %}%"></div>
-                                        </div>
-                                        <small class="text-muted">
-                                            Attendance Rate: {% widthratio present_today total_attendance 100 %}%
-                                        </small>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
+<div class="col-lg-6">
+    <div class="card height-auto">
+        <div class="card-body">
+            <div class="heading-layout1">
+                <div class="item-title">
+                    <h3>Today's Attendance</h3>
+                </div>
+            </div>
+            <div class="attendance-summary text-center">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="present-count text-success">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                            <h4>{{ present_today|default:0 }}</h4>
+                            <small>Present</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="absent-count text-danger">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                            <h4>{{ absent_today|default:0 }}</h4>
+                            <small>Absent</small>
                         </div>
                     </div>
                 </div>
+                {% with total_attendance=present_today|default:0|add:absent_today|default:0 %}
+                    {% if total_attendance > 0 %}
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: {% widthratio present_today|default:0 total_attendance 100 %}%"></div>
+                            <div class="progress-bar bg-danger" style="width: {% widthratio absent_today|default:0 total_attendance 100 %}%"></div>
+                        </div>
+                        <small class="text-muted">
+                            Attendance Rate: {% widthratio present_today|default:0 total_attendance 100 %}%
+                        </small>
+                    {% else %}
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div class="progress-bar bg-secondary" style="width: 100%"></div>
+                        </div>
+                        <small class="text-muted">
+                            No attendance data for today
+                        </small>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
             </div>
 
             <!-- My Classes & Recent Notices -->

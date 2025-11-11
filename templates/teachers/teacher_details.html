@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Teacher Details - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .single-info-details {
+        padding: 30px;
+    }
+
+    .item-img img {
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-table table {
+        margin-top: 20px;
+    }
+
+    .info-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-table td:first-child {
+        font-weight: 600;
+        color: #333;
+        width: 200px;
+    }
+
+    .header-elements ul {
+        display: flex;
+        gap: 10px;
+    }
+
+    .header-elements a {
+        color: #666;
+        transition: color 0.3s;
+    }
+
+    .header-elements a:hover {
+        color: #ff7e5f;
+    }
+
+    .subjects-list {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .subject-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .subject-item:hover {
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .classes-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .class-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .class-item:hover {
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border-left: 4px solid #4361ee;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4361ee;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Teacher Details</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'all_teachers' %}">Teachers</a></li>
+                    <li>{{ teacher.first_name }} {{ teacher.last_name }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Teacher Details Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>About Teacher</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="single-info-details">
+                        <div class="item-img">
+                            {% if teacher.photo %}
+                            <img src="{{ teacher.photo.url }}" alt="{{ teacher.first_name }} {{ teacher.last_name }}"
+                                width="300" height="300">
+                            {% else %}
+                            <img src="{% static 'img/figure/teacher.jpg' %}"
+                                alt="{{ teacher.first_name }} {{ teacher.last_name }}" width="300" height="300">
+                            {% endif %}
+                        </div>
+                        <div class="item-content">
+                            <div class="header-inline item-header">
+                                <h3 class="text-dark-medium font-medium">{{ teacher.first_name }} {{ teacher.last_name }}</h3>
+                                <div class="header-elements">
+                                    <ul>
+                                        <li>
+                                            <a href="#"
+                                                title="Edit Teacher">
+                                                <i class="far fa-edit text-primary"></i>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="#"
+                                                title="Delete Teacher" class="text-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </li>
+                                        <li><a href="#"><i class="fas fa-print"></i></a></li>
+                                        <li><a href="#"><i class="fas fa-download"></i></a></li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <p>{{ teacher.first_name }} is a dedicated teacher at Petra Education Centre with {{ teacher.experience }} years of experience, specializing in {{ teacher.specialization }}.</p>
+
+                            <div class="info-table table-responsive">
+                                <table class="table text-nowrap">
+                                    <tbody>
+                                        <tr>
+                                            <td>Teacher ID:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.teacher_id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Full Name:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.first_name }} {{ teacher.last_name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Username:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if teacher.user %}
+                                                    {{ teacher.user.username }}
+                                                {% else %}
+                                                    <span class="text-danger">No user account</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Email:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.email }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Phone:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.phone }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Gender:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.get_gender_display }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Date of Birth:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.date_of_birth }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Religion:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if teacher.religion %}
+                                                    {{ teacher.religion }}
+                                                {% else %}
+                                                    <span class="text-muted">Not specified</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Address:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.address }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Qualification:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.qualification }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Specialization:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.specialization }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Teaching Level:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.get_teaching_level_display }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Experience:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.experience }} years</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Joining Date:</td>
+                                            <td class="font-medium text-dark-medium">{{ teacher.joining_date }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Monthly Salary:</td>
+                                            <td class="font-medium text-dark-medium">KES {{ teacher.salary|floatformat:2 }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Account Status:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if teacher.is_active %}
+                                                    <span class="badge badge-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge badge-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Subjects Count:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                <span class="badge badge-info">{{ teacher.subjects.count }}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Classes Count:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                <span class="badge badge-primary">
+                                                    {% if classes_taught %}{{ classes_taught.count }}{% else %}0{% endif %}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% if teacher.user %}
+                                        <tr>
+                                            <td>Last Login:</td>
+                                            <td class="font-medium text-dark-medium">
+                                                {% if teacher.user.last_login %}
+                                                    {{ teacher.user.last_login|date:"d.m.Y H:i" }}
+                                                {% else %}
+                                                    <span class="text-warning">Never logged in</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mt-4">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ teacher.experience }}</div>
+                        <div class="stat-label">Years Experience</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stat-card">
+                        <div class="stat-number">{{ teacher.subjects.count }}</div>
+                        <div class="stat-label">Subjects</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stat-card">
+                        <div class="stat-number">
+                            {% if classes_taught %}{{ classes_taught.count }}{% else %}0{% endif %}
+                        </div>
+                        <div class="stat-label">Classes</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stat-card">
+                        <div class="stat-number">
+                            {% now "Y" as current_year %}
+                            {% with join_year=teacher.joining_date.year %}
+                                {{ current_year|add:"-1"|add:"-"|add:join_year|add:"-" }}
+                            {% endwith %}
+                        </div>
+                        <div class="stat-label">Service Years</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subjects Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Subjects Taught</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-plus text-success"></i> Assign New Subject
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-sync text-primary"></i> Update Subjects
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if teacher.subjects.all %}
+                    <div class="subjects-list">
+                        {% for subject in teacher.subjects.all %}
+                        <div class="subject-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <i class="fas fa-book fa-2x text-primary"></i>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">{{ subject.name }}</h6>
+                                    <small class="text-muted">Code: {{ subject.code }}</small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-info">
+                                        {{ subject.get_subject_type_display }}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-light">
+                                        {{ subject.credit_hours }} hrs
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <small>Level: {{ subject.get_level_display }}</small>
+                                </div>
+                                <div class="col-md-2 text-right">
+                                    <a href="#" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Subjects Assigned</h4>
+                        <p class="text-muted">This teacher hasn't been assigned any subjects yet.</p>
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Assign Subjects
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Classes Information -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Classes Assigned</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-plus text-success"></i> Assign New Class
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-sync text-primary"></i> Update Classes
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if classes_taught %}
+                    <div class="classes-list">
+                        {% for class_obj in classes_taught %}
+                        <div class="class-item">
+                            <div class="row align-items-center">
+                                <div class="col-md-1 text-center">
+                                    <i class="fas fa-chalkboard fa-2x text-success"></i>
+                                </div>
+                                <div class="col-md-3">
+                                    <h6 class="mb-1">{{ class_obj.name }}</h6>
+                                    <small class="text-muted">
+                                        {% if class_obj.section %}
+                                            Section: {{ class_obj.section.name }}
+                                        {% else %}
+                                            No section
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-primary">
+                                        {{ class_obj.get_level_category_display }}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <span class="badge badge-info">
+                                        {% with student_count=class_obj.student_set.count %}
+                                            {{ student_count }} students
+                                        {% endwith %}
+                                    </span>
+                                </div>
+                                <div class="col-md-2">
+                                    <small>Capacity: {{ class_obj.capacity }}</small>
+                                </div>
+                                <div class="col-md-2 text-right">
+                                    <a href="#" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-times"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No Classes Assigned</h4>
+                        <p class="text-muted">This teacher hasn't been assigned to any classes yet.</p>
+                        <a href="#" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Assign Classes
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Additional Information Cards -->
+            <div class="row mt-4">
+                <!-- Account Information -->
+                <div class="col-lg-6 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Account Information</h3>
+                                </div>
+                            </div>
+                            <div class="account-info">
+                                {% if teacher.user %}
+                                <div class="info-item">
+                                    <strong>Username:</strong> {{ teacher.user.username }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Email:</strong> {{ teacher.user.email }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Status:</strong> 
+                                    {% if teacher.user.is_active %}
+                                        <span class="badge badge-success">Active</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Inactive</span>
+                                    {% endif %}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Date Joined:</strong> {{ teacher.user.date_joined|date:"d.m.Y" }}
+                                </div>
+                                <div class="info-item">
+                                    <strong>Last Login:</strong> 
+                                    {% if teacher.user.last_login %}
+                                        {{ teacher.user.last_login|date:"d.m.Y H:i" }}
+                                    {% else %}
+                                        <span class="text-warning">Never</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-warning mr-2">
+                                        <i class="fas fa-key"></i> Reset Password
+                                    </button>
+                                    {% if teacher.user.is_active %}
+                                        <button class="btn btn-sm btn-secondary">Deactivate</button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-success">Activate</button>
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-3">
+                                    <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                                    <p class="text-warning">No user account created</p>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="fas fa-user-plus"></i> Create Account
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-lg-6 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Quick Actions</h3>
+                                </div>
+                            </div>
+                            <div class="quick-actions">
+                                <div class="row text-center">
+                                    <div class="col-6 mb-3">
+                                        <a href="#" class="btn btn-light btn-block py-3">
+                                            <i class="fas fa-envelope fa-2x text-primary mb-2"></i>
+                                            <br>
+                                            <small>Send Message</small>
+                                        </a>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        {% if teacher.phone %}
+                                        <a href="tel:{{ teacher.phone }}" class="btn btn-light btn-block py-3">
+                                            <i class="fas fa-phone fa-2x text-success mb-2"></i>
+                                            <br>
+                                            <small>Call Teacher</small>
+                                            <br>
+                                            <small class="text-muted">{{ teacher.phone }}</small>
+                                        </a>
+                                        {% else %}
+                                        <button class="btn btn-light btn-block py-3" disabled>
+                                            <i class="fas fa-phone fa-2x text-muted mb-2"></i>
+                                            <br>
+                                            <small>Call Teacher</small>
+                                            <br>
+                                            <small class="text-muted">No phone</small>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-6">
+                                        <a href="#" class="btn btn-light btn-block py-3">
+                                            <i class="fas fa-plus fa-2x text-info mb-2"></i>
+                                            <br>
+                                            <small>Assign Subject</small>
+                                        </a>
+                                    </div>
+                                    <!-- In the Quick Actions section, update the Assign Class button: -->
+<div class="col-6">
+    <a href="{% url 'assign_teacher_classes' teacher.teacher_id %}" class="btn btn-light btn-block py-3">
+        <i class="fas fa-chalkboard fa-2x text-warning mb-2"></i>
+        <br>
+        <small>Assign Class</small>
+    </a>
+</div>
+
+<!-- Also update the dropdown menu in the Classes Information section: -->
+<div class="dropdown-menu dropdown-menu-right">
+    <a class="dropdown-item" href="{% url 'assign_teacher_classes' teacher.teacher_id %}">
+        <i class="fas fa-plus text-success"></i> Assign New Class
+    </a>
+    <a class="dropdown-item" href="#">
+        <i class="fas fa-sync text-primary"></i> Update Classes
+    </a>
+</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact History (Optional) -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Communications</h3>
+                        </div>
+                    </div>
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">No recent communications found.</p>
+                        <a href="{% url 'messaging' %}" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Print functionality
+        $('.fa-print').parent().on('click', function () {
+            window.print();
+        });
+
+        // Download functionality
+        $('.fa-download').parent().on('click', function () {
+            alert('Download feature will be implemented soon!');
+        });
+
+        // Reset password functionality
+        $('.btn-warning').on('click', function () {
+            if (confirm('Are you sure you want to reset the password for {{ teacher.first_name }}?')) {
+                alert('Password reset link will be sent to {{ teacher.email }}');
+            }
+        });
+
+        // Account activation/deactivation
+        $('.btn-success, .btn-secondary').on('click', function () {
+            const action = $(this).hasClass('btn-success') ? 'activate' : 'deactivate';
+            if (confirm(`Are you sure you want to ${action} {{ teacher.first_name }}'s account?`)) {
+                alert(`Account ${action}d successfully!`);
+                location.reload();
+            }
+        });
+    });
+</script>
+{% endblock %}

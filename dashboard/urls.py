@@ -25,13 +25,19 @@ urlpatterns = [
     path('expense-statistics/', views.expense_statistics, name='expense_statistics'),
 
     # Fees
-    path('all-fees/', views.all_fees, name='all_fees'),
-    path('fee-detail/<int:fee_id>/', views.fee_detail, name='fee_detail'),
-    path('edit-fee/<int:fee_id>/', views.edit_fee, name='edit_fee'),
-    path('mark-paid/<int:fee_id>/', views.mark_paid, name='mark_paid'),
-    path('delete-fee/<int:fee_id>/', views.delete_fee, name='delete_fee'),
+    path('fees/all-fees/', views.all_fees, name='all_fees'),
+    path('fees/fee-detail/<int:fee_id>/', views.fee_detail, name='fee_detail'),
+    path('fees/edit-fee/<int:fee_id>/', views.edit_fee, name='edit_fee'),
+    path('fees/mark-paid/<int:fee_id>/', views.mark_paid, name='mark_paid'),
+    path('fees/delete-fee/<int:fee_id>/', views.delete_fee, name='delete_fee'),
     path('add-fee/', views.add_fee, name='add_fee'),
-    
+    path('fees/bulk-actions/', views.bulk_fee_actions, name='bulk_fee_actions'),
+    path('fees/reminders/', views.fee_reminders, name='fee_reminders'),
+    path('fees/send-bulk-reminders/', views.send_bulk_reminders, name='send_bulk_reminders'),
+    path('fees/mark-bulk-paid/', views.mark_bulk_paid, name='mark_bulk_paid'),
+    path('fees/send-reminder/<int:fee_id>/', views.send_fee_reminder, name='send_fee_reminder'),
+    path('fees/mark-paid/<int:fee_id>/', views.mark_paid, name='mark_paid'),
+
     # Students DRUD
     path('students/', views.all_students, name='all_students'),
     path('students/admit/', views.admit_form, name='admit_form'),
@@ -41,6 +47,7 @@ urlpatterns = [
     path('students/<str:student_id>/restore/', views.restore_student, name='restore_student'),
     path('students/<str:student_id>/permanent-delete/', views.permanent_delete_student, name='permanent_delete_student'),
     path('students/promotion/', views.student_promotion, name='student_promotion'),
+    path('students/promotion-history/', views.promotion_history, name='promotion_history'),
     
     # Admissions Management (MISSING)
     path('students/admissions/', views.manage_admissions, name='manage_admissions'),
@@ -61,7 +68,30 @@ urlpatterns = [
     path('teachers/', views.all_teachers, name='all_teachers'),
     path('teachers/details/<str:teacher_id>/', views.teacher_details, name='teacher_details'),  # Fixed: Added parameter
     path('teachers/add/', views.add_teacher, name='add_teacher'),
+    # Teacher class assignment URLs
+    path('teachers/<str:teacher_id>/assign-classes/', views.assign_teacher_classes, name='assign_teacher_classes'),
+    path('teachers/<str:teacher_id>/remove-class/<int:class_id>/', views.remove_teacher_class, name='remove_teacher_class'),
     path('teachers/payment/', views.teacher_payment, name='teacher_payment'),
+    # Teacher Dashboard URLs
+    path('teacher/my-classes/', views.teacher_my_classes, name='teacher_my_classes'),
+    path('teacher/class-schedule/', views.teacher_class_schedule, name='teacher_class_schedule'),
+    path('teacher/my-students/', views.teacher_my_students, name='teacher_my_students'),
+    path('teacher/attendance/', views.teacher_attendance, name='teacher_attendance'),
+    path('teacher/subjects/', views.teacher_subjects, name='teacher_subjects'),
+    path('teacher/assignments/', views.teacher_assignments, name='teacher_assignments'),
+    path('teacher/exam-results/', views.teacher_exam_results, name='teacher_exam_results'),
+
+    # Assignment URLs
+    path('teacher/assignments/', views.teacher_assignments, name='teacher_assignments'),
+    path('teacher/assignments/create/', views.assignment_create, name='assignment_create'),
+    path('teacher/assignments/<int:assignment_id>/', views.assignment_detail, name='assignment_detail'),
+    path('teacher/assignments/<int:assignment_id>/edit/', views.assignment_edit, name='assignment_edit'),
+    path('teacher/assignments/<int:assignment_id>/delete/', views.assignment_delete, name='assignment_delete'),
+    path('teacher/assignments/<int:assignment_id>/download-submissions/', views.assignment_download_submissions, name='assignment_download_submissions'),
+    
+    # Teacher AJAX endpoints
+    path('teacher/mark-attendance/', views.mark_attendance, name='mark_attendance'),
+    path('teacher/get-class-students/<int:class_id>/', views.get_class_students, name='get_class_students'),
     
     # UI Elements
     path('ui/buttons/', views.buttons, name='buttons'),
