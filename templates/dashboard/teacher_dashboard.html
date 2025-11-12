@@ -201,7 +201,7 @@
                                 <div class="dropdown">
                                     <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
                                     <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#">Full Timetable</a>
+                                        <a class="dropdown-item" href="{% url 'teacher_class_schedule' %}">Full Timetable</a>
                                     </div>
                                 </div>
                             </div>
@@ -241,53 +241,59 @@
                 </div>
 
                 <!-- Today's Attendance -->
-<div class="col-lg-6">
-    <div class="card height-auto">
-        <div class="card-body">
-            <div class="heading-layout1">
-                <div class="item-title">
-                    <h3>Today's Attendance</h3>
-                </div>
-            </div>
-            <div class="attendance-summary text-center">
-                <div class="row">
-                    <div class="col-6">
-                        <div class="present-count text-success">
-                            <i class="fas fa-check-circle fa-2x"></i>
-                            <h4>{{ present_today|default:0 }}</h4>
-                            <small>Present</small>
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Today's Attendance</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'teacher_attendance' %}">Mark Attendance</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="attendance-summary text-center">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <div class="present-count text-success">
+                                            <i class="fas fa-check-circle fa-2x"></i>
+                                            <h4>{{ present_today|default:0 }}</h4>
+                                            <small>Present</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="absent-count text-danger">
+                                            <i class="fas fa-times-circle fa-2x"></i>
+                                            <h4>{{ absent_today|default:0 }}</h4>
+                                            <small>Absent</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% with total_attendance=present_today|default:0|add:absent_today|default:0 %}
+                                    {% if total_attendance > 0 %}
+                                        <div class="progress mt-3" style="height: 10px;">
+                                            <div class="progress-bar bg-success" style="width: {% widthratio present_today|default:0 total_attendance 100 %}%"></div>
+                                            <div class="progress-bar bg-danger" style="width: {% widthratio absent_today|default:0 total_attendance 100 %}%"></div>
+                                        </div>
+                                        <small class="text-muted">
+                                            Attendance Rate: {% widthratio present_today|default:0 total_attendance 100 %}%
+                                        </small>
+                                    {% else %}
+                                        <div class="progress mt-3" style="height: 10px;">
+                                            <div class="progress-bar bg-secondary" style="width: 100%"></div>
+                                        </div>
+                                        <small class="text-muted">
+                                            No attendance data for today
+                                        </small>
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="absent-count text-danger">
-                            <i class="fas fa-times-circle fa-2x"></i>
-                            <h4>{{ absent_today|default:0 }}</h4>
-                            <small>Absent</small>
-                        </div>
-                    </div>
                 </div>
-                {% with total_attendance=present_today|default:0|add:absent_today|default:0 %}
-                    {% if total_attendance > 0 %}
-                        <div class="progress mt-3" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: {% widthratio present_today|default:0 total_attendance 100 %}%"></div>
-                            <div class="progress-bar bg-danger" style="width: {% widthratio absent_today|default:0 total_attendance 100 %}%"></div>
-                        </div>
-                        <small class="text-muted">
-                            Attendance Rate: {% widthratio present_today|default:0 total_attendance 100 %}%
-                        </small>
-                    {% else %}
-                        <div class="progress mt-3" style="height: 10px;">
-                            <div class="progress-bar bg-secondary" style="width: 100%"></div>
-                        </div>
-                        <small class="text-muted">
-                            No attendance data for today
-                        </small>
-                    {% endif %}
-                {% endwith %}
-            </div>
-        </div>
-    </div>
-</div>
             </div>
 
             <!-- My Classes & Recent Notices -->
@@ -299,6 +305,13 @@
                             <div class="heading-layout1">
                                 <div class="item-title">
                                     <h3>My Classes</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <!-- Note: class_list URL is missing, so using teacher_my_classes instead -->
+                                        <a class="dropdown-item" href="{% url 'teacher_my_classes' %}">View All Classes</a>
+                                    </div>
                                 </div>
                             </div>
                             <div class="my-classes">
@@ -323,7 +336,8 @@
                                             </p>
                                         </div>
                                         <div class="class-actions">
-                                            <a href="#" class="btn btn-sm btn-outline-primary">View</a>
+                                            <!-- Note: class_detail URL is missing, so linking to teacher_my_classes -->
+                                            <a href="{% url 'teacher_my_classes' %}" class="btn btn-sm btn-outline-primary">View</a>
                                         </div>
                                     </div>
                                     {% endfor %}
@@ -351,6 +365,8 @@
                                     <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
                                     <div class="dropdown-menu dropdown-menu-right">
                                         <a class="dropdown-item" href="{% url 'notice_board' %}">View All</a>
+                                        <!-- Note: create_notice URL is missing, so using create_notice_ajax instead -->
+                                        <a class="dropdown-item" href="#" onclick="showCreateNoticeModal()">Create Notice</a>
                                     </div>
                                 </div>
                             </div>
@@ -371,6 +387,10 @@
                                                     By: {{ notice.posted_by.get_full_name|default:notice.posted_by.username }}
                                                 </small>
                                             </p>
+                                        </div>
+                                        <div class="notice-actions">
+                                            <!-- Note: notice_detail URL is missing, so linking to notice_board -->
+                                            <a href="{% url 'notice_board' %}" class="btn btn-sm btn-outline-info">View</a>
                                         </div>
                                     </div>
                                     {% endfor %}
@@ -395,27 +415,30 @@
                                 <h3>Quick Actions</h3>
                             </div>
                             <div class="teacher-actions">
-                                <a href="#" class="single-action bg-light-blue">
+                                <a href="{% url 'teacher_attendance' %}" class="single-action bg-light-blue">
                                     <i class="flaticon-calendar"></i>
                                     <span>Mark Attendance</span>
                                 </a>
-                                <a href="#" class="single-action bg-light-green">
+                                <!-- Note: enter_marks URL is missing, so commented out -->
+                                <a href="#" class="single-action bg-light-green disabled">
                                     <i class="flaticon-edit"></i>
                                     <span>Enter Marks</span>
                                 </a>
-                                <a href="#" class="single-action bg-light-magenta">
+                                <a href="{% url 'assignment_create' %}" class="single-action bg-light-magenta">
                                     <i class="flaticon-list"></i>
                                     <span>Create Assignment</span>
                                 </a>
-                                <a href="#" class="single-action bg-light-yellow">
+                                <a href="{% url 'teacher_class_schedule' %}" class="single-action bg-light-yellow">
                                     <i class="flaticon-timetable"></i>
                                     <span>My Schedule</span>
                                 </a>
-                                <a href="#" class="single-action bg-light-orange">
+                                <!-- Note: student_messages URL is missing, so commented out -->
+                                <a href="#" class="single-action bg-light-orange disabled">
                                     <i class="flaticon-chat"></i>
                                     <span>Student Messages</span>
                                 </a>
-                                <a href="#" class="single-action bg-light-success">
+                                <!-- Note: upload_materials URL is missing, so commented out -->
+                                <a href="#" class="single-action bg-light-success disabled">
                                     <i class="flaticon-script"></i>
                                     <span>Upload Materials</span>
                                 </a>
@@ -450,6 +473,11 @@ $(document).ready(function() {
         }, 50);
     });
 });
+
+function showCreateNoticeModal() {
+    alert('Create Notice functionality would open a modal here. This feature is not yet implemented.');
+    // In a real implementation, this would open a modal for creating notices
+}
 </script>
 
 <style>
@@ -501,6 +529,10 @@ $(document).ready(function() {
     flex: 1;
 }
 
+.class-actions, .notice-actions {
+    margin-left: 15px;
+}
+
 .teacher-actions {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -525,6 +557,12 @@ $(document).ready(function() {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     text-decoration: none;
     color: #333;
+}
+
+.single-action.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .single-action i {

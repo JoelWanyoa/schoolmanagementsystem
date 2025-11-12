@@ -553,70 +553,88 @@ def teacher_my_students(request):
     }
     return render(request, 'teachers/my_students.html', context)
 
-@login_required
 def teacher_attendance(request):
-    """View for teacher to manage attendance"""
+    # Check if user has a teacher profile
     if not hasattr(request.user, 'teacher'):
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('dashboard')
+        messages.error(request, 'Teacher profile not found. Please contact administrator.')
+        return redirect('teacher_dashboard')
     
-    teacher = request.user.teacher
-    teacher_classes = Class.objects.filter(class_teacher=teacher)
-    
-    # Get today's date
-    today = timezone.now().date()
-    
-    # Get attendance for today
-    today_attendance = Attendance.objects.filter(
-        student__current_class__in=teacher_classes,
-        date=today
-    ).select_related('student', 'student__current_class')
-    
-    # Calculate attendance counts
-    present_count = today_attendance.filter(status=True).count()
-    absent_count = today_attendance.filter(status=False).count()
-    
-    # Get students from teacher's classes
-    students = Student.objects.filter(
-        current_class__in=teacher_classes,
-        is_active=True
-    ).order_by('current_class__name', 'roll_number')
-    
-    # Mark attendance for today
     if request.method == 'POST':
         try:
-            date_str = request.POST.get('date', today.isoformat())
+            date_str = request.POST.get('date')
             attendance_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             
-            for student in students:
-                status = request.POST.get(f'student_{student.id}') == 'present'
-                
-                # Update or create attendance record
-                attendance, created = Attendance.objects.update_or_create(
-                    student=student,
-                    date=attendance_date,
-                    defaults={
-                        'status': status,
-                        'marked_by': request.user,
-                    }
-                )
+            # Get the teacher's classes - FIXED: using class_teacher instead of teacher
+            teacher_classes = Class.objects.filter(class_teacher=request.user.teacher)
             
-            messages.success(request, f'Attendance marked successfully for {attendance_date}!')
+            # Get all students from the teacher's classes
+            students = Student.objects.filter(current_class__in=teacher_classes)
+            
+            for student in students:
+                status_key = f'student_{student.id}'
+                remarks_key = f'remarks_{student.id}'
+                
+                if status_key in request.POST:
+                    status = request.POST.get(status_key) == 'present'
+                    remarks = request.POST.get(remarks_key, '')
+                    
+                    # Use get_or_create to handle attendance
+                    attendance, created = Attendance.objects.get_or_create(
+                        student=student,
+                        date=attendance_date,
+                        defaults={
+                            'status': status,
+                            'remarks': remarks,
+                            'marked_by_id': request.user.id  # Use ID directly
+                        }
+                    )
+                    
+                    if not created:
+                        attendance.status = status
+                        attendance.remarks = remarks
+                        attendance.marked_by_id = request.user.id
+                        attendance.save()
+            
+            messages.success(request, 'Attendance marked successfully!')
             return redirect('teacher_attendance')
             
         except Exception as e:
             messages.error(request, f'Error marking attendance: {str(e)}')
     
+    # GET request handling
+    today = timezone.now().date()
+    selected_date = request.GET.get('date', today.isoformat())
+    
+    try:
+        attendance_date = datetime.strptime(selected_date, '%Y-%m-%d').date()
+    except ValueError:
+        attendance_date = today
+    
+    # Get teacher's classes - FIXED: using class_teacher
+    teacher_classes = Class.objects.filter(class_teacher=request.user.teacher)
+    students = Student.objects.filter(current_class__in=teacher_classes)
+    
+    # Get today's attendance for the selected date
+    today_attendance = Attendance.objects.filter(
+        student__in=students,
+        date=attendance_date
+    )
+    
+    # Calculate counts
+    present_count = today_attendance.filter(status=True).count()
+    absent_count = today_attendance.filter(status=False).count()
+    
     context = {
-        'teacher': teacher,
-        'teacher_classes': teacher_classes,
         'students': students,
-        'today': today,
         'today_attendance': today_attendance,
+        'today': today,
+        'selected_date': selected_date,
         'present_count': present_count,
         'absent_count': absent_count,
         'total_students': students.count(),
+        'teacher_classes': teacher_classes,
     }
+    
     return render(request, 'teachers/attendance.html', context)
 
 @login_required
