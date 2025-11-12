@@ -1,9 +1,5 @@
 from django.contrib import admin
-from .models import (
-    SchoolInfo, AcademicYear, Class, Section, Subject, Student, 
-    Parent, Teacher, AdmissionForm, Attendance, Exam, ExamResult, 
-    Fee, Expense, FeePayment, Notice, Message
-)
+from .models import *
 
 @admin.register(Fee)
 class FeeAdmin(admin.ModelAdmin):
@@ -257,10 +253,10 @@ class AttendanceAdmin(admin.ModelAdmin):
 
 @admin.register(Exam)
 class ExamAdmin(admin.ModelAdmin):
-    list_display = ['name', 'exam_type', 'subject', 'class_name', 'exam_date', 'total_marks']
-    list_filter = ['exam_type', 'subject', 'class_name', 'exam_date']
+    list_display = ['name', 'exam_type', 'subject', 'class_level', 'exam_date', 'total_marks']
+    list_filter = ['exam_type', 'subject', 'class_level', 'exam_date']  # Changed 'class_name' to 'class_level'
     search_fields = ['name', 'subject__name']
-    list_select_related = ['subject', 'class_name']
+    list_select_related = ['subject', 'class_level']
 
 @admin.register(ExamResult)
 class ExamResultAdmin(admin.ModelAdmin):
@@ -312,3 +308,15 @@ class SchoolInfoAdmin(admin.ModelAdmin):
 
 # You can also use admin.site.register for models that don't need custom configuration
 # admin.site.register(SchoolInfo, SchoolInfoAdmin)
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ['title', 'author', 'category', 'total_copies', 'available_copies', 'status']
+    list_filter = ['category', 'status']
+    search_fields = ['title', 'author', 'isbn']
+
+@admin.register(BookBorrowing)
+class BookBorrowingAdmin(admin.ModelAdmin):
+    list_display = ['book', 'borrower', 'borrowed_date', 'due_date', 'status', 'is_overdue']
+    list_filter = ['status', 'borrowed_date']
+    search_fields = ['book__title', 'borrower__username']

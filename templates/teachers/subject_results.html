@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subject Results - Teacher Dashboard{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Subject Results</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'teacher_dashboard' %}">Home</a>
+                    </li>
+                    <li>Subject Results</li>
+                </ul>
+            </div>
+
+            <!-- Subject Selection -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="card-title mb-0">
+                                {% if selected_subject %}
+                                    {{ selected_subject.name }} - Performance Analysis
+                                {% else %}
+                                    Select a Subject to View Results
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control" onchange="location = this.value;">
+                                <option value="{% url 'subject_results' %}">Select Subject</option>
+                                {% for subject in subjects %}
+                                <option value="{% url 'subject_results_detail' subject.id %}" 
+                                        {% if selected_subject and selected_subject.id == subject.id %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if selected_subject %}
+            <!-- Subject Statistics -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="fas fa-file-alt text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Exams</div>
+                                    <div class="item-number"><span>{{ subject_stats.total_exams|default:0 }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="fas fa-users text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Students</div>
+                                    <div class="item-number"><span>{{ subject_stats.total_students|default:0 }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="fas fa-chart-bar text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Average Marks</div>
+                                    <div class="item-number"><span>{{ subject_stats.avg_marks|floatformat:2|default:'0.00' }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-red">
+                                    <i class="fas fa-percentage text-red"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Pass Rate</div>
+                                    <div class="item-number"><span>
+                                        {% if subject_stats.total_students %}
+                                            {% widthratio subject_stats.avg_marks 100 100 %}%
+                                        {% else %}
+                                            0%
+                                        {% endif %}
+                                    </span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Exams for this Subject -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Exams - {{ selected_subject.name }}</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#">Export Data</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if exams %}
+                    <div class="table-responsive">
+                        <table id="subjectExamsTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Exam Name</th>
+                                    <th>Class</th>
+                                    <th>Date</th>
+                                    <th>Total Marks</th>
+                                    <th>Avg. Score</th>
+                                    <th>Students</th>
+                                    <th>Performance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exam in exams %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ exam.name }}</strong>
+                                        <br><small class="text-muted">{{ exam.get_exam_type_display }}</small>
+                                    </td>
+                                    <td>{{ exam.class_level.name }}</td>
+                                    <td>{{ exam.exam_date|date:"M d, Y" }}</td>
+                                    <td>{{ exam.total_marks }}</td>
+                                    <td>
+                                        {% with avg=exam.examresult_set.all|dictsort:"marks_obtained" %}
+                                            {% if avg %}
+                                                {{ avg.0.marks_obtained|floatformat:2 }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ exam.examresult_set.count }}</span>
+                                    </td>
+                                    <td>
+                                        {% with avg=exam.examresult_set.all|dictsort:"marks_obtained" %}
+                                            {% if avg %}
+                                                {% if avg.0.marks_obtained >= 80 %}
+                                                <span class="badge badge-success">Excellent</span>
+                                                {% elif avg.0.marks_obtained >= 60 %}
+                                                <span class="badge badge-warning">Good</span>
+                                                {% else %}
+                                                <span class="badge badge-danger">Needs Work</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Data</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'exam_results' exam.id %}">
+                                                    <i class="fas fa-eye text-green"></i> View Results
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'exam_analysis' exam.id %}">
+                                                    <i class="fas fa-chart-bar text-purple"></i> Analysis
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'enter_marks' exam.id %}">
+                                                    <i class="fas fa-edit text-blue"></i> Enter Marks
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Exams Found</h5>
+                        <p class="text-muted">No exams have been created for {{ selected_subject.name }} yet.</p>
+                        <a href="{% url 'create_exam' %}" class="btn btn-primary">
+                            <i class="fas fa-plus mr-2"></i>Create Exam
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- All Results for this Subject -->
+            {% if results %}
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>All Results - {{ selected_subject.name }}</h3>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Class</th>
+                                    <th>Exam</th>
+                                    <th>Date</th>
+                                    <th>Marks</th>
+                                    <th>Grade</th>
+                                    <th>Position</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results|slice:":20" %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if result.student.photo %}
+                                            <img src="{{ result.student.photo.url }}" alt="{{ result.student.full_name }}" 
+                                                 class="rounded-circle mr-2" width="35" height="35">
+                                            {% else %}
+                                            <div class="avatar bg-primary text-white rounded-circle mr-2" style="width: 35px; height: 35px; line-height: 35px; text-align: center; font-size: 12px;">
+                                                {{ result.student.first_name|first }}{{ result.student.last_name|first }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ result.student.full_name }}</strong>
+                                                <br><small class="text-muted">{{ result.student.roll_number }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ result.student.current_class.name }}</td>
+                                    <td>
+                                        <small>{{ result.exam.name }}</small>
+                                        <br><span class="badge badge-light">{{ result.exam.get_exam_type_display }}</span>
+                                    </td>
+                                    <td>{{ result.exam.exam_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="font-weight-bold text-{% if result.marks_obtained >= 80 %}success{% elif result.marks_obtained >= 50 %}warning{% else %}danger{% endif %}">
+                                            {{ result.marks_obtained }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{% if result.grade == 'A' %}success{% elif result.grade == 'B' %}info{% elif result.grade == 'C' %}warning{% elif result.grade == 'D' %}primary{% else %}danger{% endif %}">
+                                            {{ result.grade }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-secondary">{{ result.position }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if results.count > 20 %}
+                    <div class="text-center mt-3">
+                        <a href="#" class="btn btn-outline-primary">View All {{ results.count }} Results</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- No Subject Selected -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Select a Subject</h4>
+                        <p class="text-muted">Please select a subject from the dropdown above to view results and analysis.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        {% if exams %}
+        $('#subjectExamsTable').DataTable({
+            "pageLength": 10,
+            "responsive": true,
+            "order": [[2, 'desc']]
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}

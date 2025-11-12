@@ -83,6 +83,9 @@
                     <li class="nav-item">
                         <a href="{% url 'all_parents' %}" class="nav-link"><i class="fas fa-angle-right"></i>All Parents</a>
                     </li>
+                    <li class="nav-item">
+                        <a href="{% url 'add_parent' %}" class="nav-link"><i class="fas fa-angle-right"></i>Add Parent</a>
+                    </li>
                 </ul>
             </li>
 
@@ -102,11 +105,8 @@
                     <li class="nav-item">
                         <a href="{% url 'add_expense' %}" class="nav-link"><i class="fas fa-angle-right"></i>Add Expense</a>
                     </li>
-                    <!-- In your sidebar or navigation -->
                     <li class="nav-item">
-                        <a href="{% url 'fee_reminders' %}" class="nav-link">
-                            <i class="fas fa-angle-right"></i>Fee Reminders
-                        </a>
+                        <a href="{% url 'fee_reminders' %}" class="nav-link"><i class="fas fa-angle-right"></i>Fee Reminders</a>
                     </li>
                 </ul>
             </li>
@@ -116,13 +116,13 @@
                 <a href="#" class="nav-link"><i class="flaticon-maths-class-materials-cross-of-a-pencil-and-a-ruler"></i><span>Academic</span></a>
                 <ul class="nav sub-group-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Classes</a>
+                        <a href="{% url 'manage_classes' %}" class="nav-link"><i class="fas fa-angle-right"></i>Classes</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
+                        <a href="{% url 'manage_subjects' %}" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Timetable</a>
+                        <a href="{% url 'manage_timetable' %}" class="nav-link"><i class="fas fa-angle-right"></i>Timetable</a>
                     </li>
                 </ul>
             </li>
@@ -132,61 +132,64 @@
                 <a href="#" class="nav-link"><i class="flaticon-books"></i><span>Library</span></a>
                 <ul class="nav sub-group-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>All Books</a>
+                        <a href="{% url 'all_books' %}" class="nav-link"><i class="fas fa-angle-right"></i>All Books</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Add Book</a>
+                        <a href="{% url 'add_book' %}" class="nav-link"><i class="fas fa-angle-right"></i>Add Book</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'borrow_book' %}" class="nav-link"><i class="fas fa-angle-right"></i>Borrow Book</a>
                     </li>
                 </ul>
             </li>
             {% endif %}
 
             <!-- Teacher Only Sections -->
-{% if request.user.teacher %}
-<li class="nav-item sidebar-nav-item">
-    <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>My Classes</span></a>
-    <ul class="nav sub-group-menu">
-        <li class="nav-item">
-            <a href="{% url 'teacher_class_schedule' %}" class="nav-link"><i class="fas fa-angle-right"></i>Class Schedule</a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_my_students' %}" class="nav-link"><i class="fas fa-angle-right"></i>My Students</a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_attendance' %}" class="nav-link"><i class="fas fa-angle-right"></i>Attendance</a>
-        </li>
-    </ul>
-</li>
+            {% if request.user.teacher %}
+            <li class="nav-item sidebar-nav-item">
+                <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>My Classes</span></a>
+                <ul class="nav sub-group-menu">
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_class_schedule' %}" class="nav-link"><i class="fas fa-angle-right"></i>Class Schedule</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_my_students' %}" class="nav-link"><i class="fas fa-angle-right"></i>My Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_attendance' %}" class="nav-link"><i class="fas fa-angle-right"></i>Attendance</a>
+                    </li>
+                </ul>
+            </li>
 
-<li class="nav-item sidebar-nav-item">
-    <a href="#" class="nav-link"><i class="flaticon-open-book"></i><span>Teaching</span></a>
-    <ul class="nav sub-group-menu">
-        <li class="nav-item">
-            <a href="{% url 'teacher_subjects' %}" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_assignments' %}" class="nav-link"><i class="fas fa-angle-right"></i>Assignments</a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'teacher_exam_results' %}" class="nav-link"><i class="fas fa-angle-right"></i>Exam Results</a>
-        </li>
-    </ul>
-</li>
-{% endif %}
+            <li class="nav-item sidebar-nav-item">
+                <a href="#" class="nav-link"><i class="flaticon-open-book"></i><span>Teaching</span></a>
+                <ul class="nav sub-group-menu">
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_subjects' %}" class="nav-link"><i class="fas fa-angle-right"></i>Subjects</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_assignments' %}" class="nav-link"><i class="fas fa-angle-right"></i>Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'teacher_exam_results' %}" class="nav-link"><i class="fas fa-angle-right"></i>Exam Results</a>
+                    </li>
+                </ul>
+            </li>
+            {% endif %}
 
             <!-- Student Only Sections -->
             {% if request.user.student %}
             <li class="nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-open-book"></i><span>My Subjects</span></a>
+                <a href="{% url 'teacher_subjects' %}" class="nav-link"><i class="flaticon-open-book"></i><span>My Subjects</span></a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-checklist"></i><span>Attendance</span></a>
+                <a href="{% url 'teacher_attendance' %}" class="nav-link"><i class="flaticon-checklist"></i><span>Attendance</span></a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-shopping-list"></i><span>Exam Results</span></a>
+                <a href="{% url 'teacher_exam_results' %}" class="nav-link"><i class="flaticon-shopping-list"></i><span>Exam Results</span></a>
             </li>
             <li class="nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-calendar"></i><span>Class Schedule</span></a>
+                <a href="{% url 'teacher_class_schedule' %}" class="nav-link"><i class="flaticon-calendar"></i><span>Class Schedule</span></a>
             </li>
             {% endif %}
 
@@ -196,7 +199,7 @@
                 <a href="#" class="nav-link"><i class="flaticon-classmates"></i><span>My Children</span></a>
                 <ul class="nav sub-group-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>View All</a>
+                        <a href="{% url 'parent_details' request.user.parent.id %}" class="nav-link"><i class="fas fa-angle-right"></i>View All</a>
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Attendance</a>
@@ -208,7 +211,7 @@
             </li>
 
             <li class="nav-item">
-                <a href="#" class="nav-link"><i class="flaticon-credit-card"></i><span>Fee Payments</span></a>
+                <a href="{% url 'parent_fee_history' request.user.parent.id %}" class="nav-link"><i class="flaticon-credit-card"></i><span>Fee Payments</span></a>
             </li>
             {% endif %}
 
@@ -227,20 +230,36 @@
                 <a href="#" class="nav-link"><i class="flaticon-shopping-list"></i><span>Examinations</span></a>
                 <ul class="nav sub-group-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Exam Schedule</a>
+                        <a href="{% url 'exam_schedule' %}" class="nav-link"><i class="fas fa-angle-right"></i>Exam Schedule</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Exam Grades</a>
+                        <a href="{% url 'exam_grades' %}" class="nav-link"><i class="fas fa-angle-right"></i>Exam Grades</a>
                     </li>
                 </ul>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item sidebar-nav-item">
                 <a href="#" class="nav-link"><i class="flaticon-bus-side-view"></i><span>Transport</span></a>
+                <ul class="nav sub-group-menu">
+                    <li class="nav-item">
+                        <a href="{% url 'transport_management' %}" class="nav-link"><i class="fas fa-angle-right"></i>Transport Management</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'transport_routes' %}" class="nav-link"><i class="fas fa-angle-right"></i>Routes</a>
+                    </li>
+                </ul>
             </li>
 
-            <li class="nav-item">
+            <li class="nav-item sidebar-nav-item">
                 <a href="#" class="nav-link"><i class="flaticon-bed"></i><span>Hostel</span></a>
+                <ul class="nav sub-group-menu">
+                    <li class="nav-item">
+                        <a href="{% url 'hostel_management' %}" class="nav-link"><i class="fas fa-angle-right"></i>Hostel Management</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'hostel_rooms' %}" class="nav-link"><i class="fas fa-angle-right"></i>Rooms</a>
+                    </li>
+                </ul>
             </li>
 
             <!-- UI Elements (Admin Only) -->
@@ -248,19 +267,19 @@
                 <a href="#" class="nav-link"><i class="flaticon-menu-1"></i><span>UI Elements</span></a>
                 <ul class="nav sub-group-menu">
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Alert</a>
+                        <a href="{% url 'alerts' %}" class="nav-link"><i class="fas fa-angle-right"></i>Alert</a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'buttons' %}" class="nav-link"><i class="fas fa-angle-right"></i>Button</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Grid</a>
+                        <a href="{% url 'grid' %}" class="nav-link"><i class="fas fa-angle-right"></i>Grid</a>
                     </li>
                     <li class="nav-item">
                         <a href="{% url 'modals' %}" class="nav-link"><i class="fas fa-angle-right"></i>Modal</a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link"><i class="fas fa-angle-right"></i>Progress Bar</a>
+                        <a href="{% url 'progress_bars' %}" class="nav-link"><i class="fas fa-angle-right"></i>Progress Bar</a>
                     </li>
                 </ul>
             </li>

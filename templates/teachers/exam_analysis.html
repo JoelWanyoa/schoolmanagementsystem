@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Exam Analysis - {{ exam.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .progress { height: 20px; }
+    .stat-card { border-left: 4px solid; }
+    .stat-card.primary { border-left-color: #007bff; }
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.danger { border-left-color: #dc3545; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Exam Analysis</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_exam_management' %}">Exam Management</a></li>
+                    <li><a href="{% url 'exam_results' exam.id %}">{{ exam.name }}</a></li>
+                    <li>Analysis</li>
+                </ul>
+            </div>
+
+            <!-- Exam Header -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="card-title">{{ exam.name }} - Detailed Analysis</h4>
+                            <p class="mb-1"><strong>Subject:</strong> {{ exam.subject.name }} | <strong>Class:</strong> {{ exam.class_level.name }}</p>
+                            <p class="mb-1"><strong>Exam Date:</strong> {{ exam.exam_date|date:"F d, Y" }} | <strong>Total Marks:</strong> {{ exam.total_marks }}</p>
+                            <p class="mb-0"><strong>Total Students:</strong> {{ total_students }}</p>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <a href="{% url 'exam_results' exam.id %}" class="btn btn-primary">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Statistics -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card stat-card primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.avg_marks|floatformat:2 }}</h4>
+                                    <p class="mb-0">Average Marks</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-chart-bar fa-2x text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card stat-card success">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.max_marks|floatformat:2 }}</h4>
+                                    <p class="mb-0">Highest Marks</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-trophy fa-2x text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card stat-card warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.min_marks|floatformat:2 }}</h4>
+                                    <p class="mb-0">Lowest Marks</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-chart-line fa-2x text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="card stat-card danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ stats.std_dev|floatformat:2 }}</h4>
+                                    <p class="mb-0">Std. Deviation</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-calculator fa-2x text-danger"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Sections -->
+            <div class="row gutters-20">
+                <!-- Marks Distribution -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <h4 class="card-title">Marks Distribution</h4>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Marks Range</th>
+                                            <th>Students</th>
+                                            <th>Percentage</th>
+                                            <th width="40%">Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for dist in marks_distribution %}
+                                        <tr>
+                                            <td>{{ dist.range }}</td>
+                                            <td>{{ dist.count }}</td>
+                                            <td>{{ dist.percentage }}%</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar" role="progressbar" 
+                                                         style="width: {{ dist.percentage }}%; background-color: 
+                                                         {% if dist.range == '90-100' %}#28a745
+                                                         {% elif dist.range == '80-89' %}#17a2b8
+                                                         {% elif dist.range == '70-79' %}#ffc107
+                                                         {% elif dist.range == '60-69' %}#fd7e14
+                                                         {% elif dist.range == '50-59' %}#dc3545
+                                                         {% else %}#6c757d{% endif %};">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grade Distribution -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <h4 class="card-title">Grade Distribution</h4>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Grade</th>
+                                            <th>Students</th>
+                                            <th>Percentage</th>
+                                            <th>Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for grade in grade_data %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge badge-{% if grade.grade == 'A' %}success{% elif grade.grade == 'B' %}info{% elif grade.grade == 'C' %}warning{% elif grade.grade == 'D' %}primary{% else %}danger{% endif %}">
+                                                    {{ grade.grade }}
+                                                </span>
+                                            </td>
+                                            <td>{{ grade.count }}</td>
+                                            <td>{{ grade.percentage|floatformat:1 }}%</td>
+                                            <td>
+                                                {% if grade.grade == 'A' %}Excellent
+                                                {% elif grade.grade == 'B' %}Very Good
+                                                {% elif grade.grade == 'C' %}Good
+                                                {% elif grade.grade == 'D' %}Satisfactory
+                                                {% else %}Needs Improvement{% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Performers & Need Improvement -->
+            <div class="row gutters-20">
+                <!-- Top Performers -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Top Performers</h3>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student</th>
+                                            <th>Marks</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in top_performers %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if student.student.photo %}
+                                                    <img src="{{ student.student.photo.url }}" alt="{{ student.student.full_name }}" 
+                                                         class="rounded-circle mr-2" width="35" height="35">
+                                                    {% else %}
+                                                    <div class="avatar bg-primary text-white rounded-circle mr-2" style="width: 35px; height: 35px; line-height: 35px; text-align: center; font-size: 12px;">
+                                                        {{ student.student.first_name|first }}{{ student.student.last_name|first }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ student.student.full_name }}</strong>
+                                                        <br><small class="text-muted">{{ student.student.roll_number }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="font-weight-bold text-success">
+                                                    {{ student.marks_obtained }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-success">{{ student.grade }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-muted">
+                                                No data available
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Need Improvement -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Need Improvement</h3>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Student</th>
+                                            <th>Marks</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in need_improvement %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if student.student.photo %}
+                                                    <img src="{{ student.student.photo.url }}" alt="{{ student.student.full_name }}" 
+                                                         class="rounded-circle mr-2" width="35" height="35">
+                                                    {% else %}
+                                                    <div class="avatar bg-danger text-white rounded-circle mr-2" style="width: 35px; height: 35px; line-height: 35px; text-align: center; font-size: 12px;">
+                                                        {{ student.student.first_name|first }}{{ student.student.last_name|first }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <strong>{{ student.student.full_name }}</strong>
+                                                        <br><small class="text-muted">{{ student.student.roll_number }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="font-weight-bold text-danger">
+                                                    {{ student.marks_obtained }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-danger">{{ student.grade }}</span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center py-3 text-muted">
+                                                No students need improvement
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Summary -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h4 class="card-title">Performance Summary</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="alert alert-success">
+                                <h5><i class="fas fa-check-circle"></i> Strong Areas</h5>
+                                <p class="mb-0">Majority of students scored above average</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-warning">
+                                <h5><i class="fas fa-exclamation-triangle"></i> Areas to Watch</h5>
+                                <p class="mb-0">{{ need_improvement.count }} students need attention</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-lightbulb"></i> Recommendations</h5>
+                                <p class="mb-0">Consider remedial classes for struggling students</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

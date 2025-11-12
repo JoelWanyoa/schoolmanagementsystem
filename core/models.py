@@ -106,6 +106,7 @@ class Section(models.Model):
     name = models.CharField(max_length=1, choices=SECTION_CHOICES)
     class_name = models.ForeignKey(Class, on_delete=models.CASCADE)
     capacity = models.IntegerField(default=30)
+    room_number = models.CharField(max_length=20, blank=True, help_text="Room number for this section")  # Add this line
     
     class Meta:
         unique_together = ['name', 'class_name']
@@ -113,11 +114,27 @@ class Section(models.Model):
     
     def __str__(self):
         return f"{self.class_name} - Section {self.name}"
+    
+    @property
+    def current_student_count(self):
+        """Get the current number of students in this section"""
+        return self.students.count()
+    
+    @property
+    def available_seats(self):
+        """Calculate available seats in this section"""
+        return self.capacity - self.current_student_count
+    
+    @property
+    def is_full(self):
+        """Check if section is at full capacity"""
+        return self.current_student_count >= self.capacity
 
 class Subject(models.Model):
     name = models.CharField(max_length=100)
     code = models.CharField(max_length=20, unique=True)
     description = models.TextField(blank=True)
+    credit_hours = models.IntegerField(default=1, help_text="Number of credit hours for this subject")
     
     def __str__(self):
         return self.name
@@ -140,13 +157,7 @@ class Student(models.Model):
     phone = models.CharField(max_length=15, blank=True)
     email = models.EmailField(blank=True)
     photo = models.ImageField(upload_to=student_photo_path, null=True, blank=True)
-    
-    # Academic Information
-    current_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True)
-    current_section = models.ForeignKey(Section, on_delete=models.SET_NULL, null=True)
-    roll_number = models.CharField(max_length=10)
-    admission_date = models.DateField(default=timezone.now)
-    
+        
     # Parent Information
     father_name = models.CharField(max_length=100)
     father_occupation = models.CharField(max_length=100, blank=True)
@@ -511,13 +522,127 @@ class Exam(models.Model):
     name = models.CharField(max_length=100)
     exam_type = models.CharField(max_length=20, choices=EXAM_TYPES)
     subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
-    class_name = models.ForeignKey(Class, on_delete=models.CASCADE)
+    class_level = models.ForeignKey(Class, on_delete=models.CASCADE)
     exam_date = models.DateField()
     total_marks = models.DecimalField(max_digits=6, decimal_places=2)
     passing_marks = models.DecimalField(max_digits=6, decimal_places=2)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     
     def __str__(self):
-        return f"{self.name} - {self.subject} - {self.class_name}"
+        return f"{self.name} - {self.subject} - {self.class_level}"
+
+# In core/models.py - Update the ExamResult model
+class ExamResult(models.Model):
+    GRADES = (
+        ('A', 'A (Excellent)'),
+        ('B', 'B (Very Good)'),
+        ('C', 'C (Good)'),
+        ('D', 'D (Pass)'),
+        ('E', 'E (Fail)'),
+        ('F', 'F (Fail)'),
+    )
+    
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    marks_obtained = models.DecimalField(max_digits=6, decimal_places=2)
+    grade = models.CharField(max_length=1, choices=GRADES, blank=True)
+    position = models.IntegerField(null=True, blank=True)
+    remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['exam', 'student']
+        ordering = ['-marks_obtained']
+    
+    def get_subject_specific_remark(self):
+        """Get subject-appropriate default remark"""
+        subject_name = self.exam.subject.name.lower() if self.exam and self.exam.subject else ""
+        marks_float = float(self.marks_obtained)
+        total_marks = float(self.exam.total_marks) if self.exam else 100
+        percentage = (marks_float / total_marks) * 100
+        
+        # Base remarks by performance level
+        if percentage >= 90:
+            base_remark = "Outstanding performance! "
+        elif percentage >= 80:
+            base_remark = "Excellent work! "
+        elif percentage >= 70:
+            base_remark = "Very good performance. "
+        elif percentage >= 60:
+            base_remark = "Good effort. "
+        elif percentage >= 50:
+            base_remark = "Satisfactory performance. "
+        elif percentage >= 40:
+            base_remark = "Needs improvement. "
+        else:
+            base_remark = "Requires significant improvement. "
+        
+        # Subject-specific additions
+        subject_keywords = {
+            'math': "Strong problem-solving skills." if percentage >= 60 else "Needs practice in problem-solving.",
+            'english': "Good language expression." if percentage >= 60 else "Focus on grammar and vocabulary.",
+            'science': "Good scientific understanding." if percentage >= 60 else "Work on scientific concepts.",
+            'physics': "Good analytical thinking." if percentage >= 60 else "Understand physical principles better.",
+            'chemistry': "Good practical knowledge." if percentage >= 60 else "Practice chemical concepts.",
+            'biology': "Good memory and understanding." if percentage >= 60 else "Study biological processes.",
+            'history': "Good historical analysis." if percentage >= 60 else "Focus on historical events.",
+            'geography': "Good geographical knowledge." if percentage >= 60 else "Study geographical concepts.",
+            'kiswahili': "Umeweza vizuri." if percentage >= 60 else "Hitaji kujitahidi zaidi.",
+        }
+        
+        # Find matching subject keyword
+        subject_remark = ""
+        for keyword, remark in subject_keywords.items():
+            if keyword in subject_name:
+                subject_remark = remark
+                break
+        
+        return base_remark + subject_remark if subject_remark else base_remark + "Continue regular practice."
+    
+    def save(self, *args, **kwargs):
+        # Calculate grade based on marks
+        marks_float = float(self.marks_obtained)
+        
+        if marks_float >= 80:
+            self.grade = 'A'
+        elif marks_float >= 70:
+            self.grade = 'B'
+        elif marks_float >= 60:
+            self.grade = 'C'
+        elif marks_float >= 50:
+            self.grade = 'D'
+        elif marks_float >= 40:
+            self.grade = 'E'
+        else:
+            self.grade = 'F'
+        
+        # Set default remark if empty
+        if not self.remarks:
+            self.remarks = self.get_subject_specific_remark()
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.student} - {self.exam}: {self.marks_obtained}"
+
+class ReportCard(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    academic_year = models.ForeignKey(AcademicYear, on_delete=models.CASCADE)
+    term = models.CharField(max_length=20, choices=(
+        ('TERM1', 'First Term'),
+        ('TERM2', 'Second Term'),
+        ('TERM3', 'Third Term'),
+    ))
+    total_marks = models.DecimalField(max_digits=6, decimal_places=2)
+    average_score = models.DecimalField(max_digits=5, decimal_places=2)
+    class_position = models.IntegerField()
+    overall_grade = models.CharField(max_length=1)
+    teacher_remarks = models.TextField()
+    principal_remarks = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Report Card - {self.student} - {self.term}"
 
 class Assignment(models.Model):
     ASSIGNMENT_TYPES = (
@@ -598,37 +723,6 @@ class AssignmentSubmission(models.Model):
         if self.submitted_at and self.assignment.due_date:
             return self.submitted_at > self.assignment.due_date
         return False
-
-class ExamResult(models.Model):
-    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    marks_obtained = models.DecimalField(max_digits=6, decimal_places=2)
-    grade = models.CharField(max_length=5, blank=True)
-    remarks = models.TextField(blank=True)
-    
-    class Meta:
-        unique_together = ['exam', 'student']
-    
-    def __str__(self):
-        return f"{self.student} - {self.exam} - {self.marks_obtained}"
-    
-    def save(self, *args, **kwargs):
-        # Calculate grade based on marks
-        if self.marks_obtained and self.exam.total_marks:
-            percentage = (self.marks_obtained / self.exam.total_marks) * 100
-            if percentage >= 90:
-                self.grade = 'A+'
-            elif percentage >= 80:
-                self.grade = 'A'
-            elif percentage >= 70:
-                self.grade = 'B'
-            elif percentage >= 60:
-                self.grade = 'C'
-            elif percentage >= 50:
-                self.grade = 'D'
-            else:
-                self.grade = 'F'
-        super().save(*args, **kwargs)
 
 class PromotionHistory(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='promotions')
@@ -861,3 +955,426 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     pass
+
+# Add these missing models to your models.py file
+
+class Timetable(models.Model):
+    DAY_CHOICES = [
+        ('MONDAY', 'Monday'),
+        ('TUESDAY', 'Tuesday'),
+        ('WEDNESDAY', 'Wednesday'),
+        ('THURSDAY', 'Thursday'),
+        ('FRIDAY', 'Friday'),
+        ('SATURDAY', 'Saturday'),
+    ]
+    
+    class_level = models.ForeignKey(Class, on_delete=models.CASCADE, related_name='timetable_entries')
+    subject = models.ForeignKey(Subject, on_delete=models.CASCADE)
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    room = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['day', 'start_time']
+        unique_together = ['class_level', 'day', 'start_time']
+    
+    def __str__(self):
+        return f"{self.class_level} - {self.day} - {self.subject}"
+
+class Book(models.Model):
+    CATEGORY_CHOICES = [
+        ('TEXTBOOK', 'Textbook'),
+        ('REFERENCE', 'Reference Book'),
+        ('STORY', 'Story Book'),
+        ('SCIENCE', 'Science'),
+        ('MATHEMATICS', 'Mathematics'),
+        ('LANGUAGE', 'Language'),
+        ('HISTORY', 'History'),
+        ('GEOGRAPHY', 'Geography'),
+        ('OTHER', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('AVAILABLE', 'Available'),
+        ('BORROWED', 'Borrowed'),
+        ('RESERVED', 'Reserved'),
+        ('LOST', 'Lost'),
+        ('DAMAGED', 'Damaged'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    author = models.CharField(max_length=100)
+    isbn = models.CharField(max_length=20, unique=True)
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    publisher = models.CharField(max_length=100, blank=True)
+    published_date = models.DateField(null=True, blank=True)
+    total_copies = models.IntegerField(default=1)
+    available_copies = models.IntegerField(default=1)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='AVAILABLE')  # Add this field
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['title', 'author']
+    
+    def __str__(self):
+        return f"{self.title} by {self.author}"
+    
+    def save(self, *args, **kwargs):
+        # Ensure available copies don't exceed total copies
+        if self.available_copies > self.total_copies:
+            self.available_copies = self.total_copies
+        
+        # Update status based on available copies
+        if self.available_copies == 0:
+            self.status = 'BORROWED'
+        elif self.available_copies > 0 and self.status == 'BORROWED':
+            self.status = 'AVAILABLE'
+            
+        super().save(*args, **kwargs)
+    
+    @property
+    def is_available(self):
+        return self.available_copies > 0
+    
+    @property
+    def borrowed_count(self):
+        return self.total_copies - self.available_copies
+
+class BookBorrowing(models.Model):
+    STATUS_CHOICES = [
+        ('BORROWED', 'Borrowed'),
+        ('RETURNED', 'Returned'),
+        ('OVERDUE', 'Overdue'),
+        ('LOST', 'Lost'),
+    ]
+    
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='borrowings')
+    borrower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='book_borrowings')
+    borrowed_date = models.DateField(default=timezone.now)
+    due_date = models.DateField()
+    returned_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='BORROWED')
+    fine_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    remarks = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-borrowed_date']
+    
+    def __str__(self):
+        return f"{self.book.title} - {self.borrower.get_full_name()}"
+    
+    @property
+    def is_overdue(self):
+        return self.due_date < timezone.now().date() and self.status == 'BORROWED'
+    
+    @property
+    def days_overdue(self):
+        if self.is_overdue:
+            return (timezone.now().date() - self.due_date).days
+        return 0
+
+class TransportRoute(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    start_point = models.CharField(max_length=100)
+    end_point = models.CharField(max_length=100)
+    distance = models.DecimalField(max_digits=6, decimal_places=2, help_text="Distance in kilometers")
+    fare = models.DecimalField(max_digits=8, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.name} ({self.start_point} to {self.end_point})"
+
+class Vehicle(models.Model):
+    VEHICLE_TYPES = [
+        ('BUS', 'Bus'),
+        ('VAN', 'Van'),
+        ('CAR', 'Car'),
+        ('OTHER', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('MAINTENANCE', 'Under Maintenance'),
+        ('INACTIVE', 'Inactive'),
+    ]
+    
+    vehicle_number = models.CharField(max_length=20, unique=True)
+    model = models.CharField(max_length=100)
+    capacity = models.IntegerField()
+    vehicle_type = models.CharField(max_length=10, choices=VEHICLE_TYPES, default='BUS')
+    driver_name = models.CharField(max_length=100)
+    driver_phone = models.CharField(max_length=15)
+    insurance_expiry = models.DateField()
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='ACTIVE')
+    route = models.ForeignKey(TransportRoute, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.vehicle_number} - {self.model}"
+    
+    @property
+    def is_insurance_expired(self):
+        return self.insurance_expiry < timezone.now().date()
+
+class Hostel(models.Model):
+    name = models.CharField(max_length=100)
+    type = models.CharField(max_length=10, choices=[('BOYS', 'Boys'), ('GIRLS', 'Girls')])
+    address = models.TextField()
+    warden_name = models.CharField(max_length=100)
+    warden_phone = models.CharField(max_length=15)
+    total_rooms = models.IntegerField()
+    available_rooms = models.IntegerField()
+    
+    def __str__(self):
+        return f"{self.name} ({self.get_type_display()})"
+
+class HostelRoom(models.Model):
+    ROOM_TYPES = [
+        ('SINGLE', 'Single'),
+        ('DOUBLE', 'Double'),
+        ('TRIPLE', 'Triple'),
+        ('DORMITORY', 'Dormitory'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('AVAILABLE', 'Available'),
+        ('OCCUPIED', 'Occupied'),
+        ('MAINTENANCE', 'Under Maintenance'),
+    ]
+    
+    room_number = models.CharField(max_length=20)
+    hostel = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name='rooms')
+    capacity = models.IntegerField()
+    room_type = models.CharField(max_length=10, choices=ROOM_TYPES)
+    cost_per_student = models.DecimalField(max_digits=8, decimal_places=2)
+    facilities = models.TextField(blank=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='AVAILABLE')
+    
+    class Meta:
+        unique_together = ['hostel', 'room_number']
+    
+    def __str__(self):
+        return f"{self.hostel.name} - Room {self.room_number}"
+    
+    @property
+    def available_beds(self):
+        allocated_count = self.allocations.filter(status='ACTIVE').count()
+        return self.capacity - allocated_count
+
+class HostelAllocation(models.Model):
+    STATUS_CHOICES = [
+        ('ACTIVE', 'Active'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='hostel_allocations')
+    room = models.ForeignKey(HostelRoom, on_delete=models.CASCADE, related_name='allocations')
+    allocated_date = models.DateField(default=timezone.now)
+    completion_date = models.DateField(null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ACTIVE')
+    remarks = models.TextField(blank=True)
+    
+    class Meta:
+        unique_together = ['student', 'status']
+    
+    def __str__(self):
+        return f"{self.student.full_name} - {self.room.room_number}"
+
+class GradingSystem(models.Model):
+    name = models.CharField(max_length=50)
+    min_mark = models.DecimalField(max_digits=5, decimal_places=2)
+    max_mark = models.DecimalField(max_digits=5, decimal_places=2)
+    grade = models.CharField(max_length=5)
+    points = models.DecimalField(max_digits=3, decimal_places=2)
+    remarks = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['min_mark']
+        verbose_name_plural = "Grading Systems"
+    
+    def __str__(self):
+        return f"{self.grade} ({self.min_mark}-{self.max_mark})"
+
+class TeacherPayment(models.Model):
+    PAYMENT_METHODS = [
+        ('CASH', 'Cash'),
+        ('BANK_TRANSFER', 'Bank Transfer'),
+        ('CHEQUE', 'Cheque'),
+        ('MOBILE_MONEY', 'Mobile Money'),
+    ]
+    
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateField(default=timezone.now)
+    payment_method = models.CharField(max_length=15, choices=PAYMENT_METHODS, default='BANK_TRANSFER')
+    month = models.IntegerField(choices=[(i, i) for i in range(1, 13)])
+    year = models.IntegerField()
+    transaction_id = models.CharField(max_length=100, blank=True)
+    remarks = models.TextField(blank=True)
+    processed_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-payment_date', '-created_at']
+        unique_together = ['teacher', 'month', 'year']
+    
+    def __str__(self):
+        return f"{self.teacher.full_name} - {self.month}/{self.year} - ${self.amount}"
+
+class Event(models.Model):
+    EVENT_TYPES = [
+        ('ACADEMIC', 'Academic'),
+        ('SPORTS', 'Sports'),
+        ('CULTURAL', 'Cultural'),
+        ('HOLIDAY', 'Holiday'),
+        ('MEETING', 'Meeting'),
+        ('OTHER', 'Other'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+    event_type = models.CharField(max_length=15, choices=EVENT_TYPES, default='ACADEMIC')
+    location = models.CharField(max_length=100, blank=True)
+    target_audience = models.CharField(max_length=15, choices=Notice.AUDIENCE_CHOICES, default='ALL')
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['start_date']
+    
+    def __str__(self):
+        return self.title
+    
+    @property
+    def is_upcoming(self):
+        return self.start_date > timezone.now()
+    
+    @property
+    def is_ongoing(self):
+        now = timezone.now()
+        return self.start_date <= now <= self.end_date
+
+class InventoryItem(models.Model):
+    CATEGORIES = [
+        ('STATIONERY', 'Stationery'),
+        ('FURNITURE', 'Furniture'),
+        ('EQUIPMENT', 'Equipment'),
+        ('LAB', 'Lab Equipment'),
+        ('SPORTS', 'Sports Equipment'),
+        ('OTHER', 'Other'),
+    ]
+    
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=20, choices=CATEGORIES)
+    quantity = models.IntegerField(default=0)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    minimum_stock = models.IntegerField(default=0)
+    location = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    last_restocked = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} ({self.quantity} in stock)"
+    
+    @property
+    def total_value(self):
+        return self.quantity * self.unit_price
+    
+    @property
+    def needs_restock(self):
+        return self.quantity <= self.minimum_stock
+
+class LibraryTransaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('BORROW', 'Borrow'),
+        ('RETURN', 'Return'),
+        ('RENEW', 'Renew'),
+    ]
+    
+    book = models.ForeignKey(Book, on_delete=models.CASCADE)
+    member = models.ForeignKey(User, on_delete=models.CASCADE)
+    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    transaction_date = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField(null=True, blank=True)
+    returned_date = models.DateField(null=True, blank=True)
+    fine_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    remarks = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-transaction_date']
+    
+    def __str__(self):
+        return f"{self.transaction_type} - {self.book.title} - {self.member.get_full_name()}"
+
+class StudentMedicalRecord(models.Model):
+    student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='medical_record')
+    blood_group = models.CharField(max_length=5, blank=True)
+    allergies = models.TextField(blank=True)
+    chronic_conditions = models.TextField(blank=True)
+    emergency_medication = models.TextField(blank=True)
+    insurance_provider = models.CharField(max_length=100, blank=True)
+    insurance_number = models.CharField(max_length=50, blank=True)
+    last_checkup = models.DateField(null=True, blank=True)
+    next_checkup = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Medical Record - {self.student.full_name}"
+
+class Staff(models.Model):
+    STAFF_TYPES = [
+        ('ADMIN', 'Administrative'),
+        ('SUPPORT', 'Support Staff'),
+        ('SECURITY', 'Security'),
+        ('CLEANING', 'Cleaning Staff'),
+        ('OTHER', 'Other'),
+    ]
+    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
+    staff_id = models.CharField(max_length=20, unique=True)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    staff_type = models.CharField(max_length=15, choices=STAFF_TYPES)
+    phone = models.CharField(max_length=15)
+    email = models.EmailField()
+    address = models.TextField()
+    joining_date = models.DateField(default=timezone.now)
+    salary = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.staff_id})"
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def save(self, *args, **kwargs):
+        if not self.staff_id:
+            year = timezone.now().year
+            last_staff = Staff.objects.filter(joining_date__year=year).order_by('-id').first()
+            if last_staff:
+                last_id = int(last_staff.staff_id.split('-')[-1])
+                new_id = last_id + 1
+            else:
+                new_id = 1
+            self.staff_id = f"STF-{year}-{new_id:04d}"
+        super().save(*args, **kwargs)

@@ -4,8 +4,18 @@ register = template.Library()
 
 @register.filter
 def get_item(dictionary, key):
-    """Template filter to get dictionary item by key"""
-    return dictionary.get(key)
+    """Get a value from a dictionary by key"""
+    if dictionary and hasattr(dictionary, 'get'):
+        return dictionary.get(key)
+    return None
+
+@register.filter
+def subtract(value, arg):
+    """Subtract the arg from the value"""
+    try:
+        return int(value) - int(arg)
+    except (ValueError, TypeError):
+        return value
 
 
 @register.filter

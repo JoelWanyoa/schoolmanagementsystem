@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Report Card - {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-card {
+        background: white;
+        border: 2px solid #333;
+        padding: 30px;
+    }
+    .school-header {
+        text-align: center;
+        border-bottom: 3px double #333;
+        padding-bottom: 20px;
+        margin-bottom: 30px;
+    }
+    .student-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    .grade-table th {
+        background: #343a40;
+        color: white;
+    }
+    .signature-area {
+        margin-top: 50px;
+        border-top: 1px solid #333;
+        padding-top: 20px;
+    }
+    @media print {
+        .no-print { display: none; }
+        .report-card { border: none; padding: 0; }
+        body { background: white; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Report Card</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'class_results' %}">Class Results</a></li>
+                    <li>{{ student.full_name }}</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="card mb-4 no-print">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">Report Card - {{ student.full_name }}</h4>
+                            <p class="mb-0 text-muted">{{ student.current_class.name }} | Term: {{ term }}</p>
+                        </div>
+                        <div class="btn-group">
+                            <button onclick="window.print()" class="btn btn-success">
+                                <i class="fas fa-print mr-2"></i>Print Report
+                            </button>
+                            <a href="#" class="btn btn-primary">
+                                <i class="fas fa-download mr-2"></i>Download PDF
+                            </a>
+                            <a href="{% url 'class_results_detail' student.current_class.id %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Class
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Card -->
+            <div class="card report-card">
+                <div class="card-body">
+                    <!-- School Header -->
+                    <div class="school-header">
+                        <h1 class="mb-2">PETRA EDUCATION CENTRE</h1>
+                        <p class="mb-1">P.O. Box 12345, Nairobi, Kenya</p>
+                        <p class="mb-1">Tel: +254 700 000000 | Email: info@petra.edu</p>
+                        <h3 class="mt-3 mb-0">STUDENT REPORT CARD</h3>
+                        <p class="mb-0">Academic Year: {{ academic_year.name }}</p>
+                    </div>
+
+                    <!-- Student Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="student-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Student Name:</strong> {{ student.full_name }}</p>
+                                        <p><strong>Admission No:</strong> {{ student.student_id }}</p>
+                                        <p><strong>Class:</strong> {{ student.current_class.name }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Roll Number:</strong> {{ student.roll_number }}</p>
+                                        <p><strong>Term:</strong> 
+                                            {% if term == 'TERM1' %}First Term
+                                            {% elif term == 'TERM2' %}Second Term
+                                            {% else %}Third Term{% endif %}
+                                        </p>
+                                        <p><strong>Date Issued:</strong> {% now "F d, Y" %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            {% if student.photo %}
+                            <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                 class="rounded-circle border" width="120" height="120">
+                            {% else %}
+                            <div class="avatar bg-primary text-white rounded-circle mx-auto d-flex align-items-center justify-content-center" 
+                                 style="width: 120px; height: 120px; font-size: 24px;">
+                                {{ student.first_name|first }}{{ student.last_name|first }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Academic Performance -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="mb-3">ACADEMIC PERFORMANCE</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered grade-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Exam 1</th>
+                                            <th>Exam 2</th>
+                                            <th>Assignment</th>
+                                            <th>Total</th>
+                                            <th>Grade</th>
+                                            <th>Position</th>
+                                            <th>Remarks</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Sample Data - Replace with actual data -->
+                                        <tr>
+                                            <td>Mathematics</td>
+                                            <td>85</td>
+                                            <td>78</td>
+                                            <td>90</td>
+                                            <td>84.3</td>
+                                            <td><span class="badge badge-success">A</span></td>
+                                            <td>2</td>
+                                            <td>Excellent</td>
+                                        </tr>
+                                        <tr>
+                                            <td>English</td>
+                                            <td>76</td>
+                                            <td>82</td>
+                                            <td>88</td>
+                                            <td>81.3</td>
+                                            <td><span class="badge badge-info">B</span></td>
+                                            <td>5</td>
+                                            <td>Very Good</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Science</td>
+                                            <td>92</td>
+                                            <td>88</td>
+                                            <td>95</td>
+                                            <td>91.7</td>
+                                            <td><span class="badge badge-success">A</span></td>
+                                            <td>1</td>
+                                            <td>Outstanding</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Social Studies</td>
+                                            <td>68</td>
+                                            <td>72</td>
+                                            <td>75</td>
+                                            <td>71.7</td>
+                                            <td><span class="badge badge-warning">C</span></td>
+                                            <td>12</td>
+                                            <td>Good</td>
+                                        </tr>
+                                        <!-- Add more subjects as needed -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary and Grading System -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">PERFORMANCE SUMMARY</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td><strong>Total Marks:</strong></td>
+                                            <td>450/500</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Average Score:</strong></td>
+                                            <td>90.0%</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Class Position:</strong></td>
+                                            <td>3 out of 35</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Overall Grade:</strong></td>
+                                            <td><span class="badge badge-success">A</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Attendance:</strong></td>
+                                            <td>95%</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">GRADING SYSTEM</h6>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <td>A</td>
+                                            <td>80 - 100%</td>
+                                            <td>Excellent</td>
+                                        </tr>
+                                        <tr>
+                                            <td>B</td>
+                                            <td>70 - 79%</td>
+                                            <td>Very Good</td>
+                                        </tr>
+                                        <tr>
+                                            <td>C</td>
+                                            <td>60 - 69%</td>
+                                            <td>Good</td>
+                                        </tr>
+                                        <tr>
+                                            <td>D</td>
+                                            <td>50 - 59%</td>
+                                            <td>Fair</td>
+                                        </tr>
+                                        <tr>
+                                            <td>E</td>
+                                            <td>40 - 49%</td>
+                                            <td>Poor</td>
+                                        </tr>
+                                        <tr>
+                                            <td>F</td>
+                                            <td>0 - 39%</td>
+                                            <td>Fail</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher's Remarks -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h6 class="card-title">TEACHER'S REMARKS</h6>
+                                    <p class="mb-2">
+                                        {{ student.full_name }} has shown excellent progress this term. 
+                                        Consistent performance in all subjects with particular strength in Science. 
+                                        Demonstrates good leadership qualities and active participation in class activities.
+                                    </p>
+                                    <p class="mb-0"><strong>Areas for Improvement:</strong> 
+                                        Should focus on improving Social Studies performance. 
+                                        More practice in written assignments would be beneficial.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Signatures -->
+                    <div class="row signature-area">
+                        <div class="col-md-4 text-center">
+                            <p class="mb-1">_________________________</p>
+                            <p class="mb-0"><strong>Class Teacher</strong></p>
+                            <p class="mb-0">{{ teacher.full_name }}</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <p class="mb-1">_________________________</p>
+                            <p class="mb-0"><strong>Principal</strong></p>
+                            <p class="mb-0">School Principal</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <p class="mb-1">_________________________</p>
+                            <p class="mb-0"><strong>Parent's Signature</strong></p>
+                            <p class="mb-0">Date: ___________________</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <p class="mb-1 text-muted">
+                                <strong>Note:</strong> This report card should be signed by parent/guardian and returned to school.
+                            </p>
+                            <p class="mb-0 text-muted">
+                                Next term begins on: ___________________________
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Print functionality
+    function printReport() {
+        window.print();
+    }
+
+    // Auto-print option
+    $(document).ready(function() {
+        // Uncomment the line below to auto-print when page loads
+        // window.print();
+    });
+</script>
+{% endblock %}

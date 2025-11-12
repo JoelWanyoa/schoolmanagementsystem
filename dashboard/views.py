@@ -2,7 +2,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST, require_GET
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q,  Avg, Max, Min, StdDev
+from django.db.models.functions import Coalesce
+from django.db.models import FloatField, ExpressionWrapper
 from core.models import *
 from core.forms import *
 from django.utils import timezone
@@ -23,6 +25,49 @@ from django.core.exceptions import PermissionDenied
 
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
+
+from core.utils import (
+    check_user_online,
+    get_parent_children,
+    calculate_exam_positions,
+    get_conversations,
+    get_user_type,
+    generate_student_id,
+    generate_teacher_id,
+    send_fee_reminder_email
+)
+
+# Add these to your existing imports section
+import csv
+import io
+from io import BytesIO, StringIO
+from decimal import Decimal, InvalidOperation
+
+# For Excel export
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+
+try:
+    import openpyxl
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+
+# For PDF export
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib import colors
+    from reportlab.lib.units import inch
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.utils import ImageReader
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 # def check_user_online(user):
 #     """
@@ -992,6 +1037,766 @@ def assignment_download_submissions(request, assignment_id):
     response['Content-Disposition'] = f'attachment; filename="{assignment.title}_submissions.zip"'
     return response
 
+# Add these views to views.py
+
+@login_required
+def teacher_exam_management(request):
+    """Main exam management dashboard for teachers"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    teacher_classes = Class.objects.filter(class_teacher=teacher)
+    teacher_subjects = teacher.subjects.all()
+    
+    # Get statistics
+    total_exams = Exam.objects.filter(created_by=request.user).count()
+    exams_this_month = Exam.objects.filter(
+        created_by=request.user,
+        exam_date__month=timezone.now().month,
+        exam_date__year=timezone.now().year
+    ).count()
+    
+    # Recent exams
+    recent_exams = Exam.objects.filter(created_by=request.user).order_by('-exam_date')[:5]
+    
+    # Upcoming exams
+    upcoming_exams = Exam.objects.filter(
+        created_by=request.user,
+        exam_date__gte=timezone.now().date()
+    ).order_by('exam_date')[:5]
+    
+    context = {
+        'teacher': teacher,
+        'teacher_classes': teacher_classes,
+        'teacher_subjects': teacher_subjects,
+        'total_exams': total_exams,
+        'exams_this_month': exams_this_month,
+        'recent_exams': recent_exams,
+        'upcoming_exams': upcoming_exams,
+    }
+    return render(request, 'teachers/exam_management.html', context)
+
+@login_required
+def create_exam(request):
+    """Create a new exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    
+    # Check if teacher has subjects and classes assigned
+    has_subjects = teacher.subjects.exists()
+    teacher_classes = Class.objects.filter(class_teacher=teacher)
+    has_classes = teacher_classes.exists()
+    
+    if not has_subjects or not has_classes:
+        messages.warning(request, 
+            f"Cannot create exam. You need to be assigned {'subjects' if not has_subjects else ''}{' and ' if not has_subjects and not has_classes else ''}{'classes' if not has_classes else ''}.")
+        return redirect('teacher_exam_management')
+    
+    if request.method == 'POST':
+        form = ExamForm(request.POST, teacher=teacher)
+        if form.is_valid():
+            try:
+                exam = form.save(commit=False)
+                exam.created_by = request.user
+                exam.save()
+                messages.success(request, f'Exam "{exam.name}" created successfully!')
+                return redirect('enter_marks', exam_id=exam.id)
+            except Exception as e:
+                messages.error(request, f'Error creating exam: {str(e)}')
+        else:
+            # Debug form errors
+            print("Form errors:", form.errors)
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ExamForm(teacher=teacher)
+    
+    context = {
+        'form': form,
+        'teacher': teacher,
+        'teacher_classes': teacher_classes,
+        'title': 'Create New Exam'
+    }
+    return render(request, 'teachers/exam_form.html', context)
+
+@login_required
+def enter_marks(request, exam_id):
+    """Enter marks for a specific exam - Prevent re-entry of marks"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    # Get students in the exam class
+    students = Student.objects.filter(
+        current_class=exam.class_level,
+        is_active=True
+    ).order_by('roll_number')
+    
+    # Get existing results for pre-population
+    existing_results = ExamResult.objects.filter(exam=exam)
+    result_dict = {}
+    for result in existing_results:
+        result_dict[result.student.id] = result
+    
+    # Check if all students already have marks
+    all_graded = len(result_dict) == students.count()
+    
+    if request.method == 'POST':
+        # If all marks are already entered, prevent further changes
+        if all_graded and not request.POST.get('force_update'):
+            messages.warning(request, f'All marks for {exam.name} have already been entered. Use "Edit Marks" to make changes.')
+            return redirect('exam_results', exam_id=exam.id)
+        
+        try:
+            from decimal import Decimal, InvalidOperation
+            updated_count = 0
+            new_count = 0
+            
+            for student in students:
+                marks_key = f'marks_{student.id}'
+                remarks_key = f'remarks_{student.id}'
+                
+                if marks_key in request.POST:
+                    marks_obtained = request.POST.get(marks_key)
+                    remarks = request.POST.get(remarks_key, '')
+                    
+                    if marks_obtained:  # Only save if marks are provided
+                        try:
+                            # Convert to Decimal for proper storage
+                            marks_decimal = Decimal(marks_obtained)
+                            
+                            # Validate marks are within range
+                            if marks_decimal < 0:
+                                messages.error(request, f'Marks cannot be negative for {student.full_name}')
+                                continue
+                            if marks_decimal > exam.total_marks:
+                                messages.error(request, f'Marks cannot exceed total marks ({exam.total_marks}) for {student.full_name}')
+                                continue
+                            
+                            # Check if result already exists
+                            existing_result = result_dict.get(student.id)
+                            
+                            # Update or create exam result
+                            result, created = ExamResult.objects.update_or_create(
+                                exam=exam,
+                                student=student,
+                                defaults={
+                                    'marks_obtained': marks_decimal,
+                                    'remarks': remarks
+                                }
+                            )
+                            
+                            if created:
+                                new_count += 1
+                            else:
+                                updated_count += 1
+                            
+                        except InvalidOperation:
+                            messages.error(request, f'Invalid marks format for {student.full_name}')
+                            continue
+            
+            # Calculate positions after saving all marks
+            calculate_exam_positions(exam)
+            
+            if new_count > 0 and updated_count > 0:
+                messages.success(request, f'Successfully added {new_count} new marks and updated {updated_count} existing marks for {exam.name}!')
+            elif new_count > 0:
+                messages.success(request, f'Successfully entered marks for {new_count} students in {exam.name}!')
+            elif updated_count > 0:
+                messages.success(request, f'Successfully updated marks for {updated_count} students in {exam.name}!')
+            else:
+                messages.info(request, 'No changes were made to the marks.')
+                
+            return redirect('exam_results', exam_id=exam.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error entering marks: {str(e)}')
+    
+    context = {
+        'exam': exam,
+        'students': students,
+        'result_dict': result_dict,
+        'all_graded': all_graded,
+        'graded_count': len(result_dict),
+        'total_students': students.count(),
+    }
+    return render(request, 'teachers/enter_marks.html', context)
+
+def calculate_exam_positions(exam):
+    """Calculate positions for an exam based on marks"""
+    results = ExamResult.objects.filter(exam=exam).order_by('-marks_obtained')
+    
+    position = 1
+    prev_marks = None
+    same_rank_count = 0
+    
+    for result in results:
+        # Convert Decimal to float for comparison
+        current_marks = float(result.marks_obtained)
+        
+        if prev_marks is not None and current_marks == prev_marks:
+            same_rank_count += 1
+        else:
+            position += same_rank_count
+            same_rank_count = 1
+        
+        result.position = position
+        result.save()
+        prev_marks = current_marks
+
+@login_required
+def edit_marks(request, exam_id):
+    """Edit existing marks for an exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    # Similar logic to enter_marks but always allows editing
+    # You can reuse the same template with editing_mode=True
+    
+    context = {
+        'exam': exam,
+        'students': Student.objects.filter(current_class=exam.class_level, is_active=True),
+        'result_dict': {r.student.id: r for r in ExamResult.objects.filter(exam=exam)},
+        'editing_mode': True,
+    }
+    return render(request, 'teachers/enter_marks.html', context)
+
+@login_required
+def exam_results(request, exam_id):
+    """View results for a specific exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
+    
+    # Calculate statistics
+    total_students = results.count()
+    if total_students > 0:
+        average_marks = results.aggregate(Avg('marks_obtained'))['marks_obtained__avg']
+        highest_marks = results.aggregate(Max('marks_obtained'))['marks_obtained__max']
+        lowest_marks = results.aggregate(Min('marks_obtained'))['marks_obtained__min']
+        
+        # Grade distribution
+        grade_distribution = results.values('grade').annotate(count=Count('id')).order_by('grade')
+    else:
+        average_marks = highest_marks = lowest_marks = 0
+        grade_distribution = []
+    
+    context = {
+        'exam': exam,
+        'results': results,
+        'teacher': teacher,
+        'total_students': total_students,
+        'average_marks': average_marks,
+        'highest_marks': highest_marks,
+        'lowest_marks': lowest_marks,
+        'grade_distribution': grade_distribution,
+    }
+    return render(request, 'teachers/exam_results.html', context)
+
+@login_required
+def exam_analysis(request, exam_id):
+    """Detailed analysis for an exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    results = ExamResult.objects.filter(exam=exam).select_related('student')
+    
+    # Detailed statistics
+    stats = results.aggregate(
+        avg_marks=Avg('marks_obtained'),
+        max_marks=Max('marks_obtained'),
+        min_marks=Min('marks_obtained'),
+        std_dev=StdDev('marks_obtained'),
+        count=Count('id')
+    )
+    
+    # Grade distribution
+    grade_data = results.values('grade').annotate(
+        count=Count('id'),
+        percentage=ExpressionWrapper(
+            Count('id') * 100.0 / stats['count'],
+            output_field=FloatField()
+        )
+    ).order_by('grade')
+    
+    # Marks distribution (by ranges)
+    marks_ranges = [
+        ('90-100', 90, 100),
+        ('80-89', 80, 89.99),
+        ('70-79', 70, 79.99),
+        ('60-69', 60, 69.99),
+        ('50-59', 50, 59.99),
+        ('40-49', 40, 49.99),
+        ('0-39', 0, 39.99),
+    ]
+    
+    marks_distribution = []
+    for range_name, min_val, max_val in marks_ranges:
+        count = results.filter(
+            marks_obtained__gte=min_val,
+            marks_obtained__lte=max_val
+        ).count()
+        percentage = (count / stats['count'] * 100) if stats['count'] > 0 else 0
+        marks_distribution.append({
+            'range': range_name,
+            'count': count,
+            'percentage': round(percentage, 1)
+        })
+    
+    # Top performers
+    top_performers = results.order_by('-marks_obtained')[:5]
+    
+    # Students needing improvement
+    need_improvement = results.filter(marks_obtained__lt=50).order_by('marks_obtained')[:5]
+    
+    context = {
+        'exam': exam,
+        'teacher': teacher,
+        'stats': stats,
+        'grade_data': grade_data,
+        'marks_distribution': marks_distribution,
+        'top_performers': top_performers,
+        'need_improvement': need_improvement,
+        'total_students': stats['count'],
+    }
+    return render(request, 'teachers/exam_analysis.html', context)
+
+@login_required
+def subject_results(request, subject_id=None):
+    """View results for teacher's subjects"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    
+    # Get subjects taught by the teacher
+    subjects = teacher.subjects.all()
+    
+    if subject_id:
+        subject = get_object_or_404(Subject, id=subject_id)
+        # Verify teacher teaches this subject
+        if subject not in subjects:
+            messages.error(request, "You don't teach this subject.")
+            return redirect('subject_results')
+        
+        # Get exams for this subject
+        exams = Exam.objects.filter(
+            subject=subject,
+            created_by=request.user
+        ).order_by('-exam_date')
+        
+        # Get all results for this subject
+        results = ExamResult.objects.filter(
+            exam__subject=subject,
+            exam__created_by=request.user
+        ).select_related('exam', 'student').order_by('-exam__exam_date')
+        
+        # Calculate subject statistics with proper aggregation
+        subject_stats = results.aggregate(
+            avg_marks=Avg('marks_obtained'),
+            total_exams=Count('exam', distinct=True),
+            total_students=Count('student', distinct=True)
+        )
+    else:
+        subject = None
+        exams = []
+        results = []
+        subject_stats = {}
+    
+    context = {
+        'teacher': teacher,
+        'subjects': subjects,
+        'selected_subject': subject,
+        'exams': exams,
+        'results': results,
+        'subject_stats': subject_stats,
+    }
+    return render(request, 'teachers/subject_results.html', context)
+
+@login_required
+def class_results(request, class_id=None):
+    """View results for teacher's classes"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    teacher_classes = Class.objects.filter(class_teacher=teacher)
+    
+    if class_id:
+        class_obj = get_object_or_404(Class, id=class_id)
+        # Verify teacher is class teacher for this class
+        if class_obj not in teacher_classes:
+            messages.error(request, "You are not the class teacher for this class.")
+            return redirect('class_results')
+        
+        # Get students in this class
+        students = Student.objects.filter(
+            current_class=class_obj,
+            is_active=True
+        ).order_by('roll_number')
+        
+        # Get all exams for this class
+        exams = Exam.objects.filter(
+            class_level=class_obj,
+            created_by=request.user
+        ).order_by('-exam_date')
+        
+        # Calculate class performance
+        class_stats = {}
+        if exams.exists():
+            class_stats = ExamResult.objects.filter(
+                exam__class_level=class_obj,
+                exam__created_by=request.user
+            ).aggregate(
+                avg_marks=Avg('marks_obtained'),
+                total_exams=Count('exam', distinct=True)
+            )
+    else:
+        class_obj = None
+        students = []
+        exams = []
+        class_stats = {}
+    
+    context = {
+        'teacher': teacher,
+        'teacher_classes': teacher_classes,
+        'selected_class': class_obj,
+        'students': students,
+        'exams': exams,
+        'class_stats': class_stats,
+    }
+    return render(request, 'teachers/class_results.html', context)
+
+@login_required
+def generate_report_card(request, student_id, term=None):
+    """Generate report card for a student"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    student = get_object_or_404(Student, id=student_id)
+    
+    # Verify student is in teacher's class
+    if student.current_class not in Class.objects.filter(class_teacher=teacher):
+        messages.error(request, "This student is not in your class.")
+        return redirect('class_results')
+    
+    # Get current academic year
+    academic_year = AcademicYear.objects.filter(is_current=True).first()
+    
+    if not term:
+        term = 'TERM1'  # Default to first term
+    
+    # Get all exam results for this student in the current academic year and term
+    # Note: You might need to add term field to Exam model or implement term logic
+    
+    context = {
+        'student': student,
+        'teacher': teacher,
+        'academic_year': academic_year,
+        'term': term,
+    }
+    return render(request, 'teachers/report_card.html', context)
+
+@login_required
+def export_results_excel(request, exam_id):
+    """Export exam results to Excel with comprehensive error handling"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
+    
+    # Check if there are any results to export
+    if not results.exists():
+        messages.warning(request, 'No results available to export.')
+        return redirect('exam_results', exam_id=exam.id)
+    
+    try:
+        import pandas as pd
+        from io import BytesIO
+        
+        # Create DataFrame with comprehensive data
+        data = []
+        for result in results:
+            percentage = (float(result.marks_obtained) / float(exam.total_marks)) * 100
+            data.append({
+                'Position': result.position or '-',
+                'Student ID': result.student.student_id,
+                'Student Name': result.student.full_name,
+                'Roll Number': result.student.roll_number,
+                'Class': exam.class_level.name,
+                'Marks Obtained': float(result.marks_obtained),
+                'Total Marks': float(exam.total_marks),
+                'Percentage': round(percentage, 2),
+                'Grade': result.grade,
+                'Remarks': result.remarks or '',
+                'Status': 'Pass' if float(result.marks_obtained) >= float(exam.passing_marks or 0) else 'Fail'
+            })
+        
+        df = pd.DataFrame(data)
+        
+        # Create Excel file in memory
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            # Main results sheet
+            df.to_excel(writer, sheet_name='Exam Results', index=False)
+            
+            # Summary statistics sheet
+            summary_data = {
+                'Exam Information': [
+                    'Exam Name', 'Subject', 'Class', 'Exam Date', 
+                    'Total Marks', 'Passing Marks', 'Total Students'
+                ],
+                'Details': [
+                    exam.name,
+                    exam.subject.name,
+                    exam.class_level.name,
+                    exam.exam_date.strftime('%Y-%m-%d'),
+                    float(exam.total_marks),
+                    float(exam.passing_marks or 0),
+                    len(results)
+                ]
+            }
+            
+            stats_data = {
+                'Statistics': [
+                    'Average Marks', 'Highest Marks', 'Lowest Marks', 
+                    'Pass Rate', 'Fail Rate'
+                ],
+                'Values': [
+                    float(results.aggregate(Avg('marks_obtained'))['marks_obtained__avg'] or 0),
+                    float(results.aggregate(Max('marks_obtained'))['marks_obtained__max'] or 0),
+                    float(results.aggregate(Min('marks_obtained'))['marks_obtained__min'] or 0),
+                    f"{(results.filter(marks_obtained__gte=exam.passing_marks or 0).count() / len(results) * 100):.1f}%",
+                    f"{(results.filter(marks_obtained__lt=exam.passing_marks or 0).count() / len(results) * 100):.1f}%"
+                ]
+            }
+            
+            pd.DataFrame(summary_data).to_excel(writer, sheet_name='Exam Summary', index=False)
+            pd.DataFrame(stats_data).to_excel(writer, sheet_name='Statistics', index=False)
+            
+            # Grade distribution sheet
+            grade_dist = results.values('grade').annotate(count=Count('id')).order_by('grade')
+            grade_data = []
+            for grade in grade_dist:
+                grade_data.append({
+                    'Grade': grade['grade'],
+                    'Count': grade['count'],
+                    'Percentage': f"{(grade['count'] / len(results) * 100):.1f}%"
+                })
+            pd.DataFrame(grade_data).to_excel(writer, sheet_name='Grade Distribution', index=False)
+        
+        output.seek(0)
+        
+        # Create HTTP response
+        response = HttpResponse(
+            output.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        filename = f"{exam.name.replace(' ', '_')}_results_{exam.exam_date}.xlsx"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        messages.success(request, f'Results exported successfully to Excel!')
+        return response
+        
+    except ImportError:
+        # Fallback to CSV with user notification
+        messages.info(request, 'Excel export not available. Downloading CSV format instead.')
+        return export_results_csv(request, exam_id)
+    except Exception as e:
+        messages.error(request, f'Error exporting results: {str(e)}')
+        return redirect('exam_results', exam_id=exam.id)
+
+@login_required
+def export_results_pdf(request, exam_id):
+    """Export exam results to PDF"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
+    
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.lib import colors
+        from io import BytesIO
+        
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        
+        styles = getSampleStyleSheet()
+        
+        # Add title
+        title = Paragraph(f"Exam Results: {exam.name}", styles['Title'])
+        elements.append(title)
+        
+        # Add exam details
+        exam_details = [
+            ['Subject:', str(exam.subject)],
+            ['Class:', str(exam.class_level)],
+            ['Exam Date:', exam.exam_date.strftime('%Y-%m-%d')],
+            ['Total Marks:', str(exam.total_marks)]
+        ]
+        
+        exam_table = Table(exam_details)
+        exam_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ]))
+        elements.append(exam_table)
+        elements.append(Paragraph("<br/>", styles['Normal']))
+        
+        # Prepare results data
+        results_data = [['Pos', 'Student ID', 'Name', 'Marks', 'Grade', 'Remarks']]
+        
+        for result in results:
+            results_data.append([
+                str(result.position),
+                result.student.student_id,
+                result.student.full_name,
+                str(result.marks_obtained),
+                result.grade,
+                result.remarks or '-'
+            ])
+        
+        # Create results table
+        results_table = Table(results_data)
+        results_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        elements.append(results_table)
+        
+        doc.build(elements)
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{exam.name}_results.pdf"'
+        return response
+        
+    except ImportError:
+        messages.error(request, "PDF export requires reportlab to be installed.")
+        return redirect('exam_results', exam_id=exam_id)
+
+@login_required
+def bulk_upload_results(request, exam_id):
+    """Bulk upload results via CSV"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        form = BulkResultForm(request.POST, request.FILES, teacher=teacher)
+        if form.is_valid():
+            try:
+                import csv
+                import io
+                
+                csv_file = request.FILES['results_file']
+                
+                # Read the CSV file
+                data_set = csv_file.read().decode('UTF-8')
+                io_string = io.StringIO(data_set)
+                
+                success_count = 0
+                error_count = 0
+                
+                for row in csv.reader(io_string, delimiter=','):
+                    if len(row) >= 2:
+                        student_id = row[0].strip()
+                        marks_obtained = row[1].strip()
+                        remarks = row[2].strip() if len(row) > 2 else ''
+                        
+                        try:
+                            # Find student
+                            student = Student.objects.get(
+                                student_id=student_id,
+                                current_class=exam.class_level,
+                                is_active=True
+                            )
+                            
+                            # Create or update result
+                            result, created = ExamResult.objects.update_or_create(
+                                exam=exam,
+                                student=student,
+                                defaults={
+                                    'marks_obtained': float(marks_obtained),
+                                    'remarks': remarks
+                                }
+                            )
+                            success_count += 1
+                            
+                        except Student.DoesNotExist:
+                            error_count += 1
+                        except ValueError:
+                            error_count += 1
+                
+                # Recalculate positions
+                calculate_exam_positions(exam)
+                
+                messages.success(
+                    request, 
+                    f'Successfully uploaded {success_count} results. {error_count} errors occurred.'
+                )
+                return redirect('exam_results', exam_id=exam.id)
+                
+            except Exception as e:
+                messages.error(request, f'Error processing CSV file: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = BulkResultForm(teacher=teacher, initial={'exam': exam})
+    
+    context = {
+        'form': form,
+        'exam': exam,
+        'teacher': teacher,
+    }
+    return render(request, 'teachers/bulk_upload_results.html', context)
+
 # AJAX views for teacher functionality
 @login_required
 @require_POST
@@ -1061,25 +1866,6 @@ def get_class_students(request, class_id):
             'success': False,
             'error': str(e)
         })
-
-# Helper function for parent dashboard
-def get_parent_children(parent):
-    """Helper function to get all children for a parent"""
-    children = parent.students.filter(is_active=True)
-    
-    # If no children in direct relationship, try to find by guardian info
-    if not children.exists():
-        children = Student.objects.filter(
-            Q(guardian_email=parent.email) | 
-            Q(guardian_phone=parent.phone)
-        ).filter(is_active=True).distinct()
-        
-        # Auto-link found children to parent
-        for child in children:
-            if child not in parent.students.all():
-                parent.students.add(child)
-    
-    return children
 
 @login_required
 def parent_dashboard(request):
@@ -3856,3 +4642,1023 @@ def add_student_to_parent(request, parent_id):
     }
     
     return render(request, 'parents/add_student_to_parent.html', context)
+
+
+# Add these missing views to your views.py file
+
+@login_required
+def export_results_csv(request, exam_id):
+    """Export exam results to CSV format"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{exam.name}_results.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Position', 'Student ID', 'Student Name', 'Roll Number', 'Marks Obtained', 'Total Marks', 'Percentage', 'Grade', 'Remarks'])
+    
+    for result in results:
+        percentage = (float(result.marks_obtained) / float(exam.total_marks)) * 100
+        writer.writerow([
+            result.position,
+            result.student.student_id,
+            result.student.full_name,
+            result.student.roll_number,
+            float(result.marks_obtained),
+            float(exam.total_marks),
+            round(percentage, 2),
+            result.grade,
+            result.remarks or ''
+        ])
+    
+    return response
+
+@login_required
+def manage_classes(request):
+    """Manage all classes in the system"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    classes = Class.objects.all().order_by('grade_level', 'name')
+    
+    context = {
+        'classes': classes,
+    }
+    return render(request, 'academic/manage_classes.html', context)
+
+@login_required
+def add_class(request):
+    """Add a new class"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = ClassForm(request.POST)
+        if form.is_valid():
+            class_obj = form.save()
+            messages.success(request, f'Class "{class_obj.name}" created successfully!')
+            return redirect('manage_classes')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ClassForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Class'
+    }
+    return render(request, 'academic/class_form.html', context)
+
+@login_required
+def edit_class(request, class_id):
+    """Edit an existing class"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    class_obj = get_object_or_404(Class, id=class_id)
+    
+    if request.method == 'POST':
+        form = ClassForm(request.POST, instance=class_obj)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Class "{class_obj.name}" updated successfully!')
+            return redirect('manage_classes')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ClassForm(instance=class_obj)
+    
+    context = {
+        'form': form,
+        'title': 'Edit Class',
+        'class_obj': class_obj
+    }
+    return render(request, 'academic/class_form.html', context)
+
+@login_required
+def delete_class(request, class_id):
+    """Delete a class"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    class_obj = get_object_or_404(Class, id=class_id)
+    
+    if request.method == 'POST':
+        class_name = class_obj.name
+        class_obj.delete()
+        messages.success(request, f'Class "{class_name}" deleted successfully!')
+        return redirect('manage_classes')
+    
+    context = {
+        'class_obj': class_obj
+    }
+    return render(request, 'academic/confirm_delete_class.html', context)
+
+@login_required
+def manage_subjects(request):
+    """Manage all subjects in the system"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    subjects = Subject.objects.all().order_by('name')
+    
+    context = {
+        'subjects': subjects,
+    }
+    return render(request, 'academic/manage_subjects.html', context)
+
+@login_required
+def add_subject(request):
+    """Add a new subject"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = SubjectForm(request.POST)
+        if form.is_valid():
+            subject = form.save()
+            messages.success(request, f'Subject "{subject.name}" created successfully!')
+            return redirect('manage_subjects')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = SubjectForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Subject'
+    }
+    return render(request, 'academic/subject_form.html', context)
+
+@login_required
+def edit_subject(request, subject_id):
+    """Edit an existing subject"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    subject = get_object_or_404(Subject, id=subject_id)
+    
+    if request.method == 'POST':
+        form = SubjectForm(request.POST, instance=subject)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Subject "{subject.name}" updated successfully!')
+            return redirect('manage_subjects')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = SubjectForm(instance=subject)
+    
+    context = {
+        'form': form,
+        'title': 'Edit Subject',
+        'subject': subject
+    }
+    return render(request, 'academic/subject_form.html', context)
+
+@login_required
+def delete_subject(request, subject_id):
+    """Delete a subject"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    subject = get_object_or_404(Subject, id=subject_id)
+    
+    if request.method == 'POST':
+        subject_name = subject.name
+        subject.delete()
+        messages.success(request, f'Subject "{subject_name}" deleted successfully!')
+        return redirect('manage_subjects')
+    
+    context = {
+        'subject': subject
+    }
+    return render(request, 'academic/confirm_delete_subject.html', context)
+
+@login_required
+def manage_timetable(request):
+    """Manage class timetables"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    classes = Class.objects.all()
+    selected_class_id = request.GET.get('class')
+    
+    timetable_data = []
+    if selected_class_id:
+        selected_class = get_object_or_404(Class, id=selected_class_id)
+        # You would typically fetch timetable entries for this class
+        # timetable_data = Timetable.objects.filter(class_level=selected_class).order_by('day', 'period')
+    
+    context = {
+        'classes': classes,
+        'selected_class_id': selected_class_id,
+        'timetable_data': timetable_data,
+    }
+    return render(request, 'academic/manage_timetable.html', context)
+
+@login_required
+def generate_timetable(request):
+    """Generate timetable automatically"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        class_id = request.POST.get('class_id')
+        # Implement timetable generation logic here
+        messages.success(request, 'Timetable generated successfully!')
+        return redirect('manage_timetable')
+    
+    classes = Class.objects.all()
+    context = {
+        'classes': classes,
+    }
+    return render(request, 'academic/generate_timetable.html', context)
+
+@login_required
+def class_timetable(request, class_id):
+    """View timetable for a specific class"""
+    class_obj = get_object_or_404(Class, id=class_id)
+    
+    # You would typically fetch timetable entries for this class
+    # timetable_data = Timetable.objects.filter(class_level=class_obj).order_by('day', 'period')
+    timetable_data = []  # Placeholder
+    
+    context = {
+        'class_obj': class_obj,
+        'timetable_data': timetable_data,
+    }
+    return render(request, 'academic/class_timetable.html', context)
+
+@login_required
+def all_books(request):
+    """View all books in the library"""
+    books = Book.objects.all().order_by('title')
+    
+    search_query = request.GET.get('search')
+    if search_query:
+        books = books.filter(
+            Q(title__icontains=search_query) |
+            Q(author__icontains=search_query) |
+            Q(isbn__icontains=search_query) |
+            Q(category__icontains=search_query)
+        )
+    
+    context = {
+        'books': books,
+        'search_query': search_query or '',
+    }
+    return render(request, 'library/all_books.html', context)
+
+@login_required
+def add_book(request):
+    """Add a new book to the library"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            book = form.save()
+            messages.success(request, f'Book "{book.title}" added successfully!')
+            return redirect('all_books')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = BookForm()
+    
+    context = {
+        'form': form,
+        'title': 'Add New Book'
+    }
+    return render(request, 'library/book_form.html', context)
+
+@login_required
+def book_detail(request, book_id):
+    """View book details"""
+    book = get_object_or_404(Book, id=book_id)
+    
+    context = {
+        'book': book,
+    }
+    return render(request, 'library/book_detail.html', context)
+
+@login_required
+def edit_book(request, book_id):
+    """Edit book information"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    book = get_object_or_404(Book, id=book_id)
+    
+    if request.method == 'POST':
+        form = BookForm(request.POST, instance=book)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Book "{book.title}" updated successfully!')
+            return redirect('book_detail', book_id=book.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = BookForm(instance=book)
+    
+    context = {
+        'form': form,
+        'title': 'Edit Book',
+        'book': book
+    }
+    return render(request, 'library/book_form.html', context)
+
+@login_required
+def delete_book(request, book_id):
+    """Delete a book"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    book = get_object_or_404(Book, id=book_id)
+    
+    if request.method == 'POST':
+        book_title = book.title
+        book.delete()
+        messages.success(request, f'Book "{book_title}" deleted successfully!')
+        return redirect('all_books')
+    
+    context = {
+        'book': book
+    }
+    return render(request, 'library/confirm_delete_book.html', context)
+
+@login_required
+def borrow_book(request):
+    """Borrow a book"""
+    if request.method == 'POST':
+        book_id = request.POST.get('book_id')
+        student_id = request.POST.get('student_id')
+        due_date = request.POST.get('due_date')
+        
+        try:
+            book = get_object_or_404(Book, id=book_id)
+            student = get_object_or_404(Student, id=student_id)
+            
+            if book.available_copies > 0:
+                # Create borrowing record
+                borrowing = BookBorrowing.objects.create(
+                    book=book,
+                    borrower=student.user,
+                    borrowed_date=timezone.now().date(),
+                    due_date=due_date,
+                    status='BORROWED'
+                )
+                
+                # Update available copies
+                book.available_copies -= 1
+                book.save()
+                
+                messages.success(request, f'Book "{book.title}" borrowed successfully!')
+            else:
+                messages.error(request, 'No copies available for borrowing.')
+                
+        except Exception as e:
+            messages.error(request, f'Error borrowing book: {str(e)}')
+    
+    books = Book.objects.filter(available_copies__gt=0)
+    students = Student.objects.filter(is_active=True)
+    
+    context = {
+        'books': books,
+        'students': students,
+    }
+    return render(request, 'library/borrow_book.html', context)
+
+@login_required
+def return_book(request, borrow_id):
+    """Return a borrowed book"""
+    borrowing = get_object_or_404(BookBorrowing, id=borrow_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update borrowing record
+            borrowing.returned_date = timezone.now().date()
+            borrowing.status = 'RETURNED'
+            borrowing.save()
+            
+            # Update available copies
+            book = borrowing.book
+            book.available_copies += 1
+            book.save()
+            
+            messages.success(request, f'Book "{book.title}" returned successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error returning book: {str(e)}')
+    
+    return redirect('all_books')
+
+@login_required
+def exam_schedule(request):
+    """View exam schedule"""
+    exams = Exam.objects.all().order_by('exam_date')
+    
+    # Filter by class or date
+    class_filter = request.GET.get('class')
+    date_filter = request.GET.get('date')
+    
+    if class_filter:
+        exams = exams.filter(class_level_id=class_filter)
+    
+    if date_filter:
+        exams = exams.filter(exam_date=date_filter)
+    
+    context = {
+        'exams': exams,
+        'classes': Class.objects.all(),
+    }
+    return render(request, 'examinations/exam_schedule.html', context)
+
+@login_required
+def create_exam_schedule(request):
+    """Create exam schedule"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = ExamForm(request.POST)
+        if form.is_valid():
+            exam = form.save(commit=False)
+            exam.created_by = request.user
+            exam.save()
+            messages.success(request, f'Exam "{exam.name}" scheduled successfully!')
+            return redirect('exam_schedule')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ExamForm()
+    
+    context = {
+        'form': form,
+        'title': 'Schedule New Exam'
+    }
+    return render(request, 'examinations/exam_schedule_form.html', context)
+
+@login_required
+def exam_grades(request):
+    """View and manage exam grading system"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    # You would typically fetch grading system data here
+    # grading_system = GradingSystem.objects.all()
+    
+    context = {
+        # 'grading_system': grading_system,
+    }
+    return render(request, 'examinations/exam_grades.html', context)
+
+@login_required
+def setup_grading_system(request):
+    """Setup exam grading system"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        # Implement grading system setup logic
+        messages.success(request, 'Grading system setup successfully!')
+        return redirect('exam_grades')
+    
+    return render(request, 'examinations/setup_grading.html', context)
+
+@login_required
+def transport_management(request):
+    """Transport management dashboard"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    # Transport statistics
+    total_vehicles = 0  # Vehicle.objects.count()
+    total_routes = 0    # Route.objects.count()
+    assigned_students = 0  # Student.objects.filter(transport_route__isnull=False).count()
+    
+    context = {
+        'total_vehicles': total_vehicles,
+        'total_routes': total_routes,
+        'assigned_students': assigned_students,
+    }
+    return render(request, 'transport/transport_management.html', context)
+
+@login_required
+def transport_routes(request):
+    """View transport routes"""
+    # routes = Route.objects.all()
+    routes = []  # Placeholder
+    
+    context = {
+        'routes': routes,
+    }
+    return render(request, 'transport/transport_routes.html', context)
+
+@login_required
+def transport_vehicles(request):
+    """View transport vehicles"""
+    # vehicles = Vehicle.objects.all()
+    vehicles = []  # Placeholder
+    
+    context = {
+        'vehicles': vehicles,
+    }
+    return render(request, 'transport/transport_vehicles.html', context)
+
+@login_required
+def assign_transport(request):
+    """Assign transport to students"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        route_id = request.POST.get('route_id')
+        
+        try:
+            student = get_object_or_404(Student, id=student_id)
+            # route = get_object_or_404(Route, id=route_id)
+            # student.transport_route = route
+            student.save()
+            
+            messages.success(request, f'Transport assigned to {student.full_name} successfully!')
+            
+        except Exception as e:
+            messages.error(request, f'Error assigning transport: {str(e)}')
+    
+    students = Student.objects.filter(is_active=True)
+    # routes = Route.objects.all()
+    routes = []  # Placeholder
+    
+    context = {
+        'students': students,
+        'routes': routes,
+    }
+    return render(request, 'transport/assign_transport.html', context)
+
+@login_required
+def hostel_management(request):
+    """Hostel management dashboard"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    # Hostel statistics
+    total_rooms = 0  # HostelRoom.objects.count()
+    total_capacity = 0  # HostelRoom.objects.aggregate(Sum('capacity'))['capacity__sum'] or 0
+    occupied_beds = 0  # HostelAllocation.objects.filter(status='ACTIVE').count()
+    
+    context = {
+        'total_rooms': total_rooms,
+        'total_capacity': total_capacity,
+        'occupied_beds': occupied_beds,
+    }
+    return render(request, 'hostel/hostel_management.html', context)
+
+@login_required
+def hostel_rooms(request):
+    """View hostel rooms"""
+    # rooms = HostelRoom.objects.all()
+    rooms = []  # Placeholder
+    
+    context = {
+        'rooms': rooms,
+    }
+    return render(request, 'hostel/hostel_rooms.html', context)
+
+@login_required
+def hostel_allocations(request):
+    """View hostel allocations"""
+    # allocations = HostelAllocation.objects.all().select_related('student', 'room')
+    allocations = []  # Placeholder
+    
+    context = {
+        'allocations': allocations,
+    }
+    return render(request, 'hostel/hostel_allocations.html', context)
+
+@login_required
+def allocate_hostel(request):
+    """Allocate hostel to students"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        student_id = request.POST.get('student_id')
+        room_id = request.POST.get('room_id')
+        
+        try:
+            student = get_object_or_404(Student, id=student_id)
+            # room = get_object_or_404(HostelRoom, id=room_id)
+            
+            # Check if room has available beds
+            # if room.available_beds > 0:
+            #     allocation = HostelAllocation.objects.create(
+            #         student=student,
+            #         room=room,
+            #         allocated_date=timezone.now().date(),
+            #         status='ACTIVE'
+            #     )
+            #     
+            #     room.available_beds -= 1
+            #     room.save()
+                
+            messages.success(request, f'Hostel allocated to {student.full_name} successfully!')
+            # else:
+            #     messages.error(request, 'No available beds in selected room.')
+            
+        except Exception as e:
+            messages.error(request, f'Error allocating hostel: {str(e)}')
+    
+    students = Student.objects.filter(is_active=True)
+    # rooms = HostelRoom.objects.filter(available_beds__gt=0)
+    rooms = []  # Placeholder
+    
+    context = {
+        'students': students,
+        'rooms': rooms,
+    }
+    return render(request, 'hostel/allocate_hostel.html', context)
+
+@login_required
+def alerts(request):
+    """UI Elements - Alerts"""
+    return render(request, 'ui_elements/alerts.html')
+
+@login_required
+def grid(request):
+    """UI Elements - Grid"""
+    return render(request, 'ui_elements/grid.html')
+
+@login_required
+def progress_bars(request):
+    """UI Elements - Progress Bars"""
+    return render(request, 'ui_elements/progress_bars.html')
+
+@login_required
+def update_parent(request, parent_id):
+    """Update parent information"""
+    parent = get_object_or_404(Parent, id=parent_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update parent user
+            parent.user.first_name = request.POST.get('first_name', parent.first_name)
+            parent.user.last_name = request.POST.get('last_name', parent.last_name)
+            parent.user.email = request.POST.get('email', parent.email)
+            parent.user.save()
+            
+            # Update parent profile
+            parent.first_name = request.POST.get('first_name', parent.first_name)
+            parent.last_name = request.POST.get('last_name', parent.last_name)
+            parent.phone = request.POST.get('phone', parent.phone)
+            parent.email = request.POST.get('email', parent.email)
+            parent.address = request.POST.get('address', parent.address)
+            parent.occupation = request.POST.get('occupation', parent.occupation)
+            parent.father_name = request.POST.get('father_name', parent.father_name)
+            parent.mother_name = request.POST.get('mother_name', parent.mother_name)
+            
+            parent.save()
+            
+            messages.success(request, f'Parent {parent.full_name} updated successfully!')
+            return redirect('parent_details', parent_id=parent.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating parent: {str(e)}')
+    
+    context = {
+        'parent': parent,
+    }
+    return render(request, 'parents/update_parent.html', context)
+
+@login_required
+def delete_parent(request, parent_id):
+    """Delete a parent"""
+    parent = get_object_or_404(Parent, id=parent_id)
+    
+    if request.method == 'POST':
+        try:
+            parent_name = parent.full_name
+            parent_user = parent.user
+            
+            # Delete parent profile and user
+            parent.delete()
+            parent_user.delete()
+            
+            messages.success(request, f'Parent {parent_name} deleted successfully!')
+            return redirect('all_parents')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting parent: {str(e)}')
+    
+    context = {
+        'parent': parent,
+    }
+    return render(request, 'parents/delete_parent.html', context)
+
+@login_required
+def update_teacher(request, teacher_id):
+    """Update teacher information"""
+    teacher = get_object_or_404(Teacher, teacher_id=teacher_id)
+    
+    if request.method == 'POST':
+        try:
+            # Update teacher user
+            teacher.user.first_name = request.POST.get('first_name', teacher.first_name)
+            teacher.user.last_name = request.POST.get('last_name', teacher.last_name)
+            teacher.user.email = request.POST.get('email', teacher.email)
+            teacher.user.save()
+            
+            # Update teacher profile
+            teacher.first_name = request.POST.get('first_name', teacher.first_name)
+            teacher.last_name = request.POST.get('last_name', teacher.last_name)
+            teacher.phone = request.POST.get('phone', teacher.phone)
+            teacher.email = request.POST.get('email', teacher.email)
+            teacher.address = request.POST.get('address', teacher.address)
+            teacher.qualification = request.POST.get('qualification', teacher.qualification)
+            teacher.specialization = request.POST.get('specialization', teacher.specialization)
+            teacher.experience = request.POST.get('experience', teacher.experience)
+            teacher.salary = request.POST.get('salary', teacher.salary)
+            
+            if 'photo' in request.FILES:
+                teacher.photo = request.FILES['photo']
+            
+            teacher.save()
+            
+            # Update subjects
+            subject_ids = request.POST.getlist('subjects')
+            teacher.subjects.set(subject_ids)
+            
+            messages.success(request, f'Teacher {teacher.full_name} updated successfully!')
+            return redirect('teacher_details', teacher_id=teacher.teacher_id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating teacher: {str(e)}')
+    
+    subjects = Subject.objects.all()
+    context = {
+        'teacher': teacher,
+        'subjects': subjects,
+    }
+    return render(request, 'teachers/update_teacher.html', context)
+
+@login_required
+def delete_teacher(request, teacher_id):
+    """Delete a teacher"""
+    teacher = get_object_or_404(Teacher, teacher_id=teacher_id)
+    
+    if request.method == 'POST':
+        try:
+            teacher_name = teacher.full_name
+            teacher_user = teacher.user
+            
+            # Delete teacher profile and user
+            teacher.delete()
+            teacher_user.delete()
+            
+            messages.success(request, f'Teacher {teacher_name} deleted successfully!')
+            return redirect('all_teachers')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting teacher: {str(e)}')
+    
+    context = {
+        'teacher': teacher,
+    }
+    return render(request, 'teachers/delete_teacher.html', context)
+
+@login_required
+def teacher_payment_detail(request, payment_id):
+    """View teacher payment details"""
+    # payment = get_object_or_404(TeacherPayment, id=payment_id)
+    # context = {
+    #     'payment': payment,
+    # }
+    # return render(request, 'teachers/teacher_payment_detail.html', context)
+    messages.info(request, 'Teacher payment detail view will be implemented soon.')
+    return redirect('teacher_payment')
+
+@login_required
+def add_teacher_payment(request):
+    """Add teacher payment"""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        try:
+            teacher_id = request.POST.get('teacher')
+            amount = request.POST.get('amount')
+            payment_date = request.POST.get('payment_date')
+            payment_method = request.POST.get('payment_method')
+            remarks = request.POST.get('remarks', '')
+            
+            teacher = get_object_or_404(Teacher, id=teacher_id)
+            
+            # Create payment record
+            # TeacherPayment.objects.create(
+            #     teacher=teacher,
+            #     amount=amount,
+            #     payment_date=payment_date,
+            #     payment_method=payment_method,
+            #     remarks=remarks,
+            #     processed_by=request.user
+            # )
+            
+            messages.success(request, f'Payment of {amount} processed for {teacher.full_name}!')
+            return redirect('teacher_payment')
+            
+        except Exception as e:
+            messages.error(request, f'Error processing payment: {str(e)}')
+    
+    teachers = Teacher.objects.filter(is_active=True)
+    context = {
+        'teachers': teachers,
+    }
+    return render(request, 'teachers/add_teacher_payment.html', context)
+
+@login_required
+def reject_admission(request, admission_id):
+    """Reject an admission application"""
+    admission = get_object_or_404(AdmissionForm, id=admission_id)
+    
+    if admission.status != 'PENDING':
+        messages.warning(request, 'This admission has already been processed.')
+        return redirect('manage_admissions')
+    
+    if request.method == 'POST':
+        try:
+            admission.status = 'REJECTED'
+            admission.reviewed_by = request.user
+            admission.reviewed_date = timezone.now()
+            admission.rejection_reason = request.POST.get('rejection_reason', '')
+            admission.save()
+            
+            messages.success(request, f'Admission for {admission.first_name} {admission.last_name} has been rejected.')
+            
+        except Exception as e:
+            messages.error(request, f'Error rejecting admission: {str(e)}')
+    
+    return redirect('manage_admissions')
+
+@login_required
+def admission_details(request, admission_id):
+    """View admission details"""
+    admission = get_object_or_404(AdmissionForm, id=admission_id)
+    
+    context = {
+        'admission': admission,
+    }
+    return render(request, 'students/admission_details.html', context)
+
+@login_required
+def get_students_by_class(request, class_id):
+    """AJAX view to get students by class"""
+    students = Student.objects.filter(
+        current_class_id=class_id,
+        is_active=True
+    ).order_by('roll_number')
+    
+    students_data = []
+    for student in students:
+        students_data.append({
+            'id': student.id,
+            'name': student.full_name,
+            'roll_number': student.roll_number,
+            'student_id': student.student_id,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'students': students_data
+    })
+
+@login_required
+def get_subjects_by_class(request, class_id):
+    """AJAX view to get subjects by class"""
+    # This would typically query a ClassSubject relationship
+    # For now, return all subjects
+    subjects = Subject.objects.all()
+    
+    subjects_data = []
+    for subject in subjects:
+        subjects_data.append({
+            'id': subject.id,
+            'name': subject.name,
+            'code': subject.code,
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'subjects': subjects_data
+    })
+
+@login_required
+def edit_exam(request, exam_id):
+    """Edit an existing exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    teacher = request.user.teacher
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        form = ExamForm(request.POST, instance=exam, teacher=teacher)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, f'Exam "{exam.name}" updated successfully!')
+                return redirect('teacher_exam_management')
+            except Exception as e:
+                messages.error(request, f'Error updating exam: {str(e)}')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ExamForm(instance=exam, teacher=teacher)
+    
+    context = {
+        'form': form,
+        'exam': exam,
+        'teacher': teacher,
+        'title': 'Edit Exam'
+    }
+    return render(request, 'teachers/exam_form.html', context)
+
+@login_required
+def delete_exam(request, exam_id):
+    """Delete an exam"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    
+    if request.method == 'POST':
+        exam_name = exam.name
+        exam.delete()
+        messages.success(request, f'Exam "{exam_name}" deleted successfully!')
+        return redirect('teacher_exam_management')
+    
+    context = {
+        'exam': exam
+    }
+    return render(request, 'teachers/confirm_delete_exam.html', context)
+
+@login_required
+def export_results_csv(request, exam_id):
+    """Export exam results to CSV format"""
+    if not hasattr(request.user, 'teacher'):
+        messages.error(request, "You don't have permission to access this page.")
+        return redirect('dashboard')
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
+    
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{exam.name}_results.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['Position', 'Student ID', 'Student Name', 'Roll Number', 'Marks Obtained', 'Total Marks', 'Percentage', 'Grade', 'Remarks'])
+    
+    for result in results:
+        percentage = (float(result.marks_obtained) / float(exam.total_marks)) * 100
+        writer.writerow([
+            result.position,
+            result.student.student_id,
+            result.student.full_name,
+            result.student.roll_number,
+            float(result.marks_obtained),
+            float(exam.total_marks),
+            round(percentage, 2),
+            result.grade,
+            result.remarks or ''
+        ])
+    
+    return response

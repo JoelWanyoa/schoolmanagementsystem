@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Exam Management{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Exam Management</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li>Exam Management</li>
+                </ul>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="fas fa-file-alt text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Exams</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ total_exams }}">{{ total_exams }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="fas fa-calendar-check text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">This Month</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ exams_this_month }}">{{ exams_this_month }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="fas fa-chart-line text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Upcoming</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ upcoming_exams.count }}">{{ upcoming_exams.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-red">
+                                    <i class="fas fa-tasks text-red"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">To Grade</div>
+                                    <div class="item-number"><span class="counter" data-num="12">12</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modern Quick Actions -->
+            <div class="row gutters-20">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1 mb-4">
+                                <div class="item-title">
+                                    <h3>Quick Actions</h3>
+                                </div>
+                            </div>
+
+                            <div class="row text-center">
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="{% url 'create_exam' %}" class="action-card bg-gradient-yellow">
+                                        <i class="fas fa-plus mb-2"></i>
+                                        <span>Create Exam</span>
+                                    </a>
+                                </div>
+
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="{% url 'subject_results' %}" class="action-card bg-gradient-blue">
+                                        <i class="fas fa-book mb-2"></i>
+                                        <span>Subject Results</span>
+                                    </a>
+                                </div>
+
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="{% url 'class_results' %}" class="action-card bg-gradient-green">
+                                        <i class="fas fa-users mb-2"></i>
+                                        <span>Class Results</span>
+                                    </a>
+                                </div>
+
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="#" class="action-card bg-gradient-purple">
+                                        <i class="fas fa-chart-bar mb-2"></i>
+                                        <span>Analytics</span>
+                                    </a>
+                                </div>
+
+                                <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="#" class="action-card bg-gradient-dark">
+                                        <i class="fas fa-download mb-2"></i>
+                                        <span>Export Reports</span>
+                                    </a>
+                                </div>
+
+                                {% comment %} <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
+                                    <a href="{% url 'assign_classes' %}" class="action-card bg-gradient-orange">
+                                        <i class="fas fa-chalkboard-teacher mb-2"></i>
+                                        <span>Assign Classes</span>
+                                    </a>
+                                </div> {% endcomment %}
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Exams & Upcoming Exams -->
+            <div class="row gutters-20">
+                <!-- Recent Exams -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title"><h3>Recent Exams</h3></div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#">View All</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Exam Name</th>
+                                            <th>Subject</th>
+                                            <th>Class</th>
+                                            <th>Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exam in recent_exams %}
+                                        <tr>
+                                            <td><strong>{{ exam.name }}</strong><br><small class="text-muted">{{ exam.get_exam_type_display }}</small></td>
+                                            <td>{{ exam.subject.name }}</td>
+                                            <td>{{ exam.class_level.name }}</td>
+                                            <td>{{ exam.exam_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                        <span class="flaticon-more-button-of-three-dots"></span>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item" href="{% url 'enter_marks' exam.id %}">
+                                                            <i class="fas fa-edit text-blue"></i> Enter Marks
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'exam_results' exam.id %}">
+                                                            <i class="fas fa-eye text-green"></i> View Results
+                                                        </a>
+                                                        <a class="dropdown-item" href="{% url 'exam_analysis' exam.id %}">
+                                                            <i class="fas fa-chart-bar text-purple"></i> Analysis
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <i class="fas fa-file-alt fa-2x text-muted mb-3"></i>
+                                                <p class="text-muted">No exams created yet</p>
+                                                <a href="{% url 'create_exam' %}" class="btn btn-primary btn-sm">Create First Exam</a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Exams -->
+                <div class="col-lg-6">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title"><h3>Upcoming Exams</h3></div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Exam Name</th>
+                                            <th>Subject</th>
+                                            <th>Class</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for exam in upcoming_exams %}
+                                        <tr>
+                                            <td><strong>{{ exam.name }}</strong><br><small class="text-muted">{{ exam.get_exam_type_display }}</small></td>
+                                            <td>{{ exam.subject.name }}</td>
+                                            <td>{{ exam.class_level.name }}</td>
+                                            <td>
+                                                {{ exam.exam_date|date:"M d, Y" }}
+                                                {% if exam.exam_date == today %}
+                                                <span class="badge badge-warning ml-1">Today</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if exam.examresult_set.exists %}
+                                                <span class="badge badge-success">Graded</span>
+                                                {% else %}
+                                                <span class="badge badge-warning">Pending</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4">
+                                                <i class="fas fa-calendar fa-2x text-muted mb-3"></i>
+                                                <p class="text-muted">No upcoming exams</p>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Exams Table -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title"><h3>All Exams</h3></div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'create_exam' %}"><i class="fas fa-plus"></i> Create New</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-download"></i> Export</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="examsTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Exam Name</th>
+                                    <th>Type</th>
+                                    <th>Subject</th>
+                                    <th>Class</th>
+                                    <th>Date</th>
+                                    <th>Total Marks</th>
+                                    <th>Students</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exam in recent_exams %}
+                                <tr>
+                                    <td><strong>{{ exam.name }}</strong><br><small class="text-muted">Created: {{ exam.created_at|date:"M d, Y" }}</small></td>
+                                    <td><span class="badge badge-light">{{ exam.get_exam_type_display }}</span></td>
+                                    <td>{{ exam.subject.name }}</td>
+                                    <td>{{ exam.class_level.name }}</td>
+                                    <td>{{ exam.exam_date|date:"M d, Y" }}</td>
+                                    <td>{{ exam.total_marks }}</td>
+                                    <td><span class="badge badge-info">{{ exam.examresult_set.count }}</span></td>
+                                    <td>
+                                        {% if exam.exam_date < today %}
+                                        <span class="badge badge-success">Completed</span>
+                                        {% elif exam.exam_date == today %}
+                                        <span class="badge badge-warning">Today</span>
+                                        {% else %}
+                                        <span class="badge badge-primary">Upcoming</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'enter_marks' exam.id %}">
+                                                    <i class="fas fa-edit text-blue"></i> Enter Marks
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'exam_results' exam.id %}">
+                                                    <i class="fas fa-eye text-green"></i> View Results
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'exam_analysis' exam.id %}">
+                                                    <i class="fas fa-chart-bar text-purple"></i> Analysis
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'export_results_excel' exam.id %}">
+                                                    <i class="fas fa-file-excel text-success"></i> Export Excel
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item text-danger" href="#">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .action-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 110px;
+        color: #fff !important;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    .action-card i {
+        font-size: 1.6rem;
+    }
+    .action-card span {
+        font-size: 0.9rem;
+    }
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+    }
+    .bg-gradient-yellow { background: linear-gradient(135deg, #FBC02D, #F57C00); }
+    .bg-gradient-blue { background: linear-gradient(135deg, #42A5F5, #1E88E5); }
+    .bg-gradient-green { background: linear-gradient(135deg, #66BB6A, #43A047); }
+    .bg-gradient-purple { background: linear-gradient(135deg, #AB47BC, #8E24AA); }
+    .bg-gradient-dark { background: linear-gradient(135deg, #424242, #212121); }
+    .bg-gradient-orange { background: linear-gradient(135deg, #FF7043, #E64A19); }
+    @media (max-width: 575px) {
+        .action-card { height: 95px; }
+        .action-card i { font-size: 1.4rem; }
+        .action-card span { font-size: 0.85rem; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        $('#examsTable').DataTable({
+            "pageLength": 25,
+            "responsive": true,
+            "order": [[4, 'desc']]
+        });
+    });
+</script>
+{% endblock %}

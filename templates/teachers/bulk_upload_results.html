@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bulk Upload Results - {{ exam.name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Bulk Upload Results</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_exam_management' %}">Exam Management</a></li>
+                    <li><a href="{% url 'exam_results' exam.id %}">{{ exam.name }}</a></li>
+                    <li>Bulk Upload</li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Upload Results via CSV</h3>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <h5><i class="fas fa-info-circle"></i> Instructions</h5>
+                                <p class="mb-2">Upload a CSV file with the following columns:</p>
+                                <ul class="mb-0">
+                                    <li><strong>student_id</strong> - Student's ID number</li>
+                                    <li><strong>marks_obtained</strong> - Marks obtained (0-{{ exam.total_marks }})</li>
+                                    <li><strong>remarks</strong> - Optional remarks (can be empty)</li>
+                                </ul>
+                            </div>
+
+                            <form method="post" enctype="multipart/form-data" id="uploadForm">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="row gutters-20">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="{{ form.exam.id_for_label }}">Exam *</label>
+                                            {{ form.exam }}
+                                            {% if form.exam.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.exam.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="{{ form.results_file.id_for_label }}">CSV File *</label>
+                                            {{ form.results_file }}
+                                            {% if form.results_file.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.results_file.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">
+                                                File must be in CSV format. Maximum file size: 5MB.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions mt-4">
+                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                        <i class="fas fa-upload mr-2"></i>Upload Results
+                                    </button>
+                                    <a href="{% url 'enter_marks' exam.id %}" class="btn-fill-lg bg-blue-dark btn-hover-yellow">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Manual Entry
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <!-- Sample CSV -->
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Sample CSV Format</h4>
+                            <div class="alert alert-light">
+                                <pre class="mb-0">
+student_id,marks_obtained,remarks
+STU-2024-0001,85,Excellent work
+STU-2024-0002,72,Good effort
+STU-2024-0003,68,Can do better
+STU-2024-0004,91,Outstanding
+STU-2024-0005,45,Needs improvement
+                                </pre>
+                            </div>
+                            <a href="#" class="btn btn-outline-primary btn-block" id="downloadTemplate">
+                                <i class="fas fa-download mr-2"></i>Download Template
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Current Exam Info -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h4 class="card-title">Exam Information</h4>
+                            <p><strong>Exam:</strong> {{ exam.name }}</p>
+                            <p><strong>Subject:</strong> {{ exam.subject.name }}</p>
+                            <p><strong>Class:</strong> {{ exam.class_level.name }}</p>
+                            <p><strong>Total Marks:</strong> {{ exam.total_marks }}</p>
+                            <p><strong>Students:</strong> {{ students.count }}</p>
+                            <p><strong>Results Entered:</strong> {{ result_dict|length }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Tips -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h4 class="card-title">Quick Tips</h4>
+                            <div class="alert alert-warning">
+                                <ul class="mb-0 pl-3">
+                                    <li>Ensure student IDs match exactly</li>
+                                    <li>Marks should be between 0 and {{ exam.total_marks }}</li>
+                                    <li>Save file as CSV format</li>
+                                    <li>Remove any header rows if present</li>
+                                    <li>Backup your data before uploading</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload History -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Uploads</h3>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>File Name</th>
+                                    <th>Records</th>
+                                    <th>Status</th>
+                                    <th>Uploaded By</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="fas fa-history fa-2x mb-3"></i>
+                                        <p>No upload history available</p>
+                                    </td>
+                                </tr>
+                                <!-- Upload history would be displayed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Set the exam field to current exam
+        $('#id_exam').val('{{ exam.id }}');
+
+        // Download template
+        $('#downloadTemplate').on('click', function(e) {
+            e.preventDefault();
+            
+            // Create sample CSV content
+            const csvContent = "student_id,marks_obtained,remarks\n" +
+                             "STU-2024-0001,85,Excellent work\n" +
+                             "STU-2024-0002,72,Good effort\n" +
+                             "STU-2024-0003,68,Can do better\n" +
+                             "STU-2024-0004,91,Outstanding\n" +
+                             "STU-2024-0005,45,Needs improvement";
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'results_template.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        // Form validation
+        $('#uploadForm').on('submit', function(e) {
+            const fileInput = $('#id_results_file')[0];
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Please select a CSV file to upload.');
+                return false;
+            }
+
+            const fileName = fileInput.files[0].name.toLowerCase();
+            if (!fileName.endsWith('.csv')) {
+                e.preventDefault();
+                alert('Please select a CSV file.');
+                return false;
+            }
+
+            if (!confirm('Are you sure you want to upload these results? Existing marks will be overwritten.')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.id %}Edit Exam{% else %}Create New Exam{% endif %}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>{% if form.instance.id %}Edit Exam{% else %}Create New Exam{% endif %}</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_exam_management' %}">Exam Management</a></li>
+                    <li>{% if form.instance.id %}Edit Exam{% else %}New Exam{% endif %}</li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Exam Details</h3>
+                                </div>
+                            </div>
+
+                            <form method="post" novalidate id="examForm">
+                                {% csrf_token %}
+                                
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+
+                                <div class="row gutters-20">
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                            <label for="{{ form.name.id_for_label }}">Exam Name *</label>
+                                            {{ form.name }}
+                                            {% if form.name.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.name.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.exam_type.id_for_label }}">Exam Type *</label>
+                                            {{ form.exam_type }}
+                                            {% if form.exam_type.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.exam_type.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.subject.id_for_label }}">Subject *</label>
+                                            {{ form.subject }}
+                                            {% if form.subject.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.subject.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.class_level.id_for_label }}">Class *</label>
+                                            {{ form.class_level }}
+                                            {% if form.class_level.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.class_level.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.total_marks.id_for_label }}">Total Marks *</label>
+                                            {{ form.total_marks }}
+                                            {% if form.total_marks.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.total_marks.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.passing_marks.id_for_label }}">Passing Marks *</label>
+                                            {{ form.passing_marks }}
+                                            {% if form.passing_marks.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.passing_marks.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">Minimum marks required to pass</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.exam_date.id_for_label }}">Exam Date *</label>
+                                            {{ form.exam_date }}
+                                            {% if form.exam_date.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.exam_date.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions mt-4">
+                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                        {% if form.instance.id %}Update Exam{% else %}Create Exam{% endif %}
+                                    </button>
+                                    <a href="{% url 'teacher_exam_management' %}" class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Quick Tips</h4>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Exam Creation Guidelines:</strong>
+                                <ul class="mt-2">
+                                    <li>Use descriptive exam names</li>
+                                    <li>Select the correct subject and class</li>
+                                    <li>Set appropriate total marks</li>
+                                    <li>Set passing marks (usually 40% of total)</li>
+                                    <li>Choose the correct exam date</li>
+                                </ul>
+                            </div>
+
+                            <div class="teacher-info mt-4">
+                                <h5>Teacher Information</h5>
+                                <p><strong>Name:</strong> {{ teacher.full_name }}</p>
+                                <p><strong>Subjects:</strong> 
+                                    {% for subject in teacher.subjects.all %}
+                                        {{ subject.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </p>
+                                <p><strong>Classes:</strong> 
+                                    {% for class in teacher_classes %}
+                                        {{ class.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize datepicker
+        $('input[type="date"]').each(function() {
+            if (!$(this).val()) {
+                $(this).val(new Date().toISOString().split('T')[0]);
+            }
+        });
+
+        // Auto-calculate passing marks as 40% of total marks
+        $('#id_total_marks').on('input', function() {
+            const totalMarks = parseFloat($(this).val()) || 0;
+            const passingMarks = Math.round(totalMarks * 0.4 * 2) / 2; // Round to nearest 0.5
+            if (passingMarks > 0 && !$('#id_passing_marks').val()) {
+                $('#id_passing_marks').val(passingMarks);
+            }
+        });
+
+        // Form validation
+        $('#examForm').on('submit', function(e) {
+            let isValid = true;
+            let emptyFields = [];
+            
+            // Check all required fields
+            $('select[required], input[required], textarea[required]').each(function() {
+                if (!$(this).val()) {
+                    $(this).addClass('is-invalid');
+                    isValid = false;
+                    emptyFields.push($(this).attr('name'));
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+            
+            // Validate passing marks <= total marks
+            const totalMarks = parseFloat($('#id_total_marks').val()) || 0;
+            const passingMarks = parseFloat($('#id_passing_marks').val()) || 0;
+            
+            if (passingMarks > totalMarks) {
+                $('#id_passing_marks').addClass('is-invalid');
+                isValid = false;
+                alert('Passing marks cannot be greater than total marks.');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                console.log('Empty fields:', emptyFields);
+                if (emptyFields.length > 0) {
+                    alert('Please fill in all required fields.');
+                }
+            }
+        });
+
+        // Real-time validation
+        $('select, input, textarea').on('change input', function() {
+            if ($(this).val()) {
+                $(this).removeClass('is-invalid');
+            }
+        });
+    });
+</script>
+{% endblock %}

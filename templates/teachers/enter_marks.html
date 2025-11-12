@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Enter Marks - {{ exam.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .marks-input {
+        max-width: 100px;
+        text-align: center;
+    }
+    .student-photo {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+    }
+    .already-graded {
+        background-color: #f8f9fa;
+        opacity: 0.8;
+    }
+    .locked-field {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+    .grade-badge {
+        min-width: 40px;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Enter Marks</h3>
+                <ul>
+                    <li><a href="{% url 'teacher_dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_exam_management' %}">Exam Management</a></li>
+                    <li><a href="{% url 'exam_results' exam.id %}">{{ exam.name }}</a></li>
+                    <li>Enter Marks</li>
+                </ul>
+            </div>
+
+            <!-- Warning Alert if all marks are already entered -->
+            {% if all_graded %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <strong>All marks have been entered!</strong> This exam already has marks for all {{ total_students }} students.
+                <div class="mt-2">
+                    <a href="{% url 'exam_results' exam.id %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-chart-bar mr-1"></i> View Results
+                    </a>
+                    <button type="button" class="btn btn-warning btn-sm" id="enableEditing">
+                        <i class="fas fa-edit mr-1"></i> Edit Marks
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Exam Info Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4 class="card-title">{{ exam.name }}</h4>
+                            <p class="mb-1"><strong>Subject:</strong> {{ exam.subject.name }}</p>
+                            <p class="mb-1"><strong>Class:</strong> {{ exam.class_level.name }}</p>
+                            <p class="mb-1"><strong>Exam Date:</strong> {{ exam.exam_date|date:"F d, Y" }}</p>
+                            <p class="mb-0"><strong>Total Marks:</strong> {{ exam.total_marks }}</p>
+                        </div>
+                        <div class="col-md-4 text-right">
+                            <div class="btn-group">
+                                <a href="{% url 'bulk_upload_results' exam.id %}" class="btn btn-success">
+                                    <i class="fas fa-upload mr-2"></i>Bulk Upload
+                                </a>
+                                <a href="{% url 'exam_results' exam.id %}" class="btn btn-primary">
+                                    <i class="fas fa-eye mr-2"></i>View Results
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Marks Entry Form -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Student Marks Entry 
+                                <small class="text-muted">({{ graded_count }}/{{ total_students }} graded)</small>
+                            </h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'bulk_upload_results' exam.id %}">
+                                    <i class="fas fa-upload"></i> Bulk Upload
+                                </a>
+                                <a class="dropdown-item" href="#" id="downloadTemplate">
+                                    <i class="fas fa-download"></i> Download Template
+                                </a>
+                                {% if all_graded %}
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item text-warning" href="#" id="enableEditingDropdown">
+                                    <i class="fas fa-edit"></i> Enable Editing
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="post" id="marksForm">
+                        {% csrf_token %}
+                        {% if all_graded %}
+                        <input type="hidden" name="force_update" id="forceUpdate" value="false">
+                        {% endif %}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="thead-light">
+                                    <tr>
+                                        <th width="5%">#</th>
+                                        <th width="15%">Student ID</th>
+                                        <th>Student Name</th>
+                                        <th width="10%">Roll No</th>
+                                        <th width="15%">Marks (0-{{ exam.total_marks }})</th>
+                                        <th width="20%">Remarks</th>
+                                        <th width="10%">Grade</th>
+                                        <th width="10%">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    {% with result=result_dict|get_item:student.id %}
+                                    <tr class="{% if result %}already-graded{% endif %}" id="row-{{ student.id }}">
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            <strong>{{ student.student_id }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if student.photo %}
+                                                <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                                     class="rounded-circle student-photo mr-2">
+                                                {% else %}
+                                                <div class="avatar bg-primary text-white rounded-circle mr-2 student-photo d-flex align-items-center justify-content-center">
+                                                    {{ student.first_name|first }}{{ student.last_name|first }}
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <strong>{{ student.full_name }}</strong>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ student.roll_number }}</td>
+                                        <td>
+                                            {% if result and all_graded %}
+                                            <div class="input-group">
+                                                <input type="number" 
+                                                       name="marks_{{ student.id }}" 
+                                                       value="{{ result.marks_obtained }}"
+                                                       min="0" 
+                                                       max="{{ exam.total_marks }}" 
+                                                       step="0.01"  
+                                                       class="form-control marks-input locked-field"
+                                                       placeholder="0-{{ exam.total_marks }}"
+                                                       readonly
+                                                       id="marks-{{ student.id }}">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text bg-success text-white">
+                                                        <i class="fas fa-lock"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {% else %}
+                                            <input type="number" 
+                                                   name="marks_{{ student.id }}" 
+                                                   value="{% if result %}{{ result.marks_obtained }}{% endif %}"
+                                                   min="0" 
+                                                   max="{{ exam.total_marks }}" 
+                                                   step="0.01"  
+                                                   class="form-control marks-input {% if result %}bg-light{% endif %}"
+                                                   placeholder="0-{{ exam.total_marks }}"
+                                                   id="marks-{{ student.id }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if result and all_graded %}
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                       name="remarks_{{ student.id }}" 
+                                                       value="{{ result.remarks }}"
+                                                       class="form-control locked-field"
+                                                       placeholder="Optional remarks"
+                                                       readonly
+                                                       id="remarks-{{ student.id }}">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text bg-success text-white">
+                                                        <i class="fas fa-lock"></i>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            {% else %}
+                                            <input type="text" 
+                                                   name="remarks_{{ student.id }}" 
+                                                   value="{% if result %}{{ result.remarks }}{% endif %}"
+                                                   class="form-control {% if result %}bg-light{% endif %}"
+                                                   placeholder="Optional remarks"
+                                                   id="remarks-{{ student.id }}">
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge grade-badge badge-{% if result and result.marks_obtained >= 80 %}success{% elif result and result.marks_obtained >= 50 %}warning{% else %}secondary{% endif %}">
+                                                {% if result %}{{ result.grade }}{% else %}-{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if result %}
+                                            <span class="badge badge-success">
+                                                <i class="fas fa-check mr-1"></i>Graded
+                                            </span>
+                                            {% else %}
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-clock mr-1"></i>Pending
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                            <h5 class="text-muted">No Students Found</h5>
+                                            <p class="text-muted">There are no students enrolled in this class.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if students %}
+                        <div class="form-actions mt-4 text-right">
+                            {% if all_graded %}
+                            <button type="button" class="btn btn-warning" id="editMarksBtn">
+                                <i class="fas fa-edit mr-2"></i>Edit Marks
+                            </button>
+                            <button type="submit" class="btn btn-success d-none" id="updateMarksBtn">
+                                <i class="fas fa-save mr-2"></i>Update Marks
+                            </button>
+                            {% else %}
+                            <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                <i class="fas fa-save mr-2"></i>Save All Marks
+                            </button>
+                            {% endif %}
+                            <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow">
+                                <i class="fas fa-redo mr-2"></i>Reset
+                            </button>
+                            <a href="{% url 'exam_results' exam.id %}" class="btn-fill-lg bg-secondary btn-hover-yellow">
+                                <i class="fas fa-times mr-2"></i>Cancel
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ total_students }}</h4>
+                                    <p class="mb-0">Total Students</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0" id="gradedCount">{{ graded_count }}</h4>
+                                    <p class="mb-0">Graded</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0" id="pendingCount">{{ total_students|subtract:graded_count }}</h4>
+                                    <p class="mb-0">Pending</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 class="mb-0">{{ exam.total_marks }}</h4>
+                                    <p class="mb-0">Total Marks</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-star fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        let editingEnabled = false;
+
+        // Enable editing functionality
+        function enableEditing() {
+            editingEnabled = true;
+            $('#forceUpdate').val('true');
+            $('.locked-field').prop('readonly', false).removeClass('locked-field').addClass('bg-warning-light');
+            $('.input-group-append').hide();
+            $('.already-graded').removeClass('already-graded').addClass('bg-warning-light');
+            $('#editMarksBtn').addClass('d-none');
+            $('#updateMarksBtn').removeClass('d-none');
+            $('.alert-warning').addClass('d-none');
+            
+            // Show confirmation message
+            const alertHtml = `
+                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Editing Mode Enabled</strong> You can now modify existing marks.
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            $('.breadcrumbs-area').after(alertHtml);
+        }
+
+        // Enable editing buttons
+        $('#enableEditing, #enableEditingDropdown, #editMarksBtn').on('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to enable editing? This will allow you to modify existing marks.')) {
+                enableEditing();
+            }
+        });
+
+        // Auto-calculate grades and update counts
+        function updateStats() {
+            let graded = {{ graded_count }};
+            let pending = {{ total_students|subtract:graded_count }};
+            
+            if (editingEnabled) {
+                // Count only fields with values during editing
+                graded = 0;
+                $('input[type="number"]').each(function() {
+                    if ($(this).val() && $(this).val() > 0) {
+                        graded++;
+                    }
+                });
+                pending = {{ total_students }} - graded;
+            }
+            
+            $('#gradedCount').text(graded);
+            $('#pendingCount').text(pending);
+        }
+
+        // Update stats on input change
+        $('input[type="number"]').on('input', updateStats);
+
+        // Form submission confirmation with enhanced validation
+        $('#marksForm').on('submit', function(e) {
+            const graded = $('#gradedCount').text();
+            const total = {{ total_students }};
+            
+            if (graded == 0) {
+                if (!confirm('No marks have been entered. Are you sure you want to continue?')) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            if (editingEnabled) {
+                if (!confirm(`You are about to update marks for ${graded} students. This will overwrite existing data. Continue?`)) {
+                    e.preventDefault();
+                    return;
+                }
+            } else {
+                if (!confirm(`You are about to save marks for ${graded} students. Continue?`)) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Additional validation
+            let hasErrors = false;
+            $('input[type="number"]').each(function() {
+                const value = parseFloat($(this).val());
+                const maxMarks = parseFloat({{ exam.total_marks }});
+                
+                if ($(this).val() && !isNaN(value)) {
+                    if (value < 0) {
+                        $(this).addClass('is-invalid');
+                        hasErrors = true;
+                    } else if (value > maxMarks) {
+                        $(this).addClass('is-invalid');
+                        hasErrors = true;
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                alert('Please correct the invalid marks before submitting.');
+            }
+        });
+
+        // Download template
+        $('#downloadTemplate').on('click', function(e) {
+            e.preventDefault();
+            
+            const csvContent = "student_id,marks_obtained,remarks\n" +
+                             "STU-2024-0001,85,Excellent work\n" +
+                             "STU-2024-0002,72,Good effort\n" +
+                             "STU-2024-0003,68,Can do better\n" +
+                             "STU-2024-0004,91,Outstanding\n" +
+                             "STU-2024-0005,45,Needs improvement";
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', '{{ exam.name|slugify }}_marks_template.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+        // Initialize stats
+        updateStats();
+    });
+</script>
+{% endblock %}

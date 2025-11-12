@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Class Results - Teacher Dashboard{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Class Results</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'teacher_dashboard' %}">Home</a>
+                    </li>
+                    <li>Class Results</li>
+                </ul>
+            </div>
+
+            <!-- Class Selection -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="card-title mb-0">
+                                {% if selected_class %}
+                                    {{ selected_class.name }} - Class Performance
+                                {% else %}
+                                    Select a Class to View Results
+                                {% endif %}
+                            </h4>
+                            {% if selected_class %}
+                            <p class="mb-0 text-muted">
+                                Class Teacher: {{ teacher.full_name }} | Total Students: {{ students.count }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-control" onchange="location = this.value;">
+                                <option value="{% url 'class_results' %}">Select Class</option>
+                                {% for class in teacher_classes %}
+                                <option value="{% url 'class_results_detail' class.id %}" 
+                                        {% if selected_class and selected_class.id == class.id %}selected{% endif %}>
+                                    {{ class.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if selected_class %}
+            <!-- Class Statistics -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-green">
+                                    <i class="fas fa-users text-green"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Students</div>
+                                    <div class="item-number"><span>{{ students.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-blue">
+                                    <i class="fas fa-file-alt text-blue"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Exams</div>
+                                    <div class="item-number"><span>{{ exams.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-yellow">
+                                    <i class="fas fa-chart-bar text-yellow"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Avg. Performance</div>
+                                    <div class="item-number"><span>{{ class_stats.avg_marks|floatformat:2|default:'0.00' }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6">
+                    <div class="dashboard-summery-one mg-b-20">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-red">
+                                    <i class="fas fa-trophy text-red"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Class Rank</div>
+                                    <div class="item-number"><span>#{{ forloop.counter }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students List -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Students - {{ selected_class.name }}</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#">Generate Report Cards</a>
+                                <a class="dropdown-item" href="#">Export Results</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if students %}
+                    <div class="table-responsive">
+                        <table id="classStudentsTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Roll No</th>
+                                    <th>Parent</th>
+                                    <th>Exams Taken</th>
+                                    <th>Avg. Score</th>
+                                    <th>Overall Grade</th>
+                                    <th>Performance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for student in students %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if student.photo %}
+                                            <img src="{{ student.photo.url }}" alt="{{ student.full_name }}" 
+                                                 class="rounded-circle mr-2" width="40" height="40">
+                                            {% else %}
+                                            <div class="avatar bg-primary text-white rounded-circle mr-2" style="width: 40px; height: 40px; line-height: 40px; text-align: center;">
+                                                {{ student.first_name|first }}{{ student.last_name|first }}
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ student.full_name }}</h6>
+                                                <small class="text-muted">{{ student.student_id }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ student.roll_number }}</td>
+                                    <td>
+                                        {% with parent=student.parents.first %}
+                                            {% if parent %}
+                                                {{ parent.full_name }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ student.examresult_set.count }}</span>
+                                    </td>
+                                    <td>
+                                        {% with results=student.examresult_set.all %}
+                                            {% if results %}
+                                                {{ results.0.marks_obtained|floatformat:2 }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with results=student.examresult_set.all %}
+                                            {% if results %}
+                                                <span class="badge badge-{% if results.0.grade == 'A' %}success{% elif results.0.grade == 'B' %}info{% elif results.0.grade == 'C' %}warning{% elif results.0.grade == 'D' %}primary{% else %}danger{% endif %}">
+                                                    {{ results.0.grade }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge badge-secondary">-</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with results=student.examresult_set.all %}
+                                            {% if results %}
+                                                {% if results.0.marks_obtained >= 80 %}
+                                                <span class="badge badge-success">Excellent</span>
+                                                {% elif results.0.marks_obtained >= 60 %}
+                                                <span class="badge badge-warning">Good</span>
+                                                {% else %}
+                                                <span class="badge badge-danger">Needs Work</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge badge-secondary">No Data</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'generate_report_card' student.id %}">
+                                                    <i class="fas fa-file-alt text-blue"></i> Report Card
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-chart-line text-purple"></i> Performance
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-edit text-green"></i> Edit
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Students Found</h5>
+                        <p class="text-muted">There are no students enrolled in {{ selected_class.name }}.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Class Exams -->
+            {% if exams %}
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Exams - {{ selected_class.name }}</h3>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Exam</th>
+                                    <th>Subject</th>
+                                    <th>Date</th>
+                                    <th>Avg. Score</th>
+                                    <th>Top Student</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for exam in exams|slice:":10" %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ exam.name }}</strong>
+                                        <br><small class="text-muted">{{ exam.get_exam_type_display }}</small>
+                                    </td>
+                                    <td>{{ exam.subject.name }}</td>
+                                    <td>{{ exam.exam_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% with results=exam.examresult_set.all %}
+                                            {% if results %}
+                                                {{ results.0.marks_obtained|floatformat:2 }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with top_student=exam.examresult_set.first %}
+                                            {% if top_student %}
+                                                {{ top_student.student.first_name }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% if exam.examresult_set.exists %}
+                                        <span class="badge badge-success">Graded</span>
+                                        {% else %}
+                                        <span class="badge badge-warning">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'exam_results' exam.id %}" class="btn btn-sm btn-primary">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- No Class Selected -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="text-center py-5">
+                        <i class="fas fa-chalkboard-teacher fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">Select a Class</h4>
+                        <p class="text-muted">Please select a class from the dropdown above to view student results and performance.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        {% if students %}
+        $('#classStudentsTable').DataTable({
+            "pageLength": 25,
+            "responsive": true,
+            "order": [[0, 'asc']]
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %}
