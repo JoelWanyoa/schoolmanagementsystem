@@ -2249,15 +2249,16 @@ def create_exam(request):
     }
     return render(request, 'teachers/exam_form.html', context)
 
-@teacher_required
+@login_required
 def enter_marks(request, exam_id):
     """Enter marks for a specific exam - Prevent re-entry of marks"""
-    if not hasattr(request.user, 'teacher'):
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('login')
-    
-    teacher = request.user.teacher
-    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    if request.user.is_staff:
+        exam = get_object_or_404(Exam, id=exam_id)
+    else:
+        if not hasattr(request.user, 'teacher'):
+            messages.error(request, "You don't have permission to access this page.")
+            return redirect('login')
+        exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
     
     # Get students in the exam class
     students = Student.objects.filter(
@@ -2398,15 +2399,16 @@ def edit_marks(request, exam_id):
     }
     return render(request, 'teachers/enter_marks.html', context)
 
-@teacher_required
+@login_required
 def exam_results(request, exam_id):
     """View results for a specific exam"""
-    if not hasattr(request.user, 'teacher'):
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('login')
-    
-    teacher = request.user.teacher
-    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    if request.user.is_staff:
+        exam = get_object_or_404(Exam, id=exam_id)
+    else:
+        if not hasattr(request.user, 'teacher'):
+            messages.error(request, "You don't have permission to access this page.")
+            return redirect('login')
+        exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
     
     results = ExamResult.objects.filter(exam=exam).select_related('student').order_by('position')
     
@@ -2435,15 +2437,16 @@ def exam_results(request, exam_id):
     }
     return render(request, 'teachers/exam_results.html', context)
 
-@teacher_required
+@login_required
 def exam_analysis(request, exam_id):
     """Detailed analysis for an exam"""
-    if not hasattr(request.user, 'teacher'):
-        messages.error(request, "You don't have permission to access this page.")
-        return redirect('login')
-    
-    teacher = request.user.teacher
-    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    if request.user.is_staff:
+        exam = get_object_or_404(Exam, id=exam_id)
+    else:
+        if not hasattr(request.user, 'teacher'):
+            messages.error(request, "You don't have permission to access this page.")
+            return redirect('login')
+        exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
     
     results = ExamResult.objects.filter(exam=exam).select_related('student')
     
@@ -9768,7 +9771,7 @@ def get_subjects_by_class(request, class_id):
         'subjects': subjects_data
     })
 
-@teacher_required
+@login_required
 def edit_exam(request, exam_id):
     """Edit an existing exam - accessible by both teachers and admin"""
     exam = get_object_or_404(Exam, id=exam_id)
@@ -9823,16 +9826,23 @@ def edit_exam(request, exam_id):
     template_name = 'examinations/edit_exam.html' if request.user.is_staff else 'teachers/exam_form.html'
     return render(request, template_name, context)
 
-@teacher_required
+@login_required
 def delete_exam(request, exam_id):
-       
-    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    # Check if staff OR if teacher created it
+    if request.user.is_staff:
+        exam = get_object_or_404(Exam, id=exam_id)
+    else:
+        exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
     
     if request.method == 'POST':
         exam_name = exam.name
         exam.delete()
         messages.success(request, f'Exam "{exam_name}" deleted successfully!')
-        return redirect('teacher_exam_management')
+        
+        if request.user.is_staff:
+            return redirect('exam_schedule')
+        else:
+            return redirect('teacher_exam_management')
     
     context = {
         'exam': exam
