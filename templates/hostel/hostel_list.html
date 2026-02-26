@@ -1,7 +1,65 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static %}{% load custom_filters %}
 
-{% block title %}Hostels — School Management System{% endblock %}
+{% block title %}All Hostels — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    /* Petra Style Breadcrumbs */
+    .breadcrumbs-area {
+        margin-bottom: 30px;
+    }
+
+    .breadcrumbs-area h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 5px;
+    }
+
+    .data-table thead th {
+        background-color: #f0f1f3;
+        color: #111;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 15px;
+        border: none;
+    }
+
+    .data-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .hostel-type-pill {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-boys {
+        background: #e0e7ff;
+        color: #4361ee;
+    }
+
+    .type-girls {
+        background: #fee2e2;
+        color: #f43f5e;
+    }
+
+    .warden-info i {
+        font-size: 11px;
+        width: 15px;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div id="wrapper" class="wrapper bg-ash">
@@ -9,72 +67,98 @@
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
         <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
             <div class="breadcrumbs-area">
-                <h3>Hostels</h3>
-                <ul>
-                    <li><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
-                    <li>All Hostels</li>
-                </ul>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>Hostel Management</h3>
+                        <ul>
+                            <li><a href="{% url 'dashboard' %}">Home</a></li>
+                            <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
+                            <li>All Hostels</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'add_hostel' %}" class="btn-fill-lg btn-gradient-yellow">
+                        <i class="fas fa-plus mr-2"></i>Add Hostel
+                    </a>
+                </div>
             </div>
 
+            <!-- Hostel Table Card -->
             <div class="card height-auto">
                 <div class="card-body">
                     <div class="heading-layout1">
                         <div class="item-title">
-                            <h3>Hostel List</h3>
-                        </div>
-                        <div class="dropdown">
-                            <a href="{% url 'add_hostel' %}" class="btn-fill-lg btn-gradient-yellow text-white">
-                                <i class="fas fa-plus mr-2"></i>Add Hostel
-                            </a>
+                            <h3>Active Hostels Registry</h3>
                         </div>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table display data-table text-nowrap">
+                        <table id="hostelsTable" class="table display text-nowrap">
                             <thead>
                                 <tr>
                                     <th>Hostel Name</th>
-                                    <th>Type</th>
-                                    <th>Warden</th>
-                                    <th>Phone</th>
-                                    <th>Total Rooms</th>
-                                    <th>Available</th>
-                                    <th>Action</th>
+                                    <th>Classification</th>
+                                    <th>Warden Details</th>
+                                    <th>Capacity</th>
+                                    <th>Availability</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for hostel in hostels %}
                                 <tr>
-                                    <td>{{ hostel.name }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-light-blue mr-3 p-2 rounded text-center"
+                                                style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-hotel text-primary"></i>
+                                            </div>
+                                            <span class="font-weight-bold text-dark">{{ hostel.name }}</span>
+                                        </div>
+                                    </td>
                                     <td>
                                         <span
-                                            class="badge {% if hostel.type == 'BOYS' %}badge-primary{% else %}badge-danger{% endif %} badge-pill">
+                                            class="hostel-type-pill {% if hostel.type == 'BOYS' %}type-boys{% else %}type-girls{% endif %}">
                                             {{ hostel.get_type_display }}
                                         </span>
                                     </td>
-                                    <td>{{ hostel.warden_name }}</td>
-                                    <td>{{ hostel.warden_phone }}</td>
-                                    <td>{{ hostel.total_rooms }}</td>
-                                    <td>{{ hostel.available_rooms }}</td>
+                                    <td>
+                                        <div class="warden-info">
+                                            <span class="font-weight-600 d-block">{{ hostel.warden_name }}</span>
+                                            <small class="text-muted"><i class="fas fa-phone-alt"></i>{{ hostel.warden_phone }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-door-open text-muted mr-2"></i>
+                                            <span>{{ hostel.total_rooms }} Rooms</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress mr-3"
+                                                style="width: 60px; height: 6px; border-radius: 10px;">
+                                                <div class="progress-bar bg-success" role="progressbar"
+                                                    style="width: {% if hostel.total_rooms %}{{ hostel.available_rooms|divide:hostel.total_rooms|multiply:100 }}{% else %}0{% endif %}%">
+                                                </div>
+                                            </div>
+                                            <span class="font-weight-bold text-dark">{{ hostel.available_rooms }}
+                                                Available</span>
+                                        </div>
+                                    </td>
                                     <td>
                                         <div class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
-                                                aria-expanded="false">
-                                                <span class="flaticon-more-button-of-three-dots"></span>
-                                            </a>
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                                    class="flaticon-more-button-of-three-dots"></span></a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="{% url 'edit_hostel' hostel.pk %}">
-                                                    <i class="fas fa-edit text-dark-pastel-green mr-2"></i>Edit
-                                                </a>
+                                                <a class="dropdown-item" href="{% url 'edit_hostel' hostel.pk %}"><i
+                                                        class="fas fa-edit text-warning"></i> Edit Details</a>
                                                 <form action="{% url 'delete_hostel' hostel.pk %}" method="POST"
-                                                    style="display:inline;"
-                                                    onsubmit="return confirm('Are you sure you want to delete this hostel?');">
+                                                    class="d-inline" onsubmit="return confirm('Delete this hostel?');">
                                                     {% csrf_token %}
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="fas fa-trash text-orange-red mr-2"></i>Delete
-                                                    </button>
+                                                    <button type="submit" class="dropdown-item"><i
+                                                            class="fas fa-trash text-danger"></i> Remove</button>
                                                 </form>
                                             </div>
                                         </div>
@@ -82,7 +166,12 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center">No hostels found.</td>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-hotel fa-3x text-muted opacity-25 mb-3"></i>
+                                            <p class="text-muted">No hostels registered in the system.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -98,4 +187,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#hostelsTable').DataTable({
+            "pageLength": 10,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Filter Hostels:",
+                "paginate": {
+                    "next": '<i class="fas fa-chevron-right"></i>',
+                    "previous": '<i class="fas fa-chevron-left"></i>'
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

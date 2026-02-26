@@ -1,7 +1,75 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Hostel Allocations — School Management System{% endblock %}
+{% block title %}Allocation History — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    /* Petra Style Breadcrumbs */
+    .breadcrumbs-area {
+        margin-bottom: 30px;
+    }
+
+    .breadcrumbs-area h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 5px;
+    }
+
+    .data-table thead th {
+        background-color: #f0f1f3;
+        color: #111;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 15px;
+        border: none;
+    }
+
+    .data-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .avatar-pill {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 11px;
+    }
+
+    .allocation-status {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active {
+        background: #dcfce7;
+        color: #10b981;
+    }
+
+    .status-completed {
+        background: #e0f2fe;
+        color: #0ea5e9;
+    }
+
+    .status-cancelled {
+        background: #fee2e2;
+        color: #f43f5e;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div id="wrapper" class="wrapper bg-ash">
@@ -9,81 +77,115 @@
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
         <div class="dashboard-content-one">
-            <!-- Breadcubs Area Start Here -->
+            <!-- Breadcrumbs -->
             <div class="breadcrumbs-area">
-                <h3>Hostel Allocations</h3>
-                <ul>
-                    <li>
-                        <a href="{% url 'dashboard' %}">Home</a>
-                    </li>
-                    <li>
-                        <a href="{% url 'hostel_management' %}">Hostel Management</a>
-                    </li>
-                    <li>All Allocations</li>
-                </ul>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>Hostel Allocation Logs</h3>
+                        <ul>
+                            <li><a href="{% url 'dashboard' %}">Home</a></li>
+                            <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
+                            <li>Allocation Registry</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'allocate_hostel' %}" class="btn-fill-lg btn-gradient-yellow">
+                        <i class="fas fa-plus mr-2"></i>New Allocation
+                    </a>
+                </div>
             </div>
-            <!-- Breadcubs Area End Here -->
 
+            <!-- Allocation Table Card -->
             <div class="card height-auto">
                 <div class="card-body">
                     <div class="heading-layout1">
                         <div class="item-title">
-                            <h3>Allocation History</h3>
-                        </div>
-                        <div class="dropdown">
-                            <a href="{% url 'allocate_hostel' %}" class="btn-fill-lg btn-gradient-yellow text-white">
-                                <i class="fas fa-plus mr-2"></i>New Allocation
-                            </a>
+                            <h3>Full Allocation History</h3>
                         </div>
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table display data-table text-nowrap">
+                        <table id="allocationsTable" class="table display text-nowrap">
                             <thead>
                                 <tr>
-                                    <th>Student</th>
-                                    <th>Hostel</th>
-                                    <th>Room</th>
-                                    <th>Allocated Date</th>
-                                    <th>Completion Date</th>
+                                    <th>Resident Student</th>
+                                    <th>Room Assignment</th>
+                                    <th>Duration</th>
                                     <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Management</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for allocation in allocations %}
                                 <tr>
                                     <td>
-                                        {{ allocation.student.get_full_name }}
-                                        <br>
-                                        <small class="text-muted">{{ allocation.student.student_id }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-pill bg-light-blue mr-3 text-primary">
+                                                {{ allocation.student.first_name|first }}{{ allocation.student.last_name|first }}
+                                            </div>
+                                            <div>
+                                                <span class="font-weight-bold d-block text-dark">{{ allocation.student.get_full_name }}</span>
+                                                <small class="text-muted">{{ allocation.student.student_id }}</small>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td>{{ allocation.room.hostel.name }}</td>
-                                    <td>{{ allocation.room.room_number }}</td>
-                                    <td>{{ allocation.allocated_date }}</td>
-                                    <td>{{ allocation.completion_date|default:"-" }}</td>
+                                    <td>
+                                        <div class="room-assignment-box">
+                                            <span class="font-weight-600 d-block">{{ allocation.room.hostel.name }}</span>
+                                            <small class="text-muted"><i class="fas fa-door-closed mr-1"></i>Room {{ allocation.room.room_number }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="allocation-dates">
+                                            <div class="d-flex align-items-center small mb-1">
+                                                <i class="fas fa-calendar-alt text-success mr-2" style="width: 12px;"></i>
+                                                <span class="text-dark font-weight-600">{{ allocation.allocated_date|date:"d M Y" }}</span>
+                                            </div>
+                                            <div class="d-flex align-items-center small">
+                                                <i class="fas fa-calendar-times text-muted mr-2" style="width: 12px;"></i>
+                                                <span class="text-muted">{% if allocation.completion_date %}{{ allocation.completion_date|date:"d M Y" }}{% else %}On-going{% endif %}</span>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td>
                                         <span
-                                            class="badge badge-pill {% if allocation.status == 'ACTIVE' %}badge-success{% elif allocation.status == 'COMPLETED' %}badge-info{% else %}badge-danger{% endif %}">
+                                            class="allocation-status {% if allocation.status == 'ACTIVE' %}status-active{% elif allocation.status == 'COMPLETED' %}status-completed{% else %}status-cancelled{% endif %}">
                                             {{ allocation.get_status_display }}
                                         </span>
                                     </td>
                                     <td>
-                                        {% if allocation.status == 'ACTIVE' %}
-                                        <form action="{% url 'cancel_hostel_allocation' allocation.pk %}" method="POST"
-                                            style="display:inline;"
-                                            onsubmit="return confirm('Mark this allocation as completed?');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-info">
-                                                Complete
-                                            </button>
-                                        </form>
-                                        {% endif %}
+                                        <div class="d-flex gap-2">
+                                            {% if allocation.status == 'ACTIVE' %}
+                                            <form action="{% url 'cancel_hostel_allocation' allocation.pk %}"
+                                                method="POST" class="d-inline"
+                                                onsubmit="return confirm('Mark this allocation as completed?');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-info px-3">
+                                                    <i class="fas fa-check-double mr-1"></i> Finalize
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            <div class="dropdown">
+                                                <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                                        class="flaticon-more-button-of-three-dots"></span></a>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="#"><i
+                                                            class="fas fa-file-invoice text-primary"></i> View
+                                                        Receipt</a>
+                                                    <a class="dropdown-item" href="#"><i
+                                                            class="fas fa-history text-muted"></i> Activity Log</a>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">No allocations found.</td>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-history fa-3x text-muted opacity-25 mb-3"></i>
+                                            <p class="text-muted">No resident allocations found in history.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -99,4 +201,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#allocationsTable').DataTable({
+            "pageLength": 25,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Global Search Logs:",
+                "paginate": {
+                    "next": '<i class="fas fa-chevron-right"></i>',
+                    "previous": '<i class="fas fa-chevron-left"></i>'
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

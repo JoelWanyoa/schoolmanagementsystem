@@ -1,55 +1,63 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Vehicle Fleet — Petra Education Centre{% endblock %}
+{% block title %}Vehicle Fleet Registry — Petra Education Centre{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
 <style>
-    .vehicle-card {
-        background: #fff;
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        border: 1px solid #f1f5f9;
-        margin-bottom: 25px;
-        transition: all 0.3s;
+    /* Petra Style Breadcrumbs */
+    .breadcrumbs-area {
+        margin-bottom: 30px;
     }
 
-    .vehicle-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
-        border-color: #6366f1;
+    .breadcrumbs-area h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 5px;
     }
 
-    .vehicle-icon {
-        width: 80px;
-        height: 80px;
-        background: #f0f7ff;
-        color: #6366f1;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2.5rem;
-        margin-bottom: 15px;
+    .data-table thead th {
+        background-color: #f0f1f3;
+        color: #111;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 15px;
+        border: none;
+    }
+
+    .data-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
     }
 
     .vehicle-plate {
-        font-family: 'Courier New', Courier, monospace;
+        font-family: 'Monaco', 'Consolas', monospace;
         background: #f8fafc;
-        padding: 4px 12px;
-        border: 2px solid #e2e8f0;
-        border-radius: 6px;
+        padding: 5px 12px;
+        border: 2px solid #cbd5e1;
+        border-radius: 8px;
         font-weight: 800;
-        color: #334155;
+        color: #1e293b;
         letter-spacing: 1px;
     }
 
-    .driver-badge {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 12px;
-        margin-top: 15px;
+    .driver-pill {
+        display: inline-flex;
+        align-items: center;
+        background: #f1f5f9;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+    }
+
+    .driver-pill i {
+        font-size: 10px;
+        margin-right: 8px;
+        color: #64748b;
     }
 </style>
 {% endblock %}
@@ -60,82 +68,120 @@
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
         <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
             <div class="breadcrumbs-area">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h3>Vehicle Fleet</h3>
+                        <h3>Vehicle Fleet Management</h3>
                         <ul>
                             <li><a href="{% url 'dashboard' %}">Home</a></li>
                             <li><a href="{% url 'transport_management' %}">Transport</a></li>
-                            <li>Vehicles</li>
+                            <li>Fleet Registry</li>
                         </ul>
                     </div>
-                    <a href="{% url 'add_vehicle' %}" class="btn btn-fill-lg btn-gradient-yellow text-decoration-none">
+                    <a href="{% url 'add_vehicle' %}" class="btn-fill-lg btn-gradient-yellow">
                         <i class="fas fa-plus mr-2"></i>Add Vehicle
                     </a>
                 </div>
             </div>
 
-            <div class="row">
-                {% for vehicle in vehicles %}
-                <div class="col-xl-4 col-md-6 col-12">
-                    <div class="vehicle-card text-center">
-                        <div class="d-flex justify-content-center">
-                            <div class="vehicle-icon">
-                                <i
-                                    class="fas {% if vehicle.vehicle_type == 'VAN' %}fa-shuttle-van{% elif vehicle.vehicle_type == 'CAR' %}fa-car{% else %}fa-bus{% endif %}"></i>
-                            </div>
-                        </div>
-                        <h4 class="font-weight-bold mb-1">{{ vehicle.model }}</h4>
-                        <div class="mb-3">
-                            <span class="vehicle-plate">{{ vehicle.vehicle_number }}</span>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Capacity:</span>
-                            <span class="font-weight-bold">{{ vehicle.capacity }} Seats</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-4">
-                            <span class="text-muted">Route:</span>
-                            <span class="font-weight-bold text-primary">{{ vehicle.route.name|default:"Unassigned" }}</span>
-                        </div>
-
-                        <div class="driver-badge text-left">
-                            <label class="small text-muted text-uppercase font-weight-bold mb-1 d-block">Assigned
-                                Driver</label>
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle mr-3 d-flex align-items-center justify-content-center"
-                                    style="width: 35px; height: 35px;">
-                                    <i class="fas fa-user"></i>
-                                </div>
-                                <div>
-                                    <div class="font-weight-bold">{{ vehicle.driver_name }}</div>
-                                    <div class="small text-muted">{{ vehicle.driver_phone }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="divider my-3"></div>
-
-                        <div class="d-flex" style="gap: 10px;">
-                            <a href="{% url 'edit_vehicle' vehicle.pk %}"
-                                class="btn btn-sm btn-outline-primary flex-fill">Edit</a>
-                            <a href="{% url 'delete_vehicle' vehicle.pk %}"
-                                class="btn btn-sm btn-outline-danger flex-fill">Delete</a>
+            <!-- Fleet Registry Table -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Full Fleet Registry</h3>
                         </div>
                     </div>
-                </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="card p-5 text-center">
-                        <i class="fas fa-bus fa-4x text-muted opacity-25 mb-4"></i>
-                        <h3>Your Fleet is Empty</h3>
-                        <p class="text-muted">Start by adding your first school bus or van.</p>
-                        <a href="{% url 'add_vehicle' %}" class="btn btn-fill-lg btn-gradient-yellow mt-3"
-                            style="width: fit-content; margin: 0 auto; text-decoration: none;">Add Vehicle</a>
+
+                    <div class="table-responsive">
+                        <table id="fleetTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Registration No</th>
+                                    <th>Vehicle Details</th>
+                                    <th>Driver</th>
+                                    <th>Assigned Route</th>
+                                    <th>Capacity</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for vehicle in vehicles %}
+                                <tr>
+                                    <td><span class="vehicle-plate">{{ vehicle.vehicle_number }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-light-blue mr-3 p-2 rounded text-center"
+                                                style="width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+                                                <i
+                                                    class="fas {% if vehicle.vehicle_type == 'VAN' %}fa-shuttle-van{% elif vehicle.vehicle_type == 'CAR' %}fa-car{% else %}fa-bus{% endif %} fa-lg text-primary"></i>
+                                            </div>
+                                            <div>
+                                                <span class="font-weight-bold d-block text-dark">{{ vehicle.model }}</span>
+                                                <small class="text-muted text-uppercase"
+                                                    style="font-size: 10px; letter-spacing: 0.5px;">{{ vehicle.get_vehicle_type_display }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="driver-pill">
+                                            <i class="fas fa-user-tie"></i>
+                                            <span class="font-weight-bold">{{ vehicle.driver_name }}</span>
+                                            <span class="text-muted ml-2" style="font-size: 11px;">({{ vehicle.driver_phone }})</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if vehicle.route %}
+                                        <a href="{% url 'edit_route' vehicle.route.pk %}"
+                                            class="text-primary font-weight-600">
+                                            <i class="fas fa-route mr-1"></i>{{ vehicle.route.name }}
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted small italic">Unassigned</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="font-weight-bold">{{ vehicle.capacity }}</span>
+                                        <small class="text-muted ml-1">Seats</small>
+                                    </td>
+                                    <td>
+                                        {% if vehicle.status == 'ACTIVE' %}
+                                        <span class="badge badge-pill badge-success">On Road</span>
+                                        {% elif vehicle.status == 'MAINTENANCE' %}
+                                        <span class="badge badge-pill badge-warning">Garage</span>
+                                        {% else %}
+                                        <span class="badge badge-pill badge-secondary">Offline</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                                    class="flaticon-more-button-of-three-dots"></span></a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'edit_vehicle' vehicle.pk %}"><i
+                                                        class="fas fa-edit text-warning"></i> Edit Details</a>
+                                                <a class="dropdown-item" href="{% url 'delete_vehicle' vehicle.pk %}"><i
+                                                        class="fas fa-trash text-danger"></i> Remove</a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-bus fa-3x text-muted opacity-25 mb-3"></i>
+                                            <p class="text-muted">The fleet registry is currently empty.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                {% endfor %}
             </div>
 
             <footer class="footer-wrap-layout1">
@@ -145,4 +191,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#fleetTable').DataTable({
+            "pageLength": 25,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Filter Fleet:",
+                "paginate": {
+                    "next": '<i class="fas fa-chevron-right"></i>',
+                    "previous": '<i class="fas fa-chevron-left"></i>'
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}

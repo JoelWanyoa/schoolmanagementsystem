@@ -1,7 +1,74 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Hostel Rooms — School Management System{% endblock %}
+{% block title %}Room Inventory — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    /* Petra Style Breadcrumbs */
+    .breadcrumbs-area {
+        margin-bottom: 30px;
+    }
+
+    .breadcrumbs-area h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: #111;
+        margin-bottom: 5px;
+    }
+
+    .data-table thead th {
+        background-color: #f0f1f3;
+        color: #111;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 15px;
+        border: none;
+    }
+
+    .data-table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .status-pill {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-available {
+        background: #dcfce7;
+        color: #10b981;
+    }
+
+    .status-occupied {
+        background: #fee2e2;
+        color: #f43f5e;
+    }
+
+    .status-maintenance {
+        background: #fef9c3;
+        color: #ca8a04;
+    }
+
+    .cost-badge {
+        background: #f0f7ff;
+        color: #4361ee;
+        border: 1px solid #e0e7ff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div id="wrapper" class="wrapper bg-ash">
@@ -9,98 +76,131 @@
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
         <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
             <div class="breadcrumbs-area">
-                <h3>Hostel Rooms</h3>
-                <ul>
-                    <li><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
-                    <li>All Rooms</li>
-                </ul>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>Room Inventory</h3>
+                        <ul>
+                            <li><a href="{% url 'dashboard' %}">Home</a></li>
+                            <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
+                            <li>Room Registry</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'add_hostel_room' %}" class="btn-fill-lg btn-gradient-yellow">
+                        <i class="fas fa-plus mr-2"></i>Add Room
+                    </a>
+                </div>
             </div>
 
+            <!-- Filters Area -->
+            <div class="card mg-b-20 pt-4 pb-0 px-4">
+                <form method="GET">
+                    <div class="row gutters-20">
+                        <div class="col-lg-5 col-12 form-group">
+                            <label class="font-weight-bold small text-muted text-uppercase">Filter by Hostel</label>
+                            <select class="form-control select2" name="hostel">
+                                <option value="">All Hostels</option>
+                                {% for h in hostels %}
+                                <option value="{{ h.id }}" {% if request.GET.hostel==h.id|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-5 col-12 form-group">
+                            <label class="font-weight-bold small text-muted text-uppercase">Room Status</label>
+                            <select class="form-control select2" name="status">
+                                <option value="">Any Status</option>
+                                <option value="AVAILABLE" {% if request.GET.status=="AVAILABLE" %}selected{% endif %}>
+                                    Available</option>
+                                <option value="OCCUPIED" {% if request.GET.status=="OCCUPIED" %}selected{% endif %}>
+                                    Occupied</option>
+                                <option value="MAINTENANCE" {% if request.GET.status=="MAINTENANCE" %}selected{% endif
+                                    %}>Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-12 form-group d-flex align-items-end">
+                            <button type="submit" class="btn btn-fill-lg btn-gradient-yellow w-100"
+                                style="height: 44px; padding: 0;">
+                                <i class="fas fa-search"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Room Table Card -->
             <div class="card height-auto">
                 <div class="card-body">
                     <div class="heading-layout1">
                         <div class="item-title">
-                            <h3>Room Inventory</h3>
-                        </div>
-                        <div class="dropdown">
-                            <a href="{% url 'add_hostel_room' %}" class="btn-fill-lg btn-gradient-yellow text-white">
-                                <i class="fas fa-plus mr-2"></i>Add Room
-                            </a>
+                            <h3>Detailed Room Inventory</h3>
                         </div>
                     </div>
 
-                    <form class="mg-b-20" method="GET">
-                        <div class="row gutters-8">
-                            <div class="col-lg-5 col-12 form-group">
-                                <select class="form-control" name="hostel">
-                                    <option value="">Select Hostel...</option>
-                                    {% for h in hostels %}
-                                    <option value="{{ h.id }}" {% if request.GET.hostel == h.id|stringformat:"s" %}selected{% endif %}>{{ h.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-lg-5 col-12 form-group">
-                                <select class="form-control" name="status">
-                                    <option value="">Select Status...</option>
-                                    <option value="AVAILABLE" {% if request.GET.status == "AVAILABLE" %}selected{% endif %}>Available</option>
-                                    <option value="OCCUPIED" {% if request.GET.status == "OCCUPIED" %}selected{% endif %}>Occupied</option>
-                                    <option value="MAINTENANCE" {% if request.GET.status == "MAINTENANCE" %}selected{% endif %}>Maintenance</option>
-                                </select>
-                            </div>
-                            <div class="col-lg-2 col-12 form-group">
-                                <button type="submit" class="fw-btn-fill btn-gradient-yellow text-white">Search</button>
-                            </div>
-                        </div>
-                    </form>
-
                     <div class="table-responsive">
-                        <table class="table display data-table text-nowrap">
+                        <table id="roomsTable" class="table display text-nowrap">
                             <thead>
                                 <tr>
                                     <th>Room #</th>
-                                    <th>Hostel</th>
-                                    <th>Room Type</th>
-                                    <th>Capacity</th>
-                                    <th>Available Beds</th>
-                                    <th>Cost</th>
+                                    <th>Hostel Name</th>
+                                    <th>Room Schema</th>
+                                    <th>Max Capacity</th>
+                                    <th>Beds Available</th>
+                                    <th>Term Cost (KSh)</th>
                                     <th>Status</th>
-                                    <th>Action</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for room in rooms %}
                                 <tr>
-                                    <td>{{ room.room_number }}</td>
+                                    <td><span class="font-weight-bold text-dark">Room {{ room.room_number }}</span></td>
                                     <td>{{ room.hostel.name }}</td>
-                                    <td>{{ room.get_room_type_display }}</td>
-                                    <td>{{ room.capacity }}</td>
-                                    <td>{{ room.available_beds }}</td>
-                                    <td>{{ room.cost_per_student }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-th-large text-muted mr-2"></i>
+                                            <span>{{ room.get_room_type_display }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-users text-muted mr-2"></i>
+                                            <span>{{ room.capacity }} Seats</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress mr-3"
+                                                style="width: 60px; height: 6px; border-radius: 10px;">
+                                                <div class="progress-bar {% if room.available_beds > 0 %}bg-success{% else %}bg-danger{% endif %}"
+                                                    role="progressbar"
+                                                    style="width: {% if room.capacity %}{{ room.available_beds|divide:room.capacity|multiply:100 }}{% else %}0{% endif %}%">
+                                                </div>
+                                            </div>
+                                            <span class="font-weight-bold text-dark">{{ room.available_beds }}
+                                                Beds</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="cost-badge">{{ room.cost_per_student }}</span></td>
                                     <td>
                                         <span
-                                            class="badge badge-pill {% if room.status == 'AVAILABLE' %}badge-success{% elif room.status == 'OCCUPIED' %}badge-danger{% else %}badge-warning{% endif %}">
+                                            class="status-pill {% if room.status == 'AVAILABLE' %}status-available{% elif room.status == 'OCCUPIED' %}status-occupied{% else %}status-maintenance{% endif %}">
                                             {{ room.get_status_display }}
                                         </span>
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
-                                                aria-expanded="false">
-                                                <span class="flaticon-more-button-of-three-dots"></span>
-                                            </a>
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"><span
+                                                    class="flaticon-more-button-of-three-dots"></span></a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="{% url 'edit_hostel_room' room.pk %}">
-                                                    <i class="fas fa-edit text-dark-pastel-green mr-2"></i>Edit
-                                                </a>
+                                                <a class="dropdown-item" href="{% url 'edit_hostel_room' room.pk %}"><i
+                                                        class="fas fa-edit text-warning"></i> Modify Room</a>
                                                 <form action="{% url 'delete_hostel_room' room.pk %}" method="POST"
-                                                    style="display:inline;"
-                                                    onsubmit="return confirm('Are you sure you want to delete this room?');">
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('Delete this room from inventory?');">
                                                     {% csrf_token %}
-                                                    <button type="submit" class="dropdown-item">
-                                                        <i class="fas fa-trash text-orange-red mr-2"></i>Delete
-                                                    </button>
+                                                    <button type="submit" class="dropdown-item"><i
+                                                            class="fas fa-trash text-danger"></i> Delete</button>
                                                 </form>
                                             </div>
                                         </div>
@@ -108,7 +208,12 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center">No rooms found matching criteria.</td>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-door-closed fa-3x text-muted opacity-25 mb-3"></i>
+                                            <p class="text-muted">No rooms found matching your search criteria.</p>
+                                        </div>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -124,4 +229,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#roomsTable').DataTable({
+            "pageLength": 25,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Quick Filter:",
+                "paginate": {
+                    "next": '<i class="fas fa-chevron-right"></i>',
+                    "previous": '<i class="fas fa-chevron-left"></i>'
+                }
+            }
+        });
+    });
+</script>
 {% endblock %}
