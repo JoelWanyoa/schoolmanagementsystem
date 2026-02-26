@@ -344,7 +344,7 @@ class ExamForm(forms.Form):
     
     def __init__(self, *args, **kwargs):
         teacher = kwargs.pop('teacher', None)
-        instance = kwargs.pop('instance', None)
+        self.instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
         
         # Import models here to avoid circular imports
@@ -353,22 +353,22 @@ class ExamForm(forms.Form):
         
         # Add dynamic fields
         self.fields['subject'] = forms.ModelChoiceField(
-            queryset=Subject.objects.all(),
+            queryset=teacher.subjects.all() if teacher else Subject.objects.all(),
             widget=forms.Select(attrs={'class': 'form-control'})
         )
         self.fields['class_level'] = forms.ModelChoiceField(
-            queryset=Class.objects.all(),
+            queryset=Class.objects.filter(class_teacher=teacher) if teacher else Class.objects.all(),
             widget=forms.Select(attrs={'class': 'form-control'})
         )
         
         # Set initial values from instance if editing
-        if instance:
+        if self.instance:
             for field in self.fields:
-                if hasattr(instance, field):
-                    self.fields[field].initial = getattr(instance, field)
+                if hasattr(self.instance, field):
+                    self.fields[field].initial = getattr(self.instance, field)
         
         # Set default values for new exams
-        if not instance:
+        if not self.instance:
             self.fields['total_marks'].initial = 100
             self.fields['passing_marks'].initial = 40
             self.fields['status'].initial = 'UPCOMING'
@@ -376,8 +376,8 @@ class ExamForm(forms.Form):
             self.fields['start_time'].initial = '09:00'
             self.fields['end_time'].initial = '11:00'
     
-    def save(self, created_by=None):
-        Exam = apps.get_model('core', 'Exam')  # or wherever your Exam model is
+    def save(self, created_by=None, commit=True):
+        Exam = apps.get_model('core', 'Exam')
         
         exam_data = {field: self.cleaned_data[field] for field in self.cleaned_data}
         
@@ -392,8 +392,10 @@ class ExamForm(forms.Form):
         
         if created_by:
             exam.created_by = created_by
-        
-        exam.save()
+            
+        if commit:
+            exam.save()
+            
         return exam
 
 class ExamResultForm(forms.ModelForm):

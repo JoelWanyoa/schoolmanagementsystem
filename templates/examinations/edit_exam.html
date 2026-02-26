@@ -1,17 +1,47 @@
-<!-- templates/examinations/edit_exam.html -->
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}{{ title }} — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-content-one {
+        padding-bottom: 50px;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        padding-top: 15px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 8px;
+    }
+
+    .form-group i {
+        position: absolute;
+        right: 25px;
+        top: 45px;
+        color: #64748b;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<!-- Breadcubs Area Start Here -->
 <div id="wrapper" class="wrapper bg-ash">
     {% include 'includes/header.html' %}
 
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
         <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
             <div class="breadcrumbs-area">
                 <h3>Examinations</h3>
                 <ul>
@@ -24,167 +54,162 @@
                     <li>{{ title }}</li>
                 </ul>
             </div>
-            
-            <!-- Edit Exam Form Area Start Here -->
-            <div class="row">
-                <div class="col-lg-10 mx-auto">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">{{ title }}</h4>
-                            <a href="{% url 'exam_schedule' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Schedule
-                            </a>
-                        </div>
-                        <div class="card-body">
-                            <form method="POST">
-                                {% csrf_token %}
-                                
-                                {% if form.errors %}
-                                <div class="alert alert-danger">
-                                    <strong>Please correct the errors below:</strong>
-                                    <ul>
-                                        {% for field in form %}
-                                            {% for error in field.errors %}
-                                                <li>{{ field.label }}: {{ error }}</li>
-                                            {% endfor %}
-                                        {% endfor %}
-                                        {% for error in form.non_field_errors %}
-                                            <li>{{ error }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                                {% endif %}
-                                
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.name.id_for_label }}" class="form-label">Exam Name *</label>
-                                            {{ form.name }}
-                                            <div class="form-text">e.g., End of Term 1 Exam, Midterm Test, etc.</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.class_level.id_for_label }}" class="form-label">Class Level *</label>
-                                            {{ form.class_level }}
-                                        </div>
-                                    </div>
-                                </div>
+            <!-- Breadcubs Area End Here -->
 
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.subject.id_for_label }}" class="form-label">Subject *</label>
-                                            {{ form.subject }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.max_marks.id_for_label }}" class="form-label">Maximum Marks *</label>
-                                            {{ form.max_marks }}
-                                            <div class="form-text">Total marks for this exam</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.exam_date.id_for_label }}" class="form-label">Exam Date *</label>
-                                            {{ form.exam_date }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.start_time.id_for_label }}" class="form-label">Start Time *</label>
-                                            {{ form.start_time }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.end_time.id_for_label }}" class="form-label">End Time *</label>
-                                            {{ form.end_time }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.duration.id_for_label }}" class="form-label">Duration (minutes) *</label>
-                                            {{ form.duration }}
-                                            <div class="form-text">Exam duration in minutes</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.room.id_for_label }}" class="form-label">Room/Venue</label>
-                                            {{ form.room }}
-                                            <div class="form-text">Optional - exam venue</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
-                                            {{ form.status }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
-                                            {{ form.description }}
-                                            <div class="form-text">Optional exam description</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group mt-4">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save"></i> Update Exam
-                                    </button>
-                                    <a href="{% url 'exam_schedule' %}" class="btn btn-secondary">Cancel</a>
-                                    
-                                    {% if request.user.is_staff %}
-                                    <a href="{% url 'delete_exam' exam.id %}" class="btn btn-danger float-end">
-                                        <i class="fas fa-trash"></i> Delete Exam
-                                    </a>
-                                    {% endif %}
-                                </div>
-                            </form>
+            <!-- Edit Exam Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>{{ title }}</h3>
                         </div>
                     </div>
+
+                    <form class="new-added-form" method="POST" id="examForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.name.id_for_label }}">Examination Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.exam_type.id_for_label }}">Exam Category *</label>
+                                {{ form.exam_type }}
+                                {% if form.exam_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.exam_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.class_level.id_for_label }}">Target Class *</label>
+                                {{ form.class_level }}
+                                {% if form.class_level.errors %}
+                                <div class="text-danger small mt-1">{{ form.class_level.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.subject.id_for_label }}">Subject *</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.exam_date.id_for_label }}">Examination Date *</label>
+                                {{ form.exam_date }}
+                                <i class="far fa-calendar-alt"></i>
+                                {% if form.exam_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.exam_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.start_time.id_for_label }}">Start Time *</label>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                <div class="text-danger small mt-1">{{ form.start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.end_time.id_for_label }}">End Time *</label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                <div class="text-danger small mt-1">{{ form.end_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.duration.id_for_label }}">Duration (Mins)</label>
+                                {{ form.duration }}
+                                {% if form.duration.errors %}
+                                <div class="text-danger small mt-1">{{ form.duration.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.total_marks.id_for_label }}">Total Marks</label>
+                                {{ form.total_marks }}
+                                {% if form.total_marks.errors %}
+                                <div class="text-danger small mt-1">{{ form.total_marks.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.passing_marks.id_for_label }}">Passing Marks</label>
+                                {{ form.passing_marks }}
+                                {% if form.passing_marks.errors %}
+                                <div class="text-danger small mt-1">{{ form.passing_marks.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-6 col-12 form-group">
+                                <label for="{{ form.room.id_for_label }}">Venue / Room</label>
+                                {{ form.room }}
+                                <i class="fas fa-map-marker-alt"></i>
+                                {% if form.room.errors %}
+                                <div class="text-danger small mt-1">{{ form.room.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-6 col-12 form-group">
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 form-group">
+                                <label for="{{ form.description.id_for_label }}">Additional Instructions</label>
+                                {{ form.description }}
+                            </div>
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    Update Details
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow"
+                                    onclick="window.history.back()">
+                                    Cancel
+                                </button>
+                                {% if request.user.is_staff %}
+                                <a href="{% url 'delete_exam' exam.id %}"
+                                    class="btn-fill-lg bg-danger-low text-danger btn-hover-danger float-end"
+                                    onclick="return confirm('Are you sure you want to delete this exam?')">
+                                    <i class="fas fa-trash-alt mr-2"></i>Delete Exam
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-            <!-- Edit Exam Form Area End Here -->
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
         </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/moment.min.js' %}"></script>
 <script>
-$(document).ready(function() {
-    // Add Bootstrap classes to any remaining form fields
-    $('input, select, textarea').addClass('form-control');
-    
-    // Auto-calculate duration based on start and end times
-    $('#id_start_time, #id_end_time').on('change', function() {
-        const startTime = $('#id_start_time').val();
-        const endTime = $('#id_end_time').val();
-        
-        if (startTime && endTime) {
-            const start = new Date(`2000-01-01T${startTime}`);
-            const end = new Date(`2000-01-01T${endTime}`);
-            const duration = Math.round((end - start) / (1000 * 60)); // Convert to minutes
-            
-            if (duration > 0) {
-                $('#id_duration').val(duration);
+    $(document).ready(function () {
+        // Add Petra standard classes if not already present
+        $('input, select, textarea').addClass('form-control');
+
+        // Auto-calculate duration based on start and end times
+        $('#id_start_time, #id_end_time').on('change', function () {
+            const startTime = $('#id_start_time').val();
+            const endTime = $('#id_end_time').val();
+
+            if (startTime && endTime) {
+                const start = moment(startTime, 'HH:mm');
+                const end = moment(endTime, 'HH:mm');
+                const duration = moment.duration(end.diff(start)).asMinutes();
+
+                if (duration > 0) {
+                    $('#id_duration').val(Math.round(duration));
+                }
             }
-        }
+        });
     });
-});
 </script>
 {% endblock %}

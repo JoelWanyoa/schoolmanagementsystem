@@ -2182,6 +2182,9 @@ def teacher_exam_management(request):
     # Recent exams
     recent_exams = Exam.objects.filter(created_by=request.user).order_by('-exam_date')[:5]
     
+    # All exams
+    all_exams = Exam.objects.filter(created_by=request.user).order_by('-exam_date')
+    
     # Upcoming exams
     upcoming_exams = Exam.objects.filter(
         created_by=request.user,
@@ -2192,10 +2195,12 @@ def teacher_exam_management(request):
         'teacher': teacher,
         'teacher_classes': teacher_classes,
         'teacher_subjects': teacher_subjects,
+        'all_exams': all_exams,
         'total_exams': total_exams,
         'exams_this_month': exams_this_month,
         'recent_exams': recent_exams,
         'upcoming_exams': upcoming_exams,
+        'today': timezone.now().date(),
     }
     return render(request, 'teachers/exam_management.html', context)
 
