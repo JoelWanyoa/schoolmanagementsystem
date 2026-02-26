@@ -1,0 +1,852 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Class Details - {{ class_obj.name }}{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .class-header-large {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 40px 30px;
+        border-radius: 10px 10px 0 0;
+        color: white;
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .class-header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .class-header-content h2 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: white;
+    }
+
+    .class-header-content p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 5px;
+    }
+
+    .class-badge-header {
+        display: inline-block;
+        padding: 8px 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(5px);
+    }
+
+    .class-code {
+        font-family: monospace;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    .detail-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .detail-card .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f0f1f3;
+    }
+
+    .detail-card .card-title i {
+        color: #667eea;
+        margin-right: 10px;
+    }
+
+    .info-row {
+        display: flex;
+        margin-bottom: 15px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        width: 150px;
+        font-weight: 600;
+        color: #4b5563;
+    }
+
+    .info-value {
+        flex: 1;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .stat-card-modern {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 20px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .stat-card-modern:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        border-radius: 10px;
+        margin: 0 auto 15px;
+        font-size: 1.5rem;
+        color: white;
+    }
+
+    .stat-icon.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .stat-icon.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .stat-icon.warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .stat-icon.info {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    }
+
+    .stat-value-modern {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1.2;
+    }
+
+    .stat-label-modern {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .section-badge,
+    .subject-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0 8px 8px 0;
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s;
+    }
+
+    .section-badge:hover,
+    .subject-badge:hover {
+        background: #eef2ff;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .badge-capacity {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 3px 8px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        margin-left: 5px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-edit:hover {
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 2px solid #fee2e2;
+    }
+
+    .btn-delete:hover {
+        background: #dc2626;
+        color: white;
+        border-color: #dc2626;
+    }
+
+    .btn-back {
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-back:hover {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .table-responsive {
+        margin-top: 15px;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 8px;
+    }
+
+    .table thead th {
+        border: none;
+        padding: 12px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        background: transparent;
+    }
+
+    .table tbody tr {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+        border: 1px solid #f0f1f3;
+    }
+
+    .table tbody tr:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .table tbody td {
+        padding: 12px;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .student-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+    .student-info {
+        display: flex;
+        align-items: center;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .student-id {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .capacity-progress {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 10px;
+        background: #e5e7eb;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s ease;
+    }
+
+    .empty-state-small {
+        text-align: center;
+        padding: 40px;
+        background: #f9fafb;
+        border-radius: 8px;
+        border: 2px dashed #e5e7eb;
+    }
+
+    .empty-state-small i {
+        font-size: 3rem;
+        color: #d1d5db;
+        margin-bottom: 15px;
+    }
+
+    .empty-state-small h5 {
+        color: #4b5563;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .empty-state-small p {
+        color: #6b7280;
+        margin-bottom: 15px;
+    }
+
+    /* Dropdown styling */
+    .dropdown-toggle::after {
+        display: none;
+    }
+
+    .dropdown-menu {
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        padding: 8px;
+        min-width: 160px;
+    }
+
+    .dropdown-item {
+        border-radius: 6px;
+        padding: 8px 15px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .dropdown-item i {
+        width: 20px;
+        margin-right: 10px;
+    }
+
+    .dropdown-item:hover {
+        background: #f9fafb;
+    }
+
+    .badge-purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Delete confirmation modal */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+    }
+
+    .modal-header .close {
+        color: white;
+        opacity: 1;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e5e7eb;
+        padding: 15px 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Class Details</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'manage_classes' %}">Manage Classes</a>
+                    </li>
+                    <li>{{ class_obj.name }}</li>
+                </ul>
+            </div>
+
+            <!-- Class Header -->
+            <div class="card height-auto mb-4">
+                <div class="card-body p-0">
+                    <div class="class-header-large">
+                        <div class="class-header-content">
+                            <div class="mb-3">
+                                <span class="class-badge-header">{{ class_obj.get_level_category_display }}</span>
+                                <span class="class-badge-header">{{ class_obj.get_grade_level_display }}</span>
+                            </div>
+                            <h2>{{ class_obj.name }}</h2>
+                            <p class="class-code"><i class="fas fa-qrcode mr-2"></i>Class Code: {{ class_obj.code }}</p>
+                            <p><i class="fas fa-user-tie mr-2"></i>Class Teacher:
+                                {% if class_obj.class_teacher %}
+                                {{ class_obj.class_teacher.full_name }}
+                                {% else %}
+                                <span class="text-muted" style="color: rgba(255,255,255,0.8);">Not Assigned</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row">
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-value-modern">{{ total_students|default:"0" }}</div>
+                        <div class="stat-label-modern">Total Students</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon success">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="stat-value-modern">{{ total_sections|default:"0" }}</div>
+                        <div class="stat-label-modern">Sections/Streams</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon warning">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                        <div class="stat-value-modern">{{ total_subjects|default:"0" }}</div>
+                        <div class="stat-label-modern">Subjects Offered</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stat-card-modern">
+                        <div class="stat-icon info">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-value-modern">{{ total_assignments|default:"0" }}</div>
+                        <div class="stat-label-modern">Assignments</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capacity Progress -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="detail-card">
+                        <div class="card-title">
+                            <i class="fas fa-chart-line"></i>Class Capacity Overview
+                        </div>
+                        <div class="capacity-progress">
+                            <div class="progress-info">
+                                <span>Enrollment Capacity</span>
+                                <span>{{ class_obj.students.count }} / {{ class_obj.capacity }} Students
+                                    ({% widthratio class_obj.students.count class_obj.capacity 100 %}%)
+                                </span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar"
+                                    style="width: {% widthratio class_obj.students.count class_obj.capacity 100 %}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sections and Subjects -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="detail-card">
+                        <div class="card-title">
+                            <i class="fas fa-layer-group"></i>Sections / Streams
+                            <span class="badge badge-primary ml-2">{{ total_sections }}</span>
+                        </div>
+
+                        {% if sections %}
+                        <div class="section-list">
+                            {% for section in sections %}
+                            <span class="section-badge">
+                                <i class="fas fa-users mr-1"></i>{{ section.name }}
+                                <span class="badge-capacity">{{ section.capacity }} seats</span>
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state-small">
+                            <i class="fas fa-layer-group"></i>
+                            <h5>No Sections Added</h5>
+                            <p>This class doesn't have any sections or streams yet.</p>
+                            <a href="#" class="btn btn-sm btn-primary"
+                                onclick="alert('Add section functionality coming soon!'); return false;">Add Section</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="detail-card">
+                        <div class="card-title">
+                            <i class="fas fa-book-open"></i>Subjects Offered
+                            <span class="badge badge-primary ml-2">{{ total_subjects }}</span>
+                        </div>
+
+                        {% if all_subjects %}
+                        <div class="subject-list">
+                            {% for subject in all_subjects %}
+                            <span class="subject-badge">
+                                <i class="fas fa-book mr-1"></i>{{ subject.name }}
+                                {% if subject.teacher %}
+                                <span class="badge-capacity">{{ subject.teacher.full_name }}</span>
+                                {% endif %}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state-small">
+                            <i class="fas fa-book-open"></i>
+                            <h5>No Subjects Assigned</h5>
+                            <p>This class doesn't have any subjects assigned yet.</p>
+                            <a href="#" class="btn btn-sm btn-primary"
+                                onclick="alert('Assign subjects functionality coming soon!'); return false;">Assign
+                                Subjects</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students List -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="detail-card">
+                        <div class="card-title">
+                            <i class="fas fa-user-graduate"></i>Enrolled Students
+                            <span class="badge badge-primary ml-2">{{ total_students }}</span>
+                        </div>
+
+                        {% if students %}
+                        <div class="table-responsive">
+                            <table class="table display data-table text-nowrap" id="studentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Roll Number</th>
+                                        <th>Section</th>
+                                        <th>Parent Contact</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td><span class="badge badge-info">{{ student.student_id }}</span></td>
+                                        <td>
+                                            <div class="student-info">
+                                                {% if student.photo %}
+                                                <img src="{{ student.photo.url }}" alt="{{ student.full_name }}"
+                                                    class="student-avatar">
+                                                {% else %}
+                                                <div class="student-avatar bg-light d-flex align-items-center justify-content-center"
+                                                    style="background: #f3f4f6 !important; width: 35px; height: 35px; border-radius: 50%;">
+                                                    <i class="fas fa-user text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="student-name">{{ student.full_name }}</div>
+                                                    <div class="student-id">{{ student.student_id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>{{ student.roll_number|default:"-" }}</td>
+                                        <td>
+                                            {% if student.current_section %}
+                                            <span class="badge badge-purple">{{ student.current_section.name }}</span>
+                                            {% else %}
+                                            <span class="badge badge-secondary">Not Assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if student.guardian_phone %}
+                                            <i class="fas fa-phone-alt mr-1 text-muted"></i>{{ student.guardian_phone }}
+                                            {% else %}
+                                            -
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-light dropdown-toggle" type="button"
+                                                    data-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-ellipsis-v"></i>
+                                                </button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item"
+                                                        href="{% url 'student_details' student.student_id %}">
+                                                        <i class="fas fa-eye text-info"></i> View Details
+                                                    </a>
+                                                    <a class="dropdown-item" href="#"
+                                                        onclick="alert('Edit student functionality coming soon!'); return false;">
+                                                        <i class="fas fa-edit text-warning"></i> Edit
+                                                    </a>
+                                                    <div class="dropdown-divider"></div>
+                                                    <a class="dropdown-item text-danger" href="#"
+                                                        onclick="alert('Remove from class functionality coming soon!'); return false;">
+                                                        <i class="fas fa-user-minus"></i> Remove from Class
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% if all_students_count > 10 %}
+                        <div class="text-center mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                onclick="alert('View all students functionality coming soon!'); return false;">
+                                View All {{ all_students_count }} Students
+                            </a>
+                        </div>
+                        {% endif %}
+
+                        {% else %}
+                        <div class="empty-state-small">
+                            <i class="fas fa-user-graduate"></i>
+                            <h5>No Students Enrolled</h5>
+                            <p>This class currently has no students enrolled.</p>
+                            <a href="#" class="btn btn-sm btn-primary"
+                                onclick="alert('Add students functionality coming soon!'); return false;">Add
+                                Students</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mg-t-30 mg-b-30">
+                <div class="col-12">
+                    <div class="action-buttons">
+                        <a href="{% url 'edit_class' class_obj.id %}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i> Edit Class
+                        </a>
+                        <button type="button" class="btn-action btn-delete" data-toggle="modal"
+                            data-target="#deleteClassModal">
+                            <i class="fas fa-trash"></i> Delete Class
+                        </button>
+                        <a href="{% url 'manage_classes' %}" class="btn-action btn-back">
+                            <i class="fas fa-arrow-left"></i> Back to Classes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteClassModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete class <strong>{{ class_obj.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    This action cannot be undone. All associated data will be permanently deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_class' class_obj.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-2"></i>Delete Class
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add quick action modals if needed -->
+<div class="modal fade" id="addSectionModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Section</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Add section functionality will be implemented here.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable for students table if it exists
+        if ($('#studentsTable').length && !$.fn.dataTable.isDataTable('#studentsTable')) {
+            $('#studentsTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                "responsive": true,
+                "language": {
+                    "search": "Search students:",
+                    "lengthMenu": "Show _MENU_ entries",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ students",
+                    "infoEmpty": "Showing 0 to 0 of 0 students",
+                    "infoFiltered": "(filtered from _MAX_ total students)",
+                    "zeroRecords": "No matching students found",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "<i class='fas fa-chevron-right'></i>",
+                        "previous": "<i class='fas fa-chevron-left'></i>"
+                    }
+                },
+                "columnDefs": [
+                    {
+                        "targets": [6],
+                        "orderable": false
+                    }
+                ]
+            });
+        }
+
+        // Initialize tooltips if using Bootstrap tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
+        // Handle delete button click
+        $('.btn-delete').on('click', function (e) {
+            if (!$(this).data('toggle')) {
+                // For inline confirmation without modal
+                if (!confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        // Handle dropdown menu clicks to prevent event bubbling
+        $('.dropdown-menu').on('click', function (e) {
+            e.stopPropagation();
+        });
+    });
+
+    // Function to show add section modal
+    function showAddSectionModal() {
+        $('#addSectionModal').modal('show');
+    }
+
+    // Function to show add student modal
+    function showAddStudentModal() {
+        alert('Add student functionality coming soon!');
+    }
+
+    // Function to handle edit class
+    function editClass(classId) {
+        window.location.href = '/dashboard/academic/classes/' + classId + '/edit/';
+    }
+
+    // Function to handle delete class with confirmation
+    function deleteClass(classId, className) {
+        if (confirm('Are you sure you want to delete class "' + className + '"? This action cannot be undone.')) {
+            window.location.href = '/dashboard/academic/classes/' + classId + '/delete/';
+        }
+    }
+</script>
+{% endblock %}

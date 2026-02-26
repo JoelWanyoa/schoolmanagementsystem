@@ -1,0 +1,635 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | {{ title }}{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'css/select2.min.css' %}">
+<style>
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px 25px;
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .form-header h4 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin: 0;
+        color: white;
+    }
+
+    .form-header .btn-back {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-header .btn-back:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-5px);
+        color: white;
+        text-decoration: none;
+    }
+
+    .form-body {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #4b5563;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-group label i {
+        color: #667eea;
+        margin-right: 8px;
+    }
+
+    .required-star {
+        color: #dc2626;
+        margin-left: 4px;
+    }
+
+    .form-control,
+    .select2-container--default .select2-selection--single {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        padding: 10px 15px !important;
+        height: 45px !important;
+        width: 100%;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus,
+    .select2-container--default .select2-selection--single:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6b7280;
+        margin-top: 5px;
+    }
+
+    .form-text i {
+        color: #667eea;
+        margin-right: 5px;
+    }
+
+    .code-suggestions {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .code-suggestion {
+        display: inline-block;
+        padding: 6px 15px;
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #4b5563;
+        margin: 0 5px 5px 0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .code-suggestion:hover {
+        border-color: #667eea;
+        color: #667eea;
+        background: #eef2ff;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #f0f1f3;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .btn-action {
+        padding: 12px 30px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+    }
+
+    .btn-primary-action {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary-action:hover {
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-action {
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-secondary-action:hover {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .btn-danger-action {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 2px solid #fee2e2;
+    }
+
+    .btn-danger-action:hover {
+        background: #dc2626;
+        color: white;
+        border-color: #dc2626;
+    }
+
+    .alert {
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border: none;
+    }
+
+    .alert-danger {
+        background: #fef2f2;
+        color: #991b1b;
+        border-left: 4px solid #dc2626;
+    }
+
+    .alert-danger ul {
+        margin-top: 10px;
+        margin-bottom: 0;
+        padding-left: 20px;
+    }
+
+    .alert-danger li {
+        margin: 5px 0;
+    }
+
+    .is-invalid {
+        border-color: #dc2626 !important;
+    }
+
+    .invalid-feedback {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 5px;
+    }
+
+    /* Select2 customization */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 41px !important;
+        color: #333 !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 41px !important;
+        right: 10px !important;
+    }
+
+    .select2-dropdown {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .select2-results__option {
+        padding: 10px 15px !important;
+    }
+
+    .select2-results__option--highlighted {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+
+    /* Delete confirmation modal */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+    }
+
+    .modal-header .close {
+        color: white;
+        opacity: 1;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #e5e7eb;
+        padding: 15px 20px;
+    }
+
+    .badge-info {
+        background: #eef2ff;
+        color: #4f46e5;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>{{ title }}</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'manage_classes' %}">Manage Classes</a></li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+
+            <!-- Form Card -->
+            <div class="row">
+                <div class="col-lg-10 mx-auto">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h4><i class="fas fa-{% if class_obj %}edit{% else %}plus-circle{% endif %} mr-2"></i>{{ title }}</h4>
+                            <a href="{% url 'manage_classes' %}" class="btn-back">
+                                <i class="fas fa-arrow-left"></i> Back to Classes
+                            </a>
+                        </div>
+
+                        <div class="form-body">
+                            {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                <strong>Please correct the errors below:</strong>
+                                <ul>
+                                    {% for field in form %}
+                                    {% for error in field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                                    {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            <form method="POST" id="classForm">
+                                {% csrf_token %}
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.name.id_for_label }}">
+                                                <i class="fas fa-school"></i>Class Name <span
+                                                    class="required-star">*</span>
+                                            </label>
+                                            {{ form.name }}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>e.g., Primary - Grade 1, ECDE - PP1
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.code.id_for_label }}">
+                                                <i class="fas fa-qrcode"></i>Class Code <span
+                                                    class="required-star">*</span>
+                                            </label>
+                                            {{ form.code }}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>Max 10 characters
+                                            </div>
+                                            <div class="code-suggestions">
+                                                <small class="text-muted d-block mb-2">
+                                                    <i class="fas fa-lightbulb"></i> Common codes:
+                                                </small>
+                                                {% for common_code in common_codes %}
+                                                <span class="code-suggestion" data-code="{{ common_code.0 }}"
+                                                    data-level="{{ common_code.1 }}">
+                                                    {{ common_code.0 }}
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.level_category.id_for_label }}">
+                                                <i class="fas fa-layer-group"></i>Level Category <span
+                                                    class="required-star">*</span>
+                                            </label>
+                                            {{ form.level_category }}
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.grade_level.id_for_label }}">
+                                                <i class="fas fa-chart-line"></i>Grade Level <span
+                                                    class="required-star">*</span>
+                                            </label>
+                                            {{ form.grade_level }}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.capacity.id_for_label }}">
+                                                <i class="fas fa-users"></i>Capacity <span
+                                                    class="required-star">*</span>
+                                            </label>
+                                            {{ form.capacity }}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>Maximum number of students
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="{{ form.class_teacher.id_for_label }}">
+                                                <i class="fas fa-user-tie"></i>Class Teacher
+                                            </label>
+                                            {{ form.class_teacher }}
+                                            <div class="form-text">
+                                                <i class="fas fa-info-circle"></i>Optional - select a class teacher
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="action-buttons">
+                                    <button type="submit" class="btn-action btn-primary-action">
+                                        <i class="fas fa-save"></i> {{ class_obj|yesno:"Update Class,Create Class" }}
+                                    </button>
+
+                                    <a href="{% url 'manage_classes' %}" class="btn-action btn-secondary-action">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+
+                                    {% if class_obj %}
+                                    <button type="button" class="btn-action btn-danger-action ms-auto"
+                                        data-toggle="modal" data-target="#deleteClassModal">
+                                        <i class="fas fa-trash"></i> Delete Class
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if class_obj %}
+<div class="modal fade" id="deleteClassModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle mr-2"></i>Confirm Delete</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete class <strong>{{ class_obj.name }}</strong>?</p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    This action cannot be undone. All associated data will be permanently deleted.
+                </div>
+                <div class="bg-light p-3 rounded">
+                    <p class="mb-2"><strong>Class Details:</strong></p>
+                    <p class="mb-1"><i class="fas fa-code mr-2"></i>Code: {{ class_obj.code }}</p>
+                    <p class="mb-1"><i class="fas fa-layer-group mr-2"></i>Level: {{
+                        class_obj.get_level_category_display }}</p>
+                    <p class="mb-1"><i class="fas fa-chart-line mr-2"></i>Grade: {{ class_obj.get_grade_level_display }}
+                    </p>
+                    <p class="mb-0"><i class="fas fa-users mr-2"></i>Students: {{ class_obj.students.count }}</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <form method="POST" action="{% url 'delete_class' class_obj.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash mr-2"></i>Delete Class
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/select2.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize Select2 for better dropdowns
+        $('select').not('[multiple]').select2({
+            width: '100%',
+            placeholder: 'Select an option',
+            allowClear: true
+        });
+
+        // Add Bootstrap classes to form fields
+        $('input, select, textarea').addClass('form-control');
+
+        // Map common codes to level categories
+        const codeToLevelMap = {
+            'PP1': 'ECDE', 'PP2': 'ECDE',
+            'ECD1': 'ECDE', 'ECD2': 'ECDE',
+            'K1': 'ECDE', 'K2': 'ECDE',
+            '1': 'PRIMARY', 'G1': 'PRIMARY', 'P1': 'PRIMARY',
+            '2': 'PRIMARY', 'G2': 'PRIMARY', 'P2': 'PRIMARY',
+            '3': 'PRIMARY', 'G3': 'PRIMARY', 'P3': 'PRIMARY',
+            '4': 'PRIMARY', 'G4': 'PRIMARY', 'P4': 'PRIMARY',
+            '5': 'PRIMARY', 'G5': 'PRIMARY', 'P5': 'PRIMARY',
+            '6': 'PRIMARY', 'G6': 'PRIMARY', 'P6': 'PRIMARY',
+            '7': 'JUNIOR_SECONDARY', 'G7': 'JUNIOR_SECONDARY', 'JS1': 'JUNIOR_SECONDARY',
+            '8': 'JUNIOR_SECONDARY', 'G8': 'JUNIOR_SECONDARY', 'JS2': 'JUNIOR_SECONDARY',
+            '9': 'JUNIOR_SECONDARY', 'G9': 'JUNIOR_SECONDARY', 'JS3': 'JUNIOR_SECONDARY',
+            'JSS1': 'JUNIOR_SECONDARY', 'JSS2': 'JUNIOR_SECONDARY', 'JSS3': 'JUNIOR_SECONDARY'
+        };
+
+        const codeToGradeMap = {
+            'PP1': 'PP1', 'ECD1': 'PP1', 'K1': 'PP1',
+            'PP2': 'PP2', 'ECD2': 'PP2', 'K2': 'PP2',
+            '1': '1', 'G1': '1', 'P1': '1',
+            '2': '2', 'G2': '2', 'P2': '2',
+            '3': '3', 'G3': '3', 'P3': '3',
+            '4': '4', 'G4': '4', 'P4': '4',
+            '5': '5', 'G5': '5', 'P5': '5',
+            '6': '6', 'G6': '6', 'P6': '6',
+            '7': '7', 'G7': '7', 'JS1': '7', 'JSS1': '7',
+            '8': '8', 'G8': '8', 'JS2': '8', 'JSS2': '8',
+            '9': '9', 'G9': '9', 'JS3': '9', 'JSS3': '9'
+        };
+
+        // Click common codes to fill the code field and auto-select level category
+        $(document).on('click', '.code-suggestion', function () {
+            const code = $(this).text().trim();
+            $('#id_code').val(code).trigger('change');
+            autoDetectLevelAndGrade(code);
+        });
+
+        // Auto-detect when code field changes
+        $('#id_code').on('change blur', function () {
+            const code = $(this).val().toUpperCase().trim();
+            if (code) {
+                autoDetectLevelAndGrade(code);
+            }
+        });
+
+        // Real-time validation for code field
+        $('#id_code').on('input', function () {
+            const code = $(this).val();
+            if (code.length > 10) {
+                $(this).addClass('is-invalid');
+                if (!$('#code-error').length) {
+                    $(this).after('<div id="code-error" class="invalid-feedback">Class code must be 10 characters or less.</div>');
+                }
+            } else {
+                $(this).removeClass('is-invalid');
+                $('#code-error').remove();
+            }
+        });
+
+        // Auto-generate name when level or grade changes
+        $('#id_level_category, #id_grade_level').on('change', function () {
+            const levelText = $('#id_level_category option:selected').text();
+            const gradeText = $('#id_grade_level option:selected').text();
+
+            if (levelText && gradeText && levelText !== '---------') {
+                $('#id_name').val(`${levelText} - ${gradeText}`);
+            }
+        });
+
+        function autoDetectLevelAndGrade(code) {
+            let detectedLevel = null;
+            let detectedGrade = null;
+
+            // Check for exact matches
+            if (codeToLevelMap[code]) {
+                detectedLevel = codeToLevelMap[code];
+                detectedGrade = codeToGradeMap[code] || null;
+            } else {
+                // Check patterns
+                if (code.startsWith('PP') || code.startsWith('ECD') || code.startsWith('K')) {
+                    detectedLevel = 'ECDE';
+                    const gradeMatch = code.match(/\d+/);
+                    if (gradeMatch) {
+                        detectedGrade = gradeMatch[0] === '1' ? 'PP1' : 'PP2';
+                    }
+                } else if (code.startsWith('G') || code.startsWith('P') || /^[1-6]$/.test(code)) {
+                    detectedLevel = 'PRIMARY';
+                    const gradeMatch = code.match(/\d+/);
+                    if (gradeMatch && gradeMatch[0] >= 1 && gradeMatch[0] <= 6) {
+                        detectedGrade = gradeMatch[0];
+                    }
+                } else if (code.startsWith('JS') || code.startsWith('JSS') || /^[7-9]$/.test(code)) {
+                    detectedLevel = 'JUNIOR_SECONDARY';
+                    const gradeMatch = code.match(/\d+/);
+                    if (gradeMatch && gradeMatch[0] >= 7 && gradeMatch[0] <= 9) {
+                        detectedGrade = gradeMatch[0];
+                    }
+                }
+            }
+
+            if (detectedLevel) {
+                $('#id_level_category').val(detectedLevel).trigger('change');
+            }
+
+            if (detectedGrade) {
+                $('#id_grade_level').val(detectedGrade).trigger('change');
+            }
+        }
+
+        // Prevent form double submission
+        $('#classForm').on('submit', function () {
+            $(this).find('button[type="submit"]').prop('disabled', true);
+        });
+
+        // Initialize with existing values if editing
+        {% if class_obj %}
+        // Trigger change events to ensure proper display
+        $('#id_level_category, #id_grade_level').trigger('change');
+        {% endif %}
+    });
+</script>
+{% endblock %}

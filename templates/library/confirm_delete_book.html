@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Delete Book{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_books' %}">Books</a>
+                    </li>
+                    <li>Delete Book</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Confirm Deletion</h3>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger">
+                        <h4><i class="fas fa-exclamation-triangle"></i> Warning!</h4>
+                        <p>Are you sure you want to delete <strong>"{{ book.title }}"</strong>?</p>
+                        <p>(ISBN: {{ book.isbn }})</p>
+                        <p>This action cannot be undone. All borrowing records associated with this book will also be
+                            affected.</p>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mg-t-8">
+                            <button type="submit" class="btn-fill-lg bg-danger btn-hover-yellow text-white">Delete
+                                Permanently</button>
+                            <a href="{% url 'book_detail' book.id %}"
+                                class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Edit Grading Scale{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Examinations</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'exam_grades' %}">Grading System</a>
+                    </li>
+                    <li>Edit Grading Scale</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Edit Grade: {{ grade.grade }}</h3>
+                        </div>
+                    </div>
+                    <form class="new-added-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Scale Name *</label>
+                                {{ form.name }}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Grade (A, B, C...) *</label>
+                                {{ form.grade }}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Min Mark *</label>
+                                {{ form.min_mark }}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Max Mark *</label>
+                                {{ form.max_mark }}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Grade Points *</label>
+                                {{ form.points }}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Remarks *</label>
+                                {{ form.remarks }}
+                            </div>
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit"
+                                    class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Update</button>
+                                <a href="{% url 'exam_grades' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

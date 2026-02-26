@@ -7,10 +7,10 @@
 {% block content %}
 <div id="wrapper" class="wrapper bg-ash">
     {% include 'includes/header.html' %}
-    
+
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
-        
+
         <div class="dashboard-content-one">
             <div class="breadcrumbs-area">
                 <h3>Messaging</h3>
@@ -25,18 +25,18 @@
                 {% if messages %}
                 <div id="messageList">
                     {% for message in messages %}
-                        <div class="message">
-                            <!-- existing message content -->
-                            {% if message.file %}
-                                <div class="file-attachment">
-                                    <i class="fas fa-paperclip"></i>
-                                    <a href="{% url 'download_message_file' message.id %}" target="_blank">
-                                        {{ message.file.name|cut:"message_files/" }}
-                                    </a>
-                                    <small>({{ message.file.size|filesizeformat }})</small>
-                                </div>
-                            {% endif %}
+                    <div class="message">
+                        <!-- existing message content -->
+                        {% if message.file %}
+                        <div class="file-attachment">
+                            <i class="fas fa-paperclip"></i>
+                            <a href="{% url 'download_message_file' message.id %}" target="_blank">
+                                {{ message.file.name|cut:"message_files/" }}
+                            </a>
+                            <small>({{ message.file.size|filesizeformat }})</small>
                         </div>
+                        {% endif %}
+                    </div>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -52,8 +52,12 @@
                                     <h3>Conversations</h3>
                                 </div>
                                 <div class="dropdown">
-                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                        aria-expanded="false">...</a>
                                     <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="#" id="newChat">
+                                            <i class="fas fa-sms text-success"></i> New Chat
+                                        </a>
                                         <a class="dropdown-item" href="#" id="markAllRead">
                                             <i class="fas fa-check-double text-success"></i> Mark All Read
                                         </a>
@@ -63,85 +67,89 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Search Box -->
                             <div class="search-box mb-3">
                                 <i class="fas fa-search"></i>
-                                <input type="text" class="form-control" id="messageSearch" placeholder="Search conversations...">
+                                <input type="text" class="form-control" id="messageSearch"
+                                    placeholder="Search conversations...">
                             </div>
 
                             <!-- Conversations List -->
                             <div class="conversations-list" id="conversationsContainer">
                                 {% if conversations %}
-                                    {% for conversation in conversations %}
-                                    <div class="conversation-item {% if conversation.unread_count > 0 %}unread{% endif %}" 
-                                         data-user-id="{{ conversation.user.id }}"
-                                         data-user-type="{{ conversation.user_type }}"
-                                         data-search="{{ conversation.user.get_full_name|default:conversation.user.username }} {{ conversation.latest_message.content }}">
-                                        <div class="conversation-avatar">
-                                            {% if conversation.user.teacher and conversation.user.teacher.photo %}
-                                                <img src="{{ conversation.user.teacher.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
-                                            {% elif conversation.user.student and conversation.user.student.photo %}
-                                                <img src="{{ conversation.user.student.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
-                                            {% elif conversation.user.parent and conversation.user.parent.photo %}
-                                                <img src="{{ conversation.user.parent.photo.url }}" alt="{{ conversation.user.get_full_name|default:conversation.user.username }}">
-                                            {% else %}
-                                                {% with full_name=conversation.user.get_full_name|default:conversation.user.username %}
-                                                <div class="avatar-initials {{ conversation.user_type|lower }}-bg" title="{{ full_name }}">
-                                                    {{ full_name|get_initials }}
-                                                </div>
-                                                {% endwith %}
-                                            {% endif %}
-                                            {% if conversation.is_online %}
-                                            <span class="online-indicator" title="Online"></span>
-                                            {% else %}
-                                            <span class="offline-indicator" title="Offline"></span>
-                                            {% endif %}
+                                {% for conversation in conversations %}
+                                {% with full_name=conversation.user.get_full_name|default:conversation.user.username %}
+                                <div class="conversation-item {% if conversation.unread_count > 0 %}unread{% endif %}"
+                                    data-user-id="{{ conversation.user.id }}"
+                                    data-user-type="{{ conversation.user_type }}"
+                                    data-search="{{ full_name }} {{ conversation.latest_message.content }}">
+                                    <div class="conversation-avatar">
+                                        {% if conversation.user.teacher and conversation.user.teacher.photo %}
+                                        <img src="{{ conversation.user.teacher.photo.url }}" alt="{{ full_name }}">
+                                        {% elif conversation.user.student and conversation.user.student.photo %}
+                                        <img src="{{ conversation.user.student.photo.url }}" alt="{{ full_name }}">
+                                        {% elif conversation.user.parent and conversation.user.parent.photo %}
+                                        <img src="{{ conversation.user.parent.photo.url }}" alt="{{ full_name }}">
+                                        {% else %}
+                                        <div class="avatar-initials {{ conversation.user_type|lower }}-bg"
+                                            title="{{ full_name }}">
+                                            {{ full_name|get_initials }}
                                         </div>
-                                        <div class="conversation-content">
-                                            <div class="conversation-header">
-                                                <h5 class="conversation-name">{{ conversation.user.get_full_name|default:conversation.user.username }}</h5>
-                                                <span class="conversation-time">
-                                                    {% if conversation.latest_message %}
-                                                        {{ conversation.latest_message.sent_date|timesince }} ago
-                                                    {% endif %}
-                                                </span>
-                                            </div>
-                                            <p class="conversation-preview">
+                                        {% endif %}
+                                        {% if conversation.is_online %}
+                                        <span class="online-indicator" title="Online"></span>
+                                        {% else %}
+                                        <span class="offline-indicator" title="Offline"></span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="conversation-content">
+                                        <div class="conversation-header">
+                                            <h5 class="conversation-name">{{ full_name }}</h5>
+                                            <span class="conversation-time">
                                                 {% if conversation.latest_message %}
-                                                    {% if conversation.latest_message.file %}
-                                                        <i class="fas fa-paperclip mr-1"></i> 
-                                                        {% if conversation.latest_message.file.name %}
-                                                            {{ conversation.latest_message.file.name|cut:"message_files/"|truncatechars:20 }}
-                                                        {% else %}
-                                                            File attached
-                                                        {% endif %}
-                                                    {% else %}
-                                                        {{ conversation.latest_message.content|truncatewords:12 }}
-                                                    {% endif %}
-                                                {% else %}
-                                                    <span class="no-messages">No messages yet</span>
+                                                {{ conversation.latest_message.sent_date|timesince }} ago
                                                 {% endif %}
-                                            </p>
-                                            <div class="conversation-footer">
-                                                <span class="conversation-badge {{ conversation.user_type|lower }}">
-                                                    {{ conversation.user_type }}
-                                                </span>
-                                                {% if conversation.unread_count > 0 %}
-                                                <span class="unread-count">{{ conversation.unread_count }}</span>
-                                                {% endif %}
-                                            </div>
+                                            </span>
+                                        </div>
+                                        <!-- In conversations list - Update the conversation preview -->
+                                        <!-- In conversations list - Update the conversation preview -->
+                                        <p class="conversation-preview">
+                                            {% if conversation.latest_message %}
+                                            {% if conversation.latest_message.file %}
+                                            <i class="fas fa-paperclip mr-1"></i>
+                                            {% if conversation.latest_message.file.name %}
+                                            {{conversation.latest_message.file.name|cut:"message_files/"|truncatechars:20}}
+                                            {% else %}
+                                            File attached
+                                            {% endif %}
+                                            {% else %}
+                                            {{ conversation.latest_message.content|truncatewords:12 }}
+                                            {% endif %}
+                                            {% else %}
+                                            <span class="no-messages">No messages yet</span>
+                                            {% endif %}
+                                        </p>
+                                        <div class="conversation-footer">
+                                            <span class="conversation-badge {{ conversation.user_type|lower }}">
+                                                {{ conversation.user_type }}
+                                            </span>
+                                            {% if conversation.unread_count > 0 %}
+                                            <span class="unread-count">{{ conversation.unread_count }}</span>
+                                            {% endif %}
                                         </div>
                                     </div>
-                                    {% endfor %}
+                                </div>
+                                {% endwith %}
+                                {% endfor %}
                                 {% else %}
-                                    <div class="empty-conversations">
-                                        <div class="empty-icon">
-                                            <i class="fas fa-comments"></i>
-                                        </div>
-                                        <h5>No Conversations</h5>
-                                        <p>Start a new conversation by sending a message.</p>
+                                <div class="empty-conversations">
+                                    <div class="empty-icon">
+                                        <i class="fas fa-comments"></i>
                                     </div>
+                                    <h5>No Conversations</h5>
+                                    <p>Start a new conversation by sending a message.</p>
+                                </div>
                                 {% endif %}
                             </div>
                         </div>
@@ -162,17 +170,18 @@
                                     </div>
                                     <div class="thread-details">
                                         <h4 id="threadParticipant">Select a conversation</h4>
-                                        <span class="thread-status" id="threadStatus">Choose a conversation to start messaging</span>
+                                        <span class="thread-status" id="threadStatus">Choose a conversation to start
+                                            messaging</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- New Message Button - Only shows when NO conversation is selected -->
                                 <div class="thread-actions" id="newMessageAction">
                                     <button class="btn-new-message-circle" id="newMessageBtn" title="New Message">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </div>
-                                
+
                                 <!-- Conversation Actions - Only shows when a conversation IS selected -->
                                 <div class="thread-actions" id="conversationActions" style="display: none;">
                                     <button class="btn btn-icon" title="User Info" id="userInfoBtn">
@@ -192,7 +201,7 @@
                                     <h5>No Conversation Selected</h5>
                                     <p>Select a conversation from the list to view messages</p>
                                 </div>
-                                
+
                                 <div class="message-container" id="messageContainer" style="display: none;">
                                     <!-- Messages will be loaded here via AJAX -->
                                 </div>
@@ -203,13 +212,15 @@
                                 <div class="message-input-actions">
                                     <!-- File Attachment -->
                                     <div class="file-attachment-wrapper">
-                                        <input type="file" id="fileInput" multiple style="display: none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                                        <input type="file" id="fileInput" multiple style="display: none;"
+                                            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
                                         <button class="btn btn-icon" title="Attach File" id="attachFileBtn">
                                             <i class="fas fa-paperclip"></i>
                                         </button>
-                                        <div class="file-preview-container" id="filePreviewContainer" style="display: none;"></div>
+                                        <div class="file-preview-container" id="filePreviewContainer"
+                                            style="display: none;"></div>
                                     </div>
-                                    
+
                                     <!-- Emoji Picker -->
                                     <div class="emoji-picker-wrapper">
                                         <button class="btn btn-icon" title="Add Emoji" id="emojiBtn">
@@ -217,7 +228,8 @@
                                         </button>
                                         <div class="emoji-picker" id="emojiPicker" style="display: none;">
                                             <div class="emoji-categories">
-                                                <button class="emoji-category-btn active" data-category="smileys">😀</button>
+                                                <button class="emoji-category-btn active"
+                                                    data-category="smileys">😀</button>
                                                 <button class="emoji-category-btn" data-category="people">👋</button>
                                                 <button class="emoji-category-btn" data-category="nature">🐶</button>
                                                 <button class="emoji-category-btn" data-category="food">🍎</button>
@@ -233,7 +245,8 @@
                                     </div>
                                 </div>
                                 <div class="message-input">
-                                    <textarea class="form-control" id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                                    <textarea class="form-control" id="messageInput" placeholder="Type your message..."
+                                        rows="1"></textarea>
                                     <div class="message-char-count">
                                         <span id="currentCharCount">0</span>/1000
                                     </div>
@@ -247,6 +260,69 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newChatModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Chat</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="NewChatForm" method="POST" action="{% url 'messaging' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Select Recipient</label>
+                            <select class="form-control" name="receiver" required>
+                                <option value="">Choose a recipient</option>
+                                {% for user in users %}
+                                <option value="{{ user.id }}">
+                                    {{ user.get_full_name|default:user.username }}
+                                    ({% if user.teacher %}Teacher{% elif user.student %}Student{% elif user.parent
+                                    %}Parent{% elif user.is_staff %}Staff{% else %}User{% endif %})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Message Subject</label>
+                            <input type="text" class="form-control" name="subject" placeholder="Enter message subject">
+                        </div>
+                        <div class="form-group">
+                            <label>Message</label>
+                            <textarea class="form-control" name="content" rows="6"
+                                placeholder="Type your message here..." required></textarea>
+                            <div class="char-counter">
+                                <span id="messageCharCount">0</span>/1000 characters
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Attach Files (Optional)</label>
+                            <input type="file" class="form-control" name="attachments" multiple
+                                accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                            <small class="form-text text-muted">You can attach multiple files. Maximum file size: 10MB
+                                each.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -271,8 +347,9 @@
                             <option value="">Choose a recipient</option>
                             {% for user in users %}
                             <option value="{{ user.id }}">
-                                {{ user.get_full_name|default:user.username }} 
-                                ({% if user.teacher %}Teacher{% elif user.student %}Student{% elif user.parent %}Parent{% elif user.is_staff %}Staff{% else %}User{% endif %})
+                                {{ user.get_full_name|default:user.username }}
+                                ({% if user.teacher %}Teacher{% elif user.student %}Student{% elif user.parent
+                                %}Parent{% elif user.is_staff %}Staff{% else %}User{% endif %})
                             </option>
                             {% endfor %}
                         </select>
@@ -283,15 +360,18 @@
                     </div>
                     <div class="form-group">
                         <label>Message</label>
-                        <textarea class="form-control" name="content" rows="6" placeholder="Type your message here..." required></textarea>
+                        <textarea class="form-control" name="content" rows="6" placeholder="Type your message here..."
+                            required></textarea>
                         <div class="char-counter">
                             <span id="messageCharCount">0</span>/1000 characters
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Attach Files (Optional)</label>
-                        <input type="file" class="form-control" name="attachments" multiple accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
-                        <small class="form-text text-muted">You can attach multiple files. Maximum file size: 10MB each.</small>
+                        <input type="file" class="form-control" name="attachments" multiple
+                            accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+                        <small class="form-text text-muted">You can attach multiple files. Maximum file size: 10MB
+                            each.</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -337,31 +417,31 @@
 <script>
     // CSRF token setup for AJAX
     // CSRF token setup for AJAX
-function getCSRFToken() {
-    // Try to get from cookie first
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, 10) === 'csrftoken=') {
-                cookieValue = decodeURIComponent(cookie.substring(10));
-                break;
+    function getCSRFToken() {
+        // Try to get from cookie first
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
             }
         }
-    }
-    
-    // If not found in cookie, try to get from form input
-    if (!cookieValue) {
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfInput) {
-            cookieValue = csrfInput.value;
+
+        // If not found in cookie, try to get from form input
+        if (!cookieValue) {
+            const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (csrfInput) {
+                cookieValue = csrfInput.value;
+            }
         }
+
+        return cookieValue;
     }
-    
-    return cookieValue;
-}
-    
+
     // Show message function
     function showMessage(message, type = 'success') {
         const alertClass = type === 'error' ? 'danger' : type;
@@ -373,18 +453,18 @@ function getCSRFToken() {
                 </button>
             </div>
         `;
-        
+
         $('#ajaxMessages').html(messageHtml);
-        
+
         setTimeout(() => {
             $('.alert').alert('close');
         }, 5000);
     }
-    
+
     // Function to get initials from full name (first and last name)
     function getInitials(fullName) {
         if (!fullName) return 'U';
-        
+
         const names = fullName.trim().split(' ');
         if (names.length === 1) {
             return names[0].charAt(0).toUpperCase();
@@ -392,55 +472,87 @@ function getCSRFToken() {
             return (names[0].charAt(0) + names[names.length - 1].charAt(0)).toUpperCase();
         }
     }
-    
+
     // Function to get avatar color based on user type
     function getAvatarColor(userType) {
         const colorMap = {
             'TEACHER': 'teacher-bg',
-            'STUDENT': 'student-bg', 
+            'STUDENT': 'student-bg',
             'PARENT': 'parent-bg',
             'STAFF': 'staff-bg',
             'USER': 'user-bg'
         };
         return colorMap[userType] || 'default-bg';
     }
-    
+
     // Function to update thread avatar
     function updateThreadAvatar(userType, userName = '', isOnline = false) {
         const threadAvatarInitials = $('#threadAvatarInitials');
         const threadStatus = $('#threadStatus');
-        
+
         const initials = userName ? getInitials(userName) : 'U';
         const bgColor = getAvatarColor(userType);
         const statusText = isOnline ? 'Online' : 'Offline';
         const statusClass = isOnline ? 'online' : 'offline';
-        
+
         threadAvatarInitials.text(initials).attr('class', `avatar-initials ${bgColor}`);
         threadStatus.text(statusText).attr('class', `thread-status ${statusClass}`);
     }
-    
-    // Format message time to be more readable
+
+    // Format message time to be more readable - FIXED VERSION
     function formatMessageTime(dateString) {
-        const date = new Date(dateString);
+        console.log('DEBUG: Formatting time for:', dateString);
+
+        if (!dateString) {
+            return 'Just now';
+        }
+
+        // Handle different date string formats
+        let date;
+        if (dateString.includes('T')) {
+            // ISO format with T (from server)
+            date = new Date(dateString);
+        } else if (dateString.includes(' ')) {
+            // Custom format with space (fallback)
+            date = new Date(dateString.replace(' ', 'T'));
+        } else {
+            // Fallback - try parsing as is
+            date = new Date(dateString);
+        }
+
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            console.error('DEBUG: Invalid date:', dateString);
+            return 'Just now';
+        }
+
         const now = new Date();
         const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        
+        const diffSecs = Math.floor(diffMs / 1000);
+        const diffMins = Math.floor(diffSecs / 60);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+
+        console.log('DEBUG: Time differences - secs:', diffSecs, 'mins:', diffMins, 'hours:', diffHours, 'days:', diffDays);
+
         if (diffMins < 1) {
-            return 'Just now';
+            return '0 minutes ago';
         } else if (diffMins < 60) {
-            return `${diffMins}m ago`;
+            return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
         } else if (diffHours < 24) {
-            return `${diffHours}h ago`;
+            return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
         } else if (diffDays < 7) {
-            return `${diffDays}d ago`;
+            return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
         } else {
-            return date.toLocaleDateString();
+            // Format as date for older messages
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: diffDays > 365 ? 'numeric' : undefined
+            });
         }
     }
-    
+
     // Function to get file icon based on file type
     function getFileIcon(fileType) {
         if (fileType.startsWith('image/')) return 'far fa-image';
@@ -452,7 +564,7 @@ function getCSRFToken() {
         if (fileType.includes('zip') || fileType.includes('compressed')) return 'far fa-file-archive';
         return 'far fa-file';
     }
-    
+
     // Function to format file size
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
@@ -461,12 +573,12 @@ function getCSRFToken() {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-    
+
     // Function to toggle action buttons based on conversation state
     function toggleActionButtons(hasConversation) {
         const newMessageAction = $('#newMessageAction');
         const conversationActions = $('#conversationActions');
-        
+
         if (hasConversation) {
             // Hide new message button, show conversation actions
             newMessageAction.hide();
@@ -477,11 +589,11 @@ function getCSRFToken() {
             conversationActions.hide();
         }
     }
-    
+
     let currentConversationUserId = null;
     let currentOtherUser = null;
     let attachedFiles = [];
-    
+
     // Emoji data
     const emojiData = {
         'smileys': ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳'],
@@ -493,55 +605,55 @@ function getCSRFToken() {
         'symbols': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉️', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐'],
         'flags': ['🎌', '🏴', '🏁', '🚩', '🏳️', '🏳️‍🌈', '🏳️‍⚧️', '🏴‍☠️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪']
     };
-    
-    $(document).ready(function() {
+
+    $(document).ready(function () {
         // Initialize - no conversation selected
         toggleActionButtons(false);
-        
+
         // Initialize emoji picker
         initializeEmojiPicker();
-        
+
         // File attachment functionality
-        $('#attachFileBtn').on('click', function() {
+        $('#attachFileBtn').on('click', function () {
             $('#fileInput').click();
         });
-        
-        $('#fileInput').on('change', function(e) {
+
+        $('#fileInput').on('change', function (e) {
             handleFileSelection(e.target.files);
         });
-        
+
         // Emoji picker functionality
-        $('#emojiBtn').on('click', function() {
+        $('#emojiBtn').on('click', function () {
             $('#emojiPicker').toggle();
         });
-        
+
         // Close emoji picker when clicking outside
-        $(document).on('click', function(e) {
+        $(document).on('click', function (e) {
             if (!$(e.target).closest('.emoji-picker-wrapper').length) {
                 $('#emojiPicker').hide();
             }
         });
-        
+
         // Conversation selection
-        $('.conversation-item').on('click', function() {
+        $('.conversation-item').on('click', function () {
             $('.conversation-item').removeClass('active');
             $(this).addClass('active');
-            
+
             const userId = $(this).data('user-id');
             const participantName = $(this).find('.conversation-name').text();
             const userType = $(this).data('user-type') || 'USER';
             const isOnline = $(this).find('.online-indicator').length > 0;
-            
+
             currentConversationUserId = userId;
-            
+
             // Hide new message button, show conversation actions
             toggleActionButtons(true);
-            
+
             // Update thread header with appropriate avatar
             updateThreadAvatar(userType, participantName, isOnline);
             $('#threadParticipant').text(participantName);
             $('#threadStatus').text('Loading conversation...');
-            
+
             // Show loading state
             $('.empty-thread').hide();
             $('#messageContainer').html(`
@@ -553,20 +665,20 @@ function getCSRFToken() {
                 </div>
             `).show();
             $('#messageInputContainer').hide();
-            
+
             // Load conversation messages via AJAX
             $.ajax({
                 url: "{% url 'get_conversation_messages' 0 %}".replace('0', userId),
                 type: 'GET',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         currentOtherUser = response.other_user;
                         displayMessages(response.messages, response.other_user);
                         $('#messageInputContainer').show();
-                        
+
                         // Update avatar and status based on actual user data from response
                         updateThreadAvatar(response.other_user.type, response.other_user.name, isOnline);
-                        
+
                         // Mark as read in UI
                         $(`.conversation-item[data-user-id="${userId}"]`).removeClass('unread');
                         $(`.conversation-item[data-user-id="${userId}"] .unread-count`).remove();
@@ -575,182 +687,185 @@ function getCSRFToken() {
                         $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     showMessage('Error loading conversation: ' + xhr.statusText, 'error');
                     $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
                 }
             });
         });
-    
+
         // Display messages in the thread
+        // In your displayMessages function, update the file rendering part:
         function displayMessages(messages, otherUser) {
             const messageContainer = $('#messageContainer');
             messageContainer.empty();
-            
+
             if (messages.length === 0) {
                 messageContainer.html(`
-                    <div class="no-messages-found">
-                        <div class="no-messages-icon">
-                            <i class="fas fa-comments fa-3x"></i>
-                        </div>
-                        <h4>No messages yet</h4>
-                        <p>Start the conversation by sending a message!</p>
-                    </div>
-                `);
+            <div class="no-messages-found">
+                <div class="no-messages-icon">
+                    <i class="fas fa-comments fa-3x"></i>
+                </div>
+                <h4>No messages yet</h4>
+                <p>Start the conversation by sending a message!</p>
+            </div>
+        `);
                 return;
             }
-            
+
             let lastDate = null;
-            
+
             messages.forEach(message => {
                 const messageDate = new Date(message.sent_date);
                 const currentDate = messageDate.toDateString();
-                
+
                 // Add date separator if date changed
                 if (lastDate !== currentDate) {
                     const dateSeparator = `
-                        <div class="date-separator">
-                            <span class="date-text">${messageDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </div>
-                    `;
+                <div class="date-separator">
+                    <span class="date-text">${messageDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                </div>
+            `;
                     messageContainer.append(dateSeparator);
                     lastDate = currentDate;
                 }
-                
+
                 const messageTime = formatMessageTime(message.sent_date);
                 const isOutgoing = message.is_outgoing;
-                
-                // Determine avatar - use initials for both users
+
+                // Determine avatar
                 const senderInitials = getInitials(message.sender_name);
                 const avatarBgColor = isOutgoing ? 'outgoing-bg' : getAvatarColor(otherUser.type);
                 const currentUserInitials = getInitials('{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}');
-                
-                // Build message content with attachments
-                // Build message content with attachments
-let messageContent = '';
 
-// Check for file attachment (from AJAX response)
-if (message.file_info) {
-    messageContent += `<div class="message-attachments">`;
-    messageContent += `
-        <div class="message-attachment">
-            ${renderAttachment(message.file_info, isOutgoing)}
-        </div>
-    `;
-    messageContent += `</div>`;
-}
+                // Build message content with proper file handling
+                let messageContent = '';
 
-// Also check for attachments array (for backward compatibility)
-if (message.attachments && message.attachments.length > 0) {
-    messageContent += `<div class="message-attachments">`;
-    message.attachments.forEach(attachment => {
-        messageContent += `
-            <div class="message-attachment">
-                ${renderAttachment(attachment, isOutgoing)}
+                // Check for file attachment
+                if (message.file_info) {
+                    messageContent += `<div class="message-attachments">`;
+                    messageContent += `
+                <div class="message-attachment">
+                    ${renderAttachment(message.file_info, isOutgoing)}
+                </div>
+            `;
+                    messageContent += `</div>`;
+                }
+
+                if (message.content) {
+                    messageContent += `<div class="message-text">${message.content}</div>`;
+                }
+
+                const messageHtml = `
+            <div class="message ${isOutgoing ? 'outgoing' : 'incoming'} ${message.is_read ? 'read' : 'unread'}">
+                ${!isOutgoing ? `
+                <div class="message-avatar">
+                    <div class="avatar-initials ${avatarBgColor}" title="${message.sender_name}">
+                        ${senderInitials}
+                    </div>
+                </div>
+                ` : ''}
+                <div class="message-content">
+                    ${!isOutgoing ? `
+                    <div class="message-header">
+                        <span class="message-sender">${message.sender_name}</span>
+                        <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
+                    </div>
+                    ` : `
+                    <div class="message-header">
+                        <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
+                    </div>
+                    `}
+                    <div class="message-bubble">
+                        ${messageContent}
+                    </div>
+                    <div class="message-status">
+                        <i class="fas fa-check-double ${message.is_read ? 'seen' : ''}"></i>
+                    </div>
+                </div>
+                ${isOutgoing ? `
+                <div class="message-avatar">
+                    <div class="avatar-initials ${avatarBgColor}" title="You">
+                        ${currentUserInitials}
+                    </div>
+                </div>
+                ` : ''}
             </div>
         `;
-    });
-    messageContent += `</div>`;
-}
 
-if (message.content) {
-    messageContent += `<div class="message-text">${message.content}</div>`;
-}
-                
-                const messageHtml = `
-                    <div class="message ${isOutgoing ? 'outgoing' : 'incoming'} ${message.is_read ? 'read' : 'unread'}">
-                        ${!isOutgoing ? `
-                        <div class="message-avatar">
-                            <div class="avatar-initials ${avatarBgColor}" title="${message.sender_name}">
-                                ${senderInitials}
-                            </div>
-                        </div>
-                        ` : ''}
-                        <div class="message-content">
-                            ${!isOutgoing ? `
-                            <div class="message-header">
-                                <span class="message-sender">${message.sender_name}</span>
-                                <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
-                            </div>
-                            ` : `
-                            <div class="message-header">
-                                <span class="message-time" title="${new Date(message.sent_date).toLocaleString()}">${messageTime}</span>
-                            </div>
-                            `}
-                            <div class="message-bubble">
-                                ${messageContent}
-                            </div>
-                            <div class="message-status">
-                                <i class="fas fa-check-double ${message.is_read ? 'seen' : ''}"></i>
-                            </div>
-                        </div>
-                        ${isOutgoing ? `
-                        <div class="message-avatar">
-                            <div class="avatar-initials ${avatarBgColor}" title="You">
-                                ${currentUserInitials}
-                            </div>
-                        </div>
-                        ` : ''}
-                    </div>
-                `;
-                
                 messageContainer.append(messageHtml);
             });
-            
+
             // Scroll to bottom
             setTimeout(() => {
                 $('#messageThread').scrollTop($('#messageThread')[0].scrollHeight);
             }, 100);
         }
-        
-        // Render attachment in message
+
+        // Update the renderAttachment function to handle file types better
         function renderAttachment(attachment, isOutgoing) {
             const fileType = attachment.file_type || 'unknown';
-            const fileName = attachment.file_name || 'Unknown file';
-            const fileUrl = attachment.file_url || '#';
+            const fileName = attachment.name || attachment.file_name || 'Unknown file';
+            const fileUrl = attachment.url || attachment.file_url || '#';
             const fileSize = attachment.file_size ? formatFileSize(attachment.file_size) : 'Unknown size';
+
+            // Get appropriate file icon
             const fileIcon = getFileIcon(fileType);
-            
+
             return `
-                <div class="attachment-file ${isOutgoing ? 'outgoing-attachment' : 'incoming-attachment'}">
-                    <div class="attachment-icon">
-                        <i class="${fileIcon}"></i>
-                    </div>
-                    <div class="attachment-info">
-                        <span class="attachment-name">${fileName}</span>
-                        <span class="attachment-size">${fileSize}</span>
-                    </div>
-                    <div class="attachment-actions">
-                        <button class="btn-download" onclick="downloadFile('${fileUrl}', '${fileName}')" title="Download">
-                            <i class="fas fa-download"></i>
-                        </button>
-                        ${fileType.startsWith('image/') || fileType.startsWith('video/') ? `
-                        <button class="btn-preview" onclick="previewFile('${fileUrl}', '${fileName}', '${fileType}')" title="Preview">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        ` : ''}
-                    </div>
-                </div>
-            `;
+        <div class="attachment-file ${isOutgoing ? 'outgoing-attachment' : 'incoming-attachment'}">
+            <div class="attachment-icon">
+                <i class="${fileIcon}"></i>
+            </div>
+            <div class="attachment-info">
+                <span class="attachment-name">${fileName}</span>
+                <span class="attachment-size">${fileSize}</span>
+                <span class="attachment-type">${getFileTypeDisplay(fileType)}</span>
+            </div>
+            <div class="attachment-actions">
+                <button class="btn-download" onclick="downloadFile('${fileUrl}', '${fileName}')" title="Download">
+                    <i class="fas fa-download"></i>
+                </button>
+                ${fileType.startsWith('image/') || fileType.startsWith('video/') || fileType.includes('pdf') ? `
+                <button class="btn-preview" onclick="previewFile('${fileUrl}', '${fileName}', '${fileType}')" title="Preview">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ` : ''}
+            </div>
+        </div>
+    `;
         }
-        
+
+        // Add helper function to display file type
+        function getFileTypeDisplay(fileType) {
+            if (fileType.startsWith('image/')) return 'Image';
+            if (fileType.startsWith('video/')) return 'Video';
+            if (fileType.includes('pdf')) return 'PDF';
+            if (fileType.includes('powerpoint') || fileType.includes('presentation')) return 'PowerPoint';
+            if (fileType.includes('word') || fileType.includes('msword') || (fileType.includes('document') && !fileType.includes('presentation'))) return 'Word Document';
+            if (fileType.includes('excel') || fileType.includes('spreadsheet') || fileType.includes('sheet')) return 'Excel Spreadsheet';
+            if (fileType.includes('zip') || fileType.includes('compressed')) return 'Compressed File';
+            if (fileType.includes('text')) return 'Text File';
+            return 'File';
+        }
+
         // Handle file selection
         function handleFileSelection(files) {
             const filePreviewContainer = $('#filePreviewContainer');
             filePreviewContainer.empty();
             attachedFiles = [];
-            
+
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 if (file.size > 10 * 1024 * 1024) { // 10MB limit
                     showMessage(`File "${file.name}" is too large. Maximum size is 10MB.`, 'error');
                     continue;
                 }
-                
+
                 attachedFiles.push(file);
                 const fileIcon = getFileIcon(file.type);
                 const fileSize = formatFileSize(file.size);
-                
+
                 const filePreview = `
                     <div class="file-preview-item" data-file-index="${attachedFiles.length - 1}">
                         <div class="file-preview-icon">
@@ -767,91 +882,96 @@ if (message.content) {
                 `;
                 filePreviewContainer.append(filePreview);
             }
-            
+
             if (attachedFiles.length > 0) {
                 filePreviewContainer.show();
             } else {
                 filePreviewContainer.hide();
             }
         }
-        
+
         // Initialize emoji picker
         function initializeEmojiPicker() {
             const emojiGrid = $('#emojiGrid');
             const categoryButtons = $('.emoji-category-btn');
-            
+
             // Load default category
             loadEmojiCategory('smileys');
-            
+
             // Category button click handlers
-            categoryButtons.on('click', function() {
+            categoryButtons.on('click', function () {
                 const category = $(this).data('category');
                 categoryButtons.removeClass('active');
                 $(this).addClass('active');
                 loadEmojiCategory(category);
             });
-            
+
             // Load emojis for a category
             function loadEmojiCategory(category) {
                 emojiGrid.empty();
                 const emojis = emojiData[category] || [];
-                
+
                 emojis.forEach(emoji => {
                     const emojiButton = $(`
                         <button class="emoji-btn" data-emoji="${emoji}">
                             ${emoji}
                         </button>
                     `);
-                    
-                    emojiButton.on('click', function() {
+
+                    emojiButton.on('click', function () {
                         const messageInput = $('#messageInput');
                         const currentValue = messageInput.val();
                         messageInput.val(currentValue + emoji);
                         messageInput.focus();
                         $('#emojiPicker').hide();
                     });
-                    
+
                     emojiGrid.append(emojiButton);
                 });
             }
         }
-    
+
         // New Message Button
-        $('#newMessageBtn').on('click', function() {
+        $('#newMessageBtn').on('click', function () {
             $('#newMessageModal').modal('show');
         });
-    
-        // Send message from thread
-        // Send message from thread
-$('#sendMessageBtn').on('click', function() {
-    const message = $('#messageInput').val().trim();
-    if ((message || attachedFiles.length > 0) && currentConversationUserId) {
-        // Create FormData for file upload
-        const formData = new FormData();
-        formData.append('receiver_id', currentConversationUserId);
-        formData.append('content', message);
-        formData.append('csrfmiddlewaretoken', getCSRFToken());
-        
-        // Append files - use 'file' (singular) to match Django view
-        attachedFiles.forEach((file, index) => {
-            formData.append('file', file); // Changed from 'attachments' to 'file'
+
+        // New Chat Button
+        $('#newChatBtn').on('click', function () {
+            $('#newChatModal').modal('show');
         });
-        
-        // Add outgoing message to thread immediately
-        const messageTime = 'Just now';
-        const userInitials = getInitials('{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}');
-        
-        let messageContent = '';
-        if (message) {
-            messageContent += `<div class="message-text">${message}</div>`;
-        }
-        
-        if (attachedFiles.length > 0) {
-            messageContent += `<div class="message-attachments">`;
-            attachedFiles.forEach(file => {
-                const fileIcon = getFileIcon(file.type);
-                const fileSize = formatFileSize(file.size);
-                messageContent += `
+
+        // Send message from thread
+        // Send message from thread
+        $('#sendMessageBtn').on('click', function () {
+            const message = $('#messageInput').val().trim();
+            if ((message || attachedFiles.length > 0) && currentConversationUserId) {
+                // Create FormData for file upload
+                const formData = new FormData();
+                formData.append('receiver_id', currentConversationUserId);
+                formData.append('content', message);
+                formData.append('csrfmiddlewaretoken', getCSRFToken());
+
+                // Append files - use 'file' (singular) to match Django view
+                attachedFiles.forEach((file, index) => {
+                    formData.append('file', file); // Changed from 'attachments' to 'file'
+                });
+
+                // Add outgoing message to thread immediately
+                const messageTime = '0 minutes ago';
+                const userInitials = getInitials('{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}');
+
+                let messageContent = '';
+                if (message) {
+                    messageContent += `<div class="message-text">${message}</div>`;
+                }
+
+                if (attachedFiles.length > 0) {
+                    messageContent += `<div class="message-attachments">`;
+                    attachedFiles.forEach(file => {
+                        const fileIcon = getFileIcon(file.type);
+                        const fileSize = formatFileSize(file.size);
+                        messageContent += `
                     <div class="message-attachment">
                         <div class="attachment-file outgoing-attachment">
                             <div class="attachment-icon">
@@ -867,11 +987,11 @@ $('#sendMessageBtn').on('click', function() {
                         </div>
                     </div>
                 `;
-            });
-            messageContent += `</div>`;
-        }
-        
-        const messageHtml = `
+                    });
+                    messageContent += `</div>`;
+                }
+
+                const messageHtml = `
             <div class="message outgoing new-message sending">
                 <div class="message-content">
                     <div class="message-header">
@@ -891,120 +1011,146 @@ $('#sendMessageBtn').on('click', function() {
                 </div>
             </div>
         `;
-        
-        $('#messageContainer').append(messageHtml);
-        $('#messageInput').val('');
-        $('#currentCharCount').text('0');
-        $('#filePreviewContainer').hide().empty();
-        attachedFiles = [];
-        
-        // Reset textarea height
-        $('#messageInput').css('height', 'auto');
-        
-        // Scroll to bottom
-        $('#messageThread').scrollTop($('#messageThread')[0].scrollHeight);
-        
-        // Send message via AJAX with files
-        $.ajax({
-            url: "{% url 'send_message_ajax' %}",
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {
-                'X-CSRFToken': getCSRFToken() // Add CSRF token in headers too
-            },
-            success: function(response) {
-                console.log('AJAX Success:', response);
-                if (response.success) {
-                    // Update the temporary message with actual data
-                    const sentMessage = $('.new-message.sending');
-                    sentMessage.removeClass('sending new-message');
-                    
-                    // Update status icon
-                    sentMessage.find('.fa-clock').removeClass('fa-clock sending').addClass('fa-check-double seen');
-                    
-                    // Update time with actual server time if available
-                    if (response.sent_date) {
-                        sentMessage.find('.message-time').text(formatMessageTime(response.sent_date));
+
+                $('#messageContainer').append(messageHtml);
+                $('#messageInput').val('');
+                $('#currentCharCount').text('0');
+                $('#filePreviewContainer').hide().empty();
+                attachedFiles = [];
+
+                // Reset textarea height
+                $('#messageInput').css('height', 'auto');
+
+                // Scroll to bottom
+                $('#messageThread').scrollTop($('#messageThread')[0].scrollHeight);
+
+                // Send message via AJAX with files
+                $.ajax({
+                    url: "{% url 'send_message_ajax' %}",
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRFToken': getCSRFToken() // Add CSRF token in headers too
+                    },
+                    // In your send message success handler, update the time formatting part:
+                    success: function (response) {
+                        console.log('AJAX Success:', response);
+                        if (response.success) {
+                            // Update the temporary message with actual data
+                            const sentMessage = $('.new-message.sending');
+                            sentMessage.removeClass('sending new-message');
+
+                            // Update status icon
+                            sentMessage.find('.fa-clock').removeClass('fa-clock sending').addClass('fa-check-double seen');
+
+                            // Update time with actual server time if available
+                            if (response.sent_date) {
+                                console.log('DEBUG: Server sent_date:', response.sent_date);
+                                const formattedTime = formatMessageTime(response.sent_date);
+                                console.log('DEBUG: Formatted time:', formattedTime);
+                                sentMessage.find('.message-time').text(formattedTime);
+                            } else {
+                                // If no server time, use current time
+                                const currentTime = new Date().toISOString();
+                                const formattedTime = formatMessageTime(currentTime);
+                                sentMessage.find('.message-time').text(formattedTime);
+                            }
+
+                            // If there's a file, update the attachment with actual URL
+                            if (response.file_info) {
+                                const attachment = sentMessage.find('.attachment-file');
+                                attachment.find('.attachment-actions').html(`
+                <button class="btn-download" onclick="downloadFile('${response.file_info.url}', '${response.file_info.name}')" title="Download">
+                    <i class="fas fa-download"></i>
+                </button>
+                ${response.file_info.file_type.startsWith('image/') || response.file_info.file_type.startsWith('video/') || response.file_info.file_type.includes('pdf') ? `
+                <button class="btn-preview" onclick="previewFile('${response.file_info.url}', '${response.file_info.name}', '${response.file_info.file_type}')" title="Preview">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ` : ''}
+            `);
+                            }
+
+                            // Store the current conversation ID before refresh
+                            const currentActiveId = currentConversationUserId;
+
+                            // Refresh conversation list to show latest message first
+                            refreshConversationList();
+
+                            // Restore the active conversation after refresh
+                            currentConversationUserId = currentActiveId;
+
+                            // Clear input and reset UI
+                            $('#messageInput').val('');
+                            $('#currentCharCount').text('0');
+                            $('#filePreviewContainer').hide().empty();
+                            attachedFiles = [];
+
+                            // Reset textarea height
+                            $('#messageInput').css('height', 'auto');
+
+                            showMessage('Message sent successfully!', 'success');
+                        } else {
+                            showMessage('Error sending message: ' + response.error, 'error');
+                            $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('AJAX Error:', xhr.responseText); // Debug log
+                        let errorMessage = 'Error sending message';
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            errorMessage = errorData.error || errorMessage;
+                        } catch (e) {
+                            errorMessage = xhr.statusText || errorMessage;
+                        }
+                        showMessage(errorMessage, 'error');
+                        $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
                     }
-                    
-                    // If there's a file, update the attachment with actual URL
-                    if (response.file_info) {
-                        const attachment = sentMessage.find('.attachment-file');
-                        attachment.find('.attachment-actions').html(`
-                            <button class="btn-download" onclick="downloadFile('${response.file_info.url}', '${response.file_info.name}')" title="Download">
-                                <i class="fas fa-download"></i>
-                            </button>
-                            ${response.file_info.file_type.startsWith('image/') || response.file_info.file_type.startsWith('video/') ? `
-                            <button class="btn-preview" onclick="previewFile('${response.file_info.url}', '${response.file_info.name}', '${response.file_info.file_type}')" title="Preview">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            ` : ''}
-                        `);
-                    }
-                    
-                    // Refresh conversation list preview
-                    refreshConversationList();
-                } else {
-                    showMessage('Error sending message: ' + response.error, 'error');
-                    $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', xhr.responseText); // Debug log
-                let errorMessage = 'Error sending message';
-                try {
-                    const errorData = JSON.parse(xhr.responseText);
-                    errorMessage = errorData.error || errorMessage;
-                } catch (e) {
-                    errorMessage = xhr.statusText || errorMessage;
-                }
-                showMessage(errorMessage, 'error');
-                $('.sending .fa-clock').removeClass('fa-clock sending').addClass('fa-exclamation-circle text-danger failed');
+                });
+            } else if (!currentConversationUserId) {
+                showMessage('Please select a conversation first', 'warning');
+            } else if (!message && attachedFiles.length === 0) {
+                showMessage('Please enter a message or attach a file', 'warning');
+                $('#messageInput').focus();
             }
         });
-    } else if (!currentConversationUserId) {
-        showMessage('Please select a conversation first', 'warning');
-    } else if (!message && attachedFiles.length === 0) {
-        showMessage('Please enter a message or attach a file', 'warning');
-        $('#messageInput').focus();
-    }
-});
-    
+
         // Refresh conversations list
         function refreshConversations() {
             window.location.reload(); // Simple refresh for now
         }
-    
+
         // Enter key to send message
-        $('#messageInput').on('keypress', function(e) {
+        $('#messageInput').on('keypress', function (e) {
             if (e.which === 13 && !e.shiftKey) {
                 e.preventDefault();
                 $('#sendMessageBtn').click();
             }
         });
-    
+
         // Auto-resize textarea
-        $('#messageInput').on('input', function() {
+        $('#messageInput').on('input', function () {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
-            
+
             // Update character count
             const currentLength = $(this).val().length;
             $('#currentCharCount').text(currentLength);
-            
+
             if (currentLength > 900) {
                 $('#currentCharCount').parent().addClass('char-warning');
             } else {
                 $('#currentCharCount').parent().removeClass('char-warning');
             }
         });
-    
+
         // Search conversations
-        $('#messageSearch').on('keyup', function() {
+        $('#messageSearch').on('keyup', function () {
             const searchText = $(this).val().toLowerCase();
-            $('.conversation-item').each(function() {
+            $('.conversation-item').each(function () {
                 const conversationText = $(this).data('search').toLowerCase();
                 if (conversationText.includes(searchText)) {
                     $(this).show();
@@ -1013,45 +1159,45 @@ $('#sendMessageBtn').on('click', function() {
                 }
             });
         });
-    
+
         // Character counter for new message form
-        $('#newMessageForm textarea[name="content"]').on('input', function() {
+        $('#newMessageForm textarea[name="content"]').on('input', function () {
             const currentLength = $(this).val().length;
             $('#messageCharCount').text(currentLength);
-            
+
             if (currentLength > 800) {
                 $('#messageCharCount').parent().addClass('char-warning');
             } else {
                 $('#messageCharCount').parent().removeClass('char-warning');
             }
         });
-    
+
         // Refresh conversations
-        $('#refreshConversations').on('click', function(e) {
+        $('#refreshConversations').on('click', function (e) {
             e.preventDefault();
             refreshConversations();
         });
-    
+
         // Mark all as read
-        $('#markAllRead').on('click', function(e) {
+        $('#markAllRead').on('click', function (e) {
             e.preventDefault();
             // Simple implementation - just update UI
             $('.conversation-item').removeClass('unread');
             $('.unread-count').remove();
             showMessage('All conversations marked as read', 'success');
         });
-    
+
         // User info button
-        $('#userInfoBtn').on('click', function() {
+        $('#userInfoBtn').on('click', function () {
             if (currentOtherUser) {
                 showMessage(`User: ${currentOtherUser.name} | Type: ${currentOtherUser.type}`, 'info');
             } else {
                 showMessage('No conversation selected', 'warning');
             }
         });
-    
+
         // Clear chat button
-        $('#clearChatBtn').on('click', function() {
+        $('#clearChatBtn').on('click', function () {
             if (currentConversationUserId) {
                 if (confirm('Are you sure you want to clear this conversation? This action cannot be undone.')) {
                     showMessage('Clear chat feature coming soon!', 'info');
@@ -1060,52 +1206,257 @@ $('#sendMessageBtn').on('click', function() {
                 showMessage('No conversation selected', 'warning');
             }
         });
-        
+
+        // Function to refresh the conversations list
+        function refreshConversationList() {
+            console.log('DEBUG: Refreshing conversation list...');
+
+            $.ajax({
+                url: "{% url 'get_conversations_ajax' %}",
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        updateConversationsList(response.conversations);
+
+                        // Re-apply active state to current conversation after refresh
+                        if (currentConversationUserId) {
+                            $(`.conversation-item[data-user-id="${currentConversationUserId}"]`).addClass('active');
+                        }
+                    } else {
+                        console.error('Error refreshing conversations:', response.error);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error refreshing conversations:', error);
+                }
+            });
+        }
+
+        // Function to update the conversations list in the UI
+        function updateConversationsList(conversations) {
+            const container = $('#conversationsContainer');
+
+            if (conversations.length === 0) {
+                container.html(`
+            <div class="empty-conversations">
+                <div class="empty-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h5>No Conversations</h5>
+                <p>Start a new conversation by sending a message.</p>
+            </div>
+        `);
+                return;
+            }
+
+            let html = '';
+
+            conversations.forEach(conversation => {
+                const userId = conversation.user.id;
+                const participantName = conversation.user.name || conversation.user.username;
+                const userType = conversation.user_type || 'USER';
+                const isOnline = conversation.is_online || false;
+                const unreadCount = conversation.unread_count || 0;
+                const latestMessage = conversation.latest_message;
+
+                // Check if this is the current active conversation
+                const isActive = currentConversationUserId === userId;
+
+                // Build conversation preview text - FIXED VERSION
+                let previewText = '<span class="no-messages">No messages yet</span>';
+                let timeText = '';
+
+                if (latestMessage) {
+                    // Format time
+                    if (latestMessage.sent_date) {
+                        timeText = formatMessageTime(latestMessage.sent_date) + ' ago';
+                    }
+
+                    // Build preview text
+                    if (latestMessage.file_info) {
+                        // Handle file_info object
+                        const fileName = latestMessage.file_info.name || 'File attached';
+                        previewText = `<i class="fas fa-paperclip mr-1"></i> ${fileName}`;
+                    } else if (latestMessage.has_file) {
+                        // Handle has_file flag
+                        previewText = `<i class="fas fa-paperclip mr-1"></i> File attached`;
+                    } else if (latestMessage.file) {
+                        // Handle direct file reference
+                        const fileName = latestMessage.file.name || 'File attached';
+                        previewText = `<i class="fas fa-paperclip mr-1"></i> ${fileName}`;
+                    } else if (latestMessage.content) {
+                        // Handle text content
+                        const cleanContent = latestMessage.content.replace(/<[^>]*>/g, ''); // Remove any HTML tags
+                        previewText = cleanContent.length > 50 ?
+                            cleanContent.substring(0, 50) + '...' :
+                            cleanContent;
+                    } else {
+                        previewText = '<span class="no-messages">No message content</span>';
+                    }
+                }
+
+                // Get avatar HTML
+                let avatarHtml = '';
+                if (conversation.user.avatar_html) {
+                    avatarHtml = conversation.user.avatar_html;
+                } else if (conversation.user.photo_url) {
+                    avatarHtml = `<img src="${conversation.user.photo_url}" alt="${participantName}" class="avatar-img">`;
+                } else {
+                    avatarHtml = `
+                <div class="avatar-initials ${getAvatarColor(userType)}" title="${participantName}">
+                    ${getInitials(participantName)}
+                </div>
+            `;
+                }
+
+                html += `
+            <div class="conversation-item ${unreadCount > 0 ? 'unread' : ''} ${isActive ? 'active' : ''}" 
+                 data-user-id="${userId}"
+                 data-user-type="${userType}"
+                 data-search="${participantName} ${previewText.replace(/<[^>]*>/g, '')}">
+                <div class="conversation-avatar">
+                    ${avatarHtml}
+                    ${isOnline ?
+                        '<span class="online-indicator" title="Online"></span>' :
+                        '<span class="offline-indicator" title="Offline"></span>'}
+                </div>
+                <div class="conversation-content">
+                    <div class="conversation-header">
+                        <h5 class="conversation-name">${participantName}</h5>
+                        ${timeText ? `<span class="conversation-time">${timeText}</span>` : ''}
+                    </div>
+                    <p class="conversation-preview">${previewText}</p>
+                    <div class="conversation-footer">
+                        <span class="conversation-badge ${userType.toLowerCase()}">
+                            ${userType}
+                        </span>
+                        ${unreadCount > 0 ?
+                        `<span class="unread-count">${unreadCount}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+            });
+
+            container.html(html);
+
+            // Re-bind click events to the new conversation items
+            bindConversationEvents();
+
+            // Re-apply active state after refresh
+            if (currentConversationUserId) {
+                $(`.conversation-item[data-user-id="${currentConversationUserId}"]`).addClass('active');
+            }
+        }
+
+        // Function to bind events to conversation items
+        function bindConversationEvents() {
+            $('.conversation-item').off('click').on('click', function () {
+                $('.conversation-item').removeClass('active');
+                $(this).addClass('active');
+
+                const userId = $(this).data('user-id');
+                const participantName = $(this).find('.conversation-name').text();
+                const userType = $(this).data('user-type') || 'USER';
+                const isOnline = $(this).find('.online-indicator').length > 0;
+
+                currentConversationUserId = userId;
+
+                // Hide new message button, show conversation actions
+                toggleActionButtons(true);
+
+                // Update thread header with appropriate avatar
+                updateThreadAvatar(userType, participantName, isOnline);
+                $('#threadParticipant').text(participantName);
+                $('#threadStatus').text('Loading conversation...');
+
+                // Show loading state
+                $('.empty-thread').hide();
+                $('#messageContainer').html(`
+            <div class="loading-messages">
+                <div class="loading-spinner">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                </div>
+                <p>Loading messages...</p>
+            </div>
+        `).show();
+                $('#messageInputContainer').hide();
+
+                // Load conversation messages via AJAX
+                $.ajax({
+                    url: "{% url 'get_conversation_messages' 0 %}".replace('0', userId),
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.success) {
+                            currentOtherUser = response.other_user;
+                            displayMessages(response.messages, response.other_user);
+                            $('#messageInputContainer').show();
+
+                            // Update avatar and status based on actual user data from response
+                            updateThreadAvatar(response.other_user.type, response.other_user.name, isOnline);
+
+                            // Mark as read in UI
+                            $(`.conversation-item[data-user-id="${userId}"]`).removeClass('unread');
+                            $(`.conversation-item[data-user-id="${userId}"] .unread-count`).remove();
+                        } else {
+                            showMessage('Error loading conversation: ' + response.error, 'error');
+                            $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        showMessage('Error loading conversation: ' + xhr.statusText, 'error');
+                        $('#messageContainer').html('<div class="error-loading">Failed to load messages. Please try again.</div>');
+                    }
+                });
+            });
+        }
+
+
         // Clear conversation selection (when clicking elsewhere or using escape)
         function clearConversationSelection() {
             $('.conversation-item').removeClass('active');
             currentConversationUserId = null;
             currentOtherUser = null;
-            
+
             // Reset thread header
             $('#threadParticipant').text('Select a conversation');
             $('#threadStatus').text('Choose a conversation to start messaging');
             updateThreadAvatar('USER', '', false);
-            
+
             // Hide message container, show empty state
             $('.empty-thread').show();
             $('#messageContainer').hide();
             $('#messageInputContainer').hide();
-            
+
             // Show new message button, hide conversation actions
             toggleActionButtons(false);
         }
-        
+
         // Escape key to clear selection
-        $(document).on('keyup', function(e) {
+        $(document).on('keyup', function (e) {
             if (e.key === 'Escape' && currentConversationUserId) {
                 clearConversationSelection();
             }
         });
     });
-    
+
     // Global functions for file handling
-    window.removeAttachedFile = function(index) {
+    window.removeAttachedFile = function (index) {
         attachedFiles.splice(index, 1);
         $(`.file-preview-item[data-file-index="${index}"]`).remove();
-        
+
         // Update indices for remaining files
-        $('.file-preview-item').each(function(i) {
+        $('.file-preview-item').each(function (i) {
             $(this).attr('data-file-index', i);
             $(this).find('.file-preview-remove').attr('onclick', `removeAttachedFile(${i})`);
         });
-        
+
         if (attachedFiles.length === 0) {
             $('#filePreviewContainer').hide();
         }
     };
-    
-    window.downloadFile = function(fileUrl, fileName) {
+
+    window.downloadFile = function (fileUrl, fileName) {
         const link = document.createElement('a');
         link.href = fileUrl;
         link.download = fileName;
@@ -1113,16 +1464,16 @@ $('#sendMessageBtn').on('click', function() {
         link.click();
         document.body.removeChild(link);
     };
-    
-    window.previewFile = function(fileUrl, fileName, fileType) {
+
+    window.previewFile = function (fileUrl, fileName, fileType) {
         const modalContent = $('#filePreviewContent');
         const downloadBtn = $('#downloadFileBtn');
         const modalTitle = $('#filePreviewTitle');
-        
+
         modalTitle.text(`Preview: ${fileName}`);
         downloadBtn.attr('href', fileUrl);
         downloadBtn.attr('download', fileName);
-        
+
         if (fileType.startsWith('image/')) {
             modalContent.html(`<img src="${fileUrl}" alt="${fileName}" class="img-fluid" style="max-height: 70vh;">`);
         } else if (fileType.startsWith('video/')) {
@@ -1141,7 +1492,7 @@ $('#sendMessageBtn').on('click', function() {
                 </div>
             `);
         }
-        
+
         $('#filePreviewModal').modal('show');
     };
 </script>
@@ -1163,7 +1514,7 @@ $('#sendMessageBtn').on('click', function() {
         --transition: all 0.3s ease;
         --message-max-width: 75%;
     }
-    
+
     .message-thread-header {
         display: flex;
         justify-content: space-between;
@@ -1176,31 +1527,46 @@ $('#sendMessageBtn').on('click', function() {
     .thread-info {
         display: flex;
         align-items: center;
+        min-width: 0;
+        flex: 1;
     }
-    
+
     .thread-avatar {
         margin-right: 15px;
+        flex-shrink: 0;
     }
-    
+
+    .thread-details {
+        min-width: 0;
+        flex: 1;
+    }
+
     .thread-details h4 {
         margin: 0 0 6px 0;
         color: var(--dark);
         font-weight: 600;
         font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    
+
     .thread-status {
         font-size: 14px;
         font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-        
+
     .thread-actions {
         display: flex;
         align-items: center;
         gap: 10px;
-        margin-left: auto;
+        margin-left: 15px;
+        flex-shrink: 0;
     }
-    
+
     .btn-new-message-circle {
         width: 45px;
         height: 45px;
@@ -1217,12 +1583,12 @@ $('#sendMessageBtn').on('click', function() {
         font-size: 16px;
         flex-shrink: 0;
     }
-    
+
     .btn-new-message-circle:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(67, 97, 238, 0.4);
     }
-    
+
     .btn-icon {
         width: 40px;
         height: 40px;
@@ -1235,8 +1601,9 @@ $('#sendMessageBtn').on('click', function() {
         color: var(--secondary);
         transition: var(--transition);
         font-size: 16px;
+        flex-shrink: 0;
     }
-    
+
     .btn-icon:hover {
         background-color: var(--primary);
         color: white;
@@ -1248,7 +1615,7 @@ $('#sendMessageBtn').on('click', function() {
     .file-attachment-wrapper {
         position: relative;
     }
-    
+
     .file-preview-container {
         position: absolute;
         bottom: 100%;
@@ -1263,7 +1630,7 @@ $('#sendMessageBtn').on('click', function() {
         box-shadow: var(--box-shadow);
         z-index: 1000;
     }
-    
+
     .file-preview-item {
         display: flex;
         align-items: center;
@@ -1273,26 +1640,27 @@ $('#sendMessageBtn').on('click', function() {
         margin-bottom: 5px;
         transition: var(--transition);
     }
-    
+
     .file-preview-item:hover {
         background: #e9ecef;
     }
-    
+
     .file-preview-item:last-child {
         margin-bottom: 0;
     }
-    
+
     .file-preview-icon {
         margin-right: 10px;
         font-size: 16px;
         color: var(--primary);
+        flex-shrink: 0;
     }
-    
+
     .file-preview-info {
         flex: 1;
         min-width: 0;
     }
-    
+
     .file-preview-name {
         display: block;
         font-size: 12px;
@@ -1302,12 +1670,12 @@ $('#sendMessageBtn').on('click', function() {
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .file-preview-size {
         font-size: 11px;
         color: var(--secondary);
     }
-    
+
     .file-preview-remove {
         background: none;
         border: none;
@@ -1316,8 +1684,10 @@ $('#sendMessageBtn').on('click', function() {
         padding: 4px;
         border-radius: 4px;
         transition: var(--transition);
+        flex-shrink: 0;
+        margin-left: 8px;
     }
-    
+
     .file-preview-remove:hover {
         background: var(--danger);
         color: white;
@@ -1327,7 +1697,7 @@ $('#sendMessageBtn').on('click', function() {
     .emoji-picker-wrapper {
         position: relative;
     }
-    
+
     .emoji-picker {
         position: absolute;
         bottom: 100%;
@@ -1342,15 +1712,17 @@ $('#sendMessageBtn').on('click', function() {
         box-shadow: var(--box-shadow);
         z-index: 1000;
     }
-    
+
     .emoji-categories {
         display: flex;
         justify-content: space-between;
         margin-bottom: 10px;
         padding-bottom: 10px;
         border-bottom: 1px solid #e9ecef;
+        flex-wrap: wrap;
+        gap: 5px;
     }
-    
+
     .emoji-category-btn {
         background: none;
         border: none;
@@ -1359,14 +1731,16 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: 6px;
         cursor: pointer;
         transition: var(--transition);
+        flex: 1;
+        min-width: 30px;
     }
-    
+
     .emoji-category-btn:hover,
     .emoji-category-btn.active {
         background: var(--primary);
         color: white;
     }
-    
+
     .emoji-grid {
         display: grid;
         grid-template-columns: repeat(8, 1fr);
@@ -1374,7 +1748,7 @@ $('#sendMessageBtn').on('click', function() {
         max-height: 200px;
         overflow-y: auto;
     }
-    
+
     .emoji-btn {
         background: none;
         border: none;
@@ -1384,7 +1758,7 @@ $('#sendMessageBtn').on('click', function() {
         cursor: pointer;
         transition: var(--transition);
     }
-    
+
     .emoji-btn:hover {
         background: #f8f9fa;
         transform: scale(1.2);
@@ -1394,11 +1768,11 @@ $('#sendMessageBtn').on('click', function() {
     .message-attachments {
         margin-bottom: 8px;
     }
-    
+
     .message-attachment {
         margin-bottom: 8px;
     }
-    
+
     .attachment-file {
         display: flex;
         align-items: center;
@@ -1407,32 +1781,34 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: 8px;
         border: 1px solid #e9ecef;
         transition: var(--transition);
+        flex-wrap: wrap;
     }
-    
+
     .outgoing-attachment {
         background: rgba(255, 255, 255, 0.9);
     }
-    
+
     .incoming-attachment {
         background: rgba(248, 249, 250, 0.9);
     }
-    
+
     .attachment-file:hover {
         background: white;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     .attachment-icon {
         margin-right: 12px;
         font-size: 20px;
         color: var(--primary);
+        flex-shrink: 0;
     }
-    
+
     .attachment-info {
         flex: 1;
         min-width: 0;
     }
-    
+
     .attachment-name {
         display: block;
         font-weight: 500;
@@ -1442,17 +1818,19 @@ $('#sendMessageBtn').on('click', function() {
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    
+
     .attachment-size {
         font-size: 11px;
         color: var(--secondary);
     }
-    
+
     .attachment-actions {
         display: flex;
         gap: 5px;
+        flex-shrink: 0;
+        margin-left: 10px;
     }
-    
+
     .btn-download,
     .btn-preview {
         background: none;
@@ -1464,7 +1842,7 @@ $('#sendMessageBtn').on('click', function() {
         transition: var(--transition);
         font-size: 12px;
     }
-    
+
     .btn-download:hover,
     .btn-preview:hover {
         background: var(--primary);
@@ -1477,104 +1855,124 @@ $('#sendMessageBtn').on('click', function() {
         font-weight: 600;
         color: var(--dark);
         line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px;
     }
-    
+
     .conversation-preview {
         font-size: 14px;
         line-height: 1.4;
         color: #666;
         margin: 4px 0 6px 0;
+        min-height: 20px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
     }
-    
+
     .conversation-preview .no-messages {
         color: #999;
         font-style: italic;
     }
-    
+
     /* Message Thread Improvements */
     .message-thread {
         height: 500px;
         overflow-y: auto;
-        padding: 20px;
+        padding: 15px;
         background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
         border-radius: var(--border-radius);
         margin-bottom: 20px;
     }
-    
+
     .message {
         display: flex;
         margin-bottom: 16px;
         animation: fadeInUp 0.3s ease;
         align-items: flex-start;
     }
-    
+
     .message.outgoing {
         justify-content: flex-end;
     }
-    
+
     .message.incoming {
         justify-content: flex-start;
     }
-    
+
     .message-content {
         max-width: var(--message-max-width);
         min-width: 120px;
+        flex: 1;
     }
-    
+
     .message-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 6px;
         padding: 0 8px;
+        flex-wrap: wrap;
     }
-    
+
     .message-sender {
         font-size: 13px;
         font-weight: 600;
         color: var(--dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
     }
-    
+
     .message-time {
         font-size: 11px;
         color: #888;
         font-weight: 500;
+        white-space: nowrap;
+        margin-left: 8px;
     }
-    
+
     .message-bubble {
         padding: 12px 16px;
         border-radius: 18px;
         position: relative;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        word-wrap: break-word;
+        overflow-wrap: break-word;
     }
-    
+
     .message.incoming .message-bubble {
         background: white;
         border-bottom-left-radius: 6px;
         border: 1px solid #e9ecef;
     }
-    
+
     .message.outgoing .message-bubble {
         background: linear-gradient(135deg, var(--primary), #6a11cb);
         color: white;
         border-bottom-right-radius: 6px;
     }
-    
+
     .message-text {
         font-size: 14px;
         line-height: 1.5;
         word-wrap: break-word;
         white-space: pre-wrap;
+        overflow-wrap: break-word;
     }
-    
+
     .message.outgoing .message-text {
         color: white;
     }
-    
+
     .message.incoming .message-text {
         color: var(--dark);
     }
-    
+
     /* Message Status */
     .message-status {
         text-align: right;
@@ -1582,26 +1980,26 @@ $('#sendMessageBtn').on('click', function() {
         padding: 0 8px;
         font-size: 11px;
     }
-    
+
     .message-status .seen {
         color: var(--info);
     }
-    
+
     .message-status .sending {
         color: #888;
     }
-    
+
     .message-status .failed {
         color: var(--danger);
     }
-    
+
     /* Date Separators */
     .date-separator {
         text-align: center;
         margin: 20px 0;
         position: relative;
     }
-    
+
     .date-separator::before {
         content: '';
         position: absolute;
@@ -1612,7 +2010,7 @@ $('#sendMessageBtn').on('click', function() {
         background: #e9ecef;
         z-index: 1;
     }
-    
+
     .date-text {
         background: white;
         padding: 6px 16px;
@@ -1623,36 +2021,37 @@ $('#sendMessageBtn').on('click', function() {
         position: relative;
         z-index: 2;
         border: 1px solid #e9ecef;
+        display: inline-block;
     }
-    
+
     /* Loading States */
     .loading-messages {
         text-align: center;
         padding: 40px 20px;
         color: #666;
     }
-    
+
     .loading-spinner {
         margin-bottom: 16px;
     }
-    
+
     .no-messages-found {
         text-align: center;
         padding: 60px 20px;
         color: #666;
     }
-    
+
     .no-messages-icon {
         margin-bottom: 20px;
         color: #bdc3c7;
     }
-    
+
     .no-messages-found h4 {
         color: var(--dark);
         margin-bottom: 8px;
         font-weight: 600;
     }
-    
+
     .error-loading {
         text-align: center;
         padding: 40px 20px;
@@ -1661,7 +2060,7 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: var(--border-radius);
         border: 1px solid rgba(231, 76, 60, 0.2);
     }
-    
+
     /* Improved Message Input */
     .message-input-container {
         display: flex;
@@ -1672,18 +2071,22 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: var(--border-radius);
         border: 1px solid #e9ecef;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        flex-wrap: wrap;
     }
-    
+
     .message-input-actions {
         display: flex;
         gap: 8px;
+        order: 2;
     }
-    
+
     .message-input {
         flex: 1;
         position: relative;
+        order: 1;
+        min-width: 0;
     }
-    
+
     .message-input textarea {
         border: 1px solid #e9ecef;
         resize: none;
@@ -1695,14 +2098,16 @@ $('#sendMessageBtn').on('click', function() {
         line-height: 1.4;
         min-height: 44px;
         max-height: 120px;
+        width: 100%;
+        box-sizing: border-box;
     }
-    
+
     .message-input textarea:focus {
         background-color: white;
         box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
         border-color: var(--primary);
     }
-    
+
     .message-char-count {
         position: absolute;
         bottom: 8px;
@@ -1712,13 +2117,18 @@ $('#sendMessageBtn').on('click', function() {
         background: white;
         padding: 2px 6px;
         border-radius: 10px;
+        pointer-events: none;
     }
-    
+
     .message-char-count.char-warning {
         color: var(--warning);
         font-weight: 600;
     }
-    
+
+    .message-send {
+        order: 3;
+    }
+
     /* Avatar Improvements */
     .avatar-initials {
         width: 50px;
@@ -1732,30 +2142,51 @@ $('#sendMessageBtn').on('click', function() {
         font-size: 16px;
         text-transform: uppercase;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
     }
-    
+
     .thread-avatar .avatar-initials {
         width: 60px;
         height: 60px;
         font-size: 18px;
     }
-    
+
     .message-avatar .avatar-initials {
         width: 40px;
         height: 40px;
         font-size: 14px;
         flex-shrink: 0;
     }
-    
+
     /* Avatar background colors */
-    .teacher-bg { background: linear-gradient(135deg, #3498db, #2980b9); }
-    .student-bg { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-    .parent-bg { background: linear-gradient(135deg, #f39c12, #e67e22); }
-    .staff-bg { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-    .user-bg { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
-    .default-bg { background: linear-gradient(135deg, #4361ee, #6a11cb); }
-    .outgoing-bg { background: linear-gradient(135deg, #4361ee, #6a11cb); }
-    
+    .teacher-bg {
+        background: linear-gradient(135deg, #3498db, #2980b9);
+    }
+
+    .student-bg {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+
+    .parent-bg {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+
+    .staff-bg {
+        background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    }
+
+    .user-bg {
+        background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    }
+
+    .default-bg {
+        background: linear-gradient(135deg, #4361ee, #6a11cb);
+    }
+
+    .outgoing-bg {
+        background: linear-gradient(135deg, #4361ee, #6a11cb);
+    }
+
     /* Online/Offline status indicators */
     .online-indicator {
         position: absolute;
@@ -1768,7 +2199,7 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: 50%;
         animation: pulse 2s infinite;
     }
-    
+
     .offline-indicator {
         position: absolute;
         bottom: 2px;
@@ -1780,71 +2211,74 @@ $('#sendMessageBtn').on('click', function() {
         border-radius: 50%;
         opacity: 0.6;
     }
-    
+
     .thread-status.online {
         color: var(--success);
         font-weight: 600;
     }
-    
+
     .thread-status.offline {
         color: var(--secondary);
     }
-    
+
     @keyframes pulse {
         0% {
             transform: scale(0.95);
             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
         }
+
         70% {
             transform: scale(1);
             box-shadow: 0 0 0 6px rgba(40, 167, 69, 0);
         }
+
         100% {
             transform: scale(0.95);
             box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
         }
     }
-    
+
     /* Improved Conversations List */
     .conversations-list {
         max-height: 600px;
         overflow-y: auto;
     }
-    
+
     .conversation-item {
         display: flex;
         align-items: flex-start;
-        padding: 16px;
+        padding: 12px;
         border-radius: var(--border-radius);
         margin-bottom: 8px;
         cursor: pointer;
         transition: var(--transition);
         border: 1px solid transparent;
+        min-height: 80px;
     }
-    
+
     .conversation-item:hover {
         background-color: rgba(67, 97, 238, 0.05);
         border-color: rgba(67, 97, 238, 0.1);
         transform: translateY(-1px);
     }
-    
+
     .conversation-item.active {
         background-color: rgba(67, 97, 238, 0.1);
         border-color: var(--primary);
         box-shadow: 0 2px 8px rgba(67, 97, 238, 0.15);
     }
-    
+
     .conversation-item.unread {
         background-color: rgba(67, 97, 238, 0.08);
         border-left: 3px solid var(--primary);
     }
-    
+
     .conversation-avatar {
         position: relative;
-        margin-right: 15px;
+        margin-right: 12px;
         flex-shrink: 0;
     }
-    
+
     .conversation-avatar img {
         width: 50px;
         height: 50px;
@@ -1852,114 +2286,91 @@ $('#sendMessageBtn').on('click', function() {
         object-fit: cover;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     .conversation-content {
         flex: 1;
         min-width: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
-    
+
     .conversation-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
+        min-width: 0;
     }
-    
+
     .conversation-time {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--secondary);
         white-space: nowrap;
+        flex-shrink: 0;
+        margin-left: 8px;
     }
-    
+
     .conversation-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-top: 4px;
+        margin-top: 2px;
     }
-    
+
     .conversation-badge {
-        font-size: 11px;
-        padding: 4px 8px;
-        border-radius: 12px;
+        font-size: 10px;
+        padding: 3px 6px;
+        border-radius: 10px;
         font-weight: 500;
+        white-space: nowrap;
     }
-    
+
     .conversation-badge.teacher {
         background-color: rgba(52, 152, 219, 0.1);
         color: var(--info);
         border: 1px solid rgba(52, 152, 219, 0.2);
     }
-    
+
     .conversation-badge.student {
         background-color: rgba(40, 167, 69, 0.1);
         color: var(--success);
         border: 1px solid rgba(40, 167, 69, 0.2);
     }
-    
+
     .conversation-badge.parent {
         background-color: rgba(243, 156, 18, 0.1);
         color: var(--warning);
         border: 1px solid rgba(243, 156, 18, 0.2);
     }
-    
+
     .conversation-badge.staff {
         background-color: rgba(67, 97, 238, 0.1);
         color: var(--primary);
         border: 1px solid rgba(67, 97, 238, 0.2);
     }
-    
+
     .conversation-badge.user {
         background-color: rgba(108, 117, 125, 0.1);
         color: var(--secondary);
         border: 1px solid rgba(108, 117, 125, 0.2);
     }
-    
+
     .unread-count {
         background-color: var(--danger);
         color: white;
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
+        width: 18px;
+        height: 18px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 600;
         box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
+        flex-shrink: 0;
     }
-    
-    /* Empty States */
-    .empty-conversations,
-    .empty-thread {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--secondary);
-    }
-    
-    .empty-icon,
-    .empty-thread-icon {
-        font-size: 64px;
-        color: #bdc3c7;
-        margin-bottom: 20px;
-        opacity: 0.6;
-    }
-    
-    .empty-conversations h5,
-    .empty-thread h5 {
-        color: var(--dark);
-        margin-bottom: 12px;
-        font-weight: 600;
-        font-size: 18px;
-    }
-    
-    .empty-conversations p,
-    .empty-thread p {
-        color: #666;
-        font-size: 14px;
-        line-height: 1.5;
-    }
-    
+
     /* Send Button */
     .btn-send {
         width: 48px;
@@ -1974,114 +2385,492 @@ $('#sendMessageBtn').on('click', function() {
         transition: var(--transition);
         font-size: 16px;
         box-shadow: 0 2px 8px rgba(67, 97, 238, 0.3);
+        flex-shrink: 0;
     }
-    
+
     .btn-send:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
     }
-    
+
     .btn-send:active {
         transform: translateY(0);
     }
-    
+
     /* Animations */
     @keyframes fadeInUp {
         from {
             opacity: 0;
             transform: translateY(10px);
         }
+
         to {
             opacity: 1;
             transform: translateY(0);
         }
     }
-    
+
     .new-message {
         animation: fadeInUp 0.3s ease;
     }
-    
+
+    /* Empty States */
+    .empty-conversations,
+    .empty-thread {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--secondary);
+    }
+
+    .empty-icon,
+    .empty-thread-icon {
+        font-size: 48px;
+        color: #bdc3c7;
+        margin-bottom: 16px;
+        opacity: 0.6;
+    }
+
+    .empty-conversations h5,
+    .empty-thread h5 {
+        color: var(--dark);
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .empty-conversations p,
+    .empty-thread p {
+        color: #666;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
     /* Scrollbar Styling */
     .conversations-list::-webkit-scrollbar,
     .message-thread::-webkit-scrollbar,
     .emoji-grid::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
     }
-    
+
     .conversations-list::-webkit-scrollbar-track,
     .message-thread::-webkit-scrollbar-track,
     .emoji-grid::-webkit-scrollbar-track {
         background: #f1f1f1;
-        border-radius: 3px;
+        border-radius: 2px;
     }
-    
+
     .conversations-list::-webkit-scrollbar-thumb,
     .message-thread::-webkit-scrollbar-thumb,
     .emoji-grid::-webkit-scrollbar-thumb {
         background: #c1c1c1;
-        border-radius: 3px;
+        border-radius: 2px;
     }
-    
+
     .conversations-list::-webkit-scrollbar-thumb:hover,
     .message-thread::-webkit-scrollbar-thumb:hover,
     .emoji-grid::-webkit-scrollbar-thumb:hover {
         background: #a8a8a8;
     }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .conversation-item {
+
+    /* ===== RESPONSIVE DESIGN ===== */
+
+    /* Large devices (desktops, 992px and up) */
+    @media (min-width: 992px) {
+
+        .col-xl-5,
+        .col-xl-7 {
+            padding: 0 10px;
+        }
+    }
+
+    /* Medium devices (tablets, 768px to 991px) */
+    @media (max-width: 991px) {
+        .row.gutters-20 {
+            margin: 0 -10px;
+        }
+
+        .col-lg-5,
+        .col-lg-7 {
+            padding: 0 10px;
+        }
+
+        .message-content {
+            max-width: 85%;
+        }
+
+        .conversation-name {
+            max-width: 120px;
+        }
+    }
+
+    /* Small devices (landscape phones, 576px to 767px) */
+    @media (max-width: 767px) {
+        .dashboard-content-one {
+            padding: 15px;
+        }
+
+        .breadcrumbs-area {
+            padding: 15px 0;
+        }
+
+        .breadcrumbs-area h3 {
+            font-size: 18px;
+        }
+
+        .row.gutters-20 {
+            margin: 0 -8px;
+            flex-direction: column;
+        }
+
+        .col-xl-5,
+        .col-xl-7,
+        .col-lg-5,
+        .col-lg-7 {
+            padding: 0 8px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .message-thread-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            padding-bottom: 15px;
+        }
+
+        .thread-info {
+            width: 100%;
+        }
+
+        .thread-actions {
+            margin-left: 0;
+            align-self: flex-end;
+        }
+
+        .message-thread {
+            height: 400px;
             padding: 12px;
         }
-        
+
+        .message {
+            margin-bottom: 12px;
+        }
+
+        .message-content {
+            max-width: 90%;
+        }
+
+        .message-bubble {
+            padding: 10px 14px;
+        }
+
+        .message-avatar .avatar-initials {
+            width: 35px;
+            height: 35px;
+            font-size: 12px;
+        }
+
+        .message-input-container {
+            padding: 12px;
+            gap: 8px;
+        }
+
+        .message-input-actions {
+            order: 2;
+            width: 100%;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .message-input {
+            order: 1;
+            width: 100%;
+        }
+
+        .message-send {
+            order: 3;
+        }
+
+        .conversation-item {
+            padding: 10px;
+            min-height: 70px;
+        }
+
+        .conversation-avatar {
+            margin-right: 10px;
+        }
+
         .conversation-avatar img {
             width: 45px;
             height: 45px;
         }
-        
-        .message-content {
-            max-width: 85%;
+
+        .avatar-initials {
+            width: 45px;
+            height: 45px;
+            font-size: 14px;
         }
-        
-        .message-thread-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 15px;
+
+        .conversation-name {
+            font-size: 14px;
+            max-width: 100px;
         }
-        
-        .thread-actions {
-            align-self: flex-end;
+
+        .conversation-preview {
+            font-size: 13px;
+            -webkit-line-clamp: 1;
         }
-        
-        .message-input-container {
-            flex-wrap: wrap;
+
+        .conversation-time {
+            font-size: 10px;
         }
-        
-        .message-input-actions {
-            order: 2;
+
+        .conversation-badge {
+            font-size: 9px;
+            padding: 2px 5px;
         }
-        
-        .message-input {
-            order: 1;
-            flex: 100%;
-            margin-bottom: 10px;
+
+        .unread-count {
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
         }
-        
-        .message-send {
-            order: 3;
-        }
-        
-        .message-thread {
-            height: 400px;
-        }
-        
+
         .emoji-picker {
             width: 280px;
-            left: -120px;
+            left: -50px;
         }
-        
+
         .file-preview-container {
-            left: -100px;
+            left: -50px;
+            min-width: 200px;
+        }
+    }
+
+    /* Extra small devices (portrait phones, less than 576px) */
+    @media (max-width: 575px) {
+        .dashboard-page-one {
+            padding: 0;
+        }
+
+        .dashboard-content-one {
+            padding: 10px;
+        }
+
+        .card.height-auto {
+            margin-bottom: 15px;
+        }
+
+        .message-thread {
+            height: 350px;
+            padding: 10px;
+        }
+
+        .message-content {
+            max-width: 95%;
+        }
+
+        .message-bubble {
+            padding: 8px 12px;
+        }
+
+        .message-text {
+            font-size: 13px;
+        }
+
+        .message-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .message-time {
+            margin-left: 0;
+            font-size: 10px;
+        }
+
+        .conversation-item {
+            padding: 8px;
+            min-height: 65px;
+        }
+
+        .conversation-avatar {
+            margin-right: 8px;
+        }
+
+        .conversation-avatar img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .avatar-initials {
+            width: 40px;
+            height: 40px;
+            font-size: 13px;
+        }
+
+        .conversation-name {
+            font-size: 13px;
+            max-width: 80px;
+        }
+
+        .conversation-preview {
+            font-size: 12px;
+        }
+
+        .thread-avatar .avatar-initials {
+            width: 50px;
+            height: 50px;
+            font-size: 16px;
+        }
+
+        .thread-details h4 {
+            font-size: 16px;
+        }
+
+        .thread-status {
+            font-size: 13px;
+        }
+
+        .btn-new-message-circle {
+            width: 40px;
+            height: 40px;
+            font-size: 14px;
+        }
+
+        .btn-icon {
+            width: 35px;
+            height: 35px;
+            font-size: 14px;
+        }
+
+        .btn-send {
+            width: 42px;
+            height: 42px;
+            font-size: 14px;
+        }
+
+        .message-input textarea {
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+
+        .attachment-file {
+            padding: 8px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .attachment-icon {
+            margin-right: 0;
+            align-self: flex-start;
+        }
+
+        .attachment-info {
+            width: 100%;
+        }
+
+        .attachment-actions {
+            margin-left: 0;
+            align-self: flex-end;
+        }
+
+        /* Hide some elements on very small screens */
+        .conversation-badge {
+            display: none;
+        }
+
+        .message-sender {
+            max-width: 80px;
+        }
+    }
+
+    /* Ultra small devices (less than 400px) */
+    @media (max-width: 400px) {
+        .message-thread {
+            height: 300px;
+            padding: 8px;
+        }
+
+        .message-content {
+            max-width: 98%;
+        }
+
+        .conversation-header {
+            flex-wrap: wrap;
+        }
+
+        .conversation-name {
+            max-width: 60px;
+        }
+
+        .thread-details h4 {
+            font-size: 14px;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .message-input-actions .btn-icon:nth-child(n+3) {
+            display: none;
+        }
+    }
+
+    /* Mobile-first conversation layout */
+    @media (max-width: 767px) {
+        #conversationsContainer {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        #messageThreadCard {
+            min-height: 500px;
+        }
+
+        /* Stack layout for mobile */
+        .dashboard-content-one .row {
+            flex-direction: column-reverse;
+        }
+
+        .col-xl-5 {
+            order: 2;
+        }
+
+        .col-xl-7 {
+            order: 1;
+            margin-bottom: 15px;
+        }
+    }
+
+    /* Ensure images in messages are responsive */
+    .message-bubble img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    /* Fix for long unbroken text */
+    .message-text,
+    .conversation-preview {
+        word-break: break-word;
+    }
+
+    /* Improve touch targets for mobile */
+    @media (max-width: 767px) {
+
+        .conversation-item,
+        .btn-icon,
+        .btn-send,
+        .emoji-btn,
+        .file-preview-remove {
+            min-height: 44px;
+            /* Minimum touch target size */
+        }
+
+        .conversation-item {
+            padding: 12px 8px;
         }
     }
 </style>

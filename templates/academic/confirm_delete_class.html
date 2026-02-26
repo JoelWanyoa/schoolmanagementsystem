@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delete Class{% endblock %}
+
+{% block extra_css %}
+<style>
+    .impact-item {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-left: 4px solid #ef4444;
+        background: #fef2f2;
+        border-radius: 6px;
+    }
+    
+    .impact-item.warning {
+        border-left-color: #f59e0b;
+        background: #fffbeb;
+    }
+    
+    .impact-item.info {
+        border-left-color: #3b82f6;
+        background: #eff6ff;
+    }
+    
+    .impact-label {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+    
+    .impact-description {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+    
+    .related-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 0.5rem;
+    }
+    
+    .related-item {
+        padding: 0.5rem;
+        background: white;
+        border-radius: 4px;
+        margin-bottom: 0.25rem;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Delete Class</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'manage_classes' %}">Manage Classes</a></li>
+                    <li>Delete {{ class_obj.name }}</li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h4 class="card-title mb-0">
+                                <i class="fas fa-exclamation-triangle"></i> Confirm Deletion
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h5 class="alert-heading">
+                                    <i class="fas fa-exclamation-triangle"></i> Are you sure you want to delete this class?
+                                </h5>
+                                <p class="mb-0">
+                                    <strong>Class:</strong> {{ class_obj.name }}<br>
+                                    <strong>Code:</strong> {{ class_obj.code }}<br>
+                                    <strong>Level:</strong> {{ class_obj.get_level_category_display }} - {{ class_obj.get_grade_level_display }}
+                                </p>
+                            </div>
+
+                            <h6 class="mt-4 mb-3"><i class="fas fa-info-circle"></i> This action will affect the following:</h6>
+                            
+                            <div class="impact-list">
+                                {% if related_counts.sections > 0 %}
+                                <div class="impact-item">
+                                    <div class="impact-label">
+                                        <i class="fas fa-layer-group text-danger"></i> 
+                                        {{ related_counts.sections }} Section(s) will be DELETED
+                                    </div>
+                                    <div class="impact-description">
+                                        All sections belonging to this class will be permanently deleted.
+                                        {% if sections %}
+                                        <div class="related-list">
+                                            {% for section in sections %}
+                                            <div class="related-item">{{ section.name }}</div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if related_counts.class_subjects > 0 %}
+                                <div class="impact-item">
+                                    <div class="impact-label">
+                                        <i class="fas fa-book text-danger"></i> 
+                                        {{ related_counts.class_subjects }} Class Subject Allocation(s) will be DELETED
+                                    </div>
+                                    <div class="impact-description">
+                                        All subject allocations for this class will be permanently deleted.
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if related_counts.timetables > 0 %}
+                                <div class="impact-item">
+                                    <div class="impact-label">
+                                        <i class="fas fa-calendar-alt text-danger"></i> 
+                                        {{ related_counts.timetables }} Timetable Entry/Entries will be DELETED
+                                    </div>
+                                    <div class="impact-description">
+                                        All timetable entries for this class will be permanently deleted.
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if related_counts.assignments > 0 %}
+                                <div class="impact-item">
+                                    <div class="impact-label">
+                                        <i class="fas fa-tasks text-danger"></i> 
+                                        {{ related_counts.assignments }} Assignment(s) will be DELETED
+                                    </div>
+                                    <div class="impact-description">
+                                        All assignments for this class will be permanently deleted.
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if related_counts.students > 0 %}
+                                <div class="impact-item warning">
+                                    <div class="impact-label">
+                                        <i class="fas fa-user-graduate text-warning"></i> 
+                                        {{ related_counts.students }} Student(s) will be UNLINKED
+                                    </div>
+                                    <div class="impact-description">
+                                        Students will remain in the system but their current_class field will be set to NULL.
+                                        They will need to be reassigned to another class.
+                                        {% if students %}
+                                        <div class="related-list">
+                                            {% for student in students|slice:":10" %}
+                                            <div class="related-item">{{ student.full_name }} ({{ student.student_id }})</div>
+                                            {% endfor %}
+                                            {% if related_counts.students > 10 %}
+                                            <div class="related-item text-muted">... and {{ related_counts.students|add:"-10" }} more</div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if related_counts.sections == 0 and related_counts.class_subjects == 0 and related_counts.timetables == 0 and related_counts.assignments == 0 and related_counts.students == 0 %}
+                                <div class="impact-item info">
+                                    <div class="impact-label">
+                                        <i class="fas fa-info-circle"></i> No Related Data
+                                    </div>
+                                    <div class="impact-description">
+                                        This class has no associated sections, subjects, timetables, assignments, or students.
+                                        It can be safely deleted.
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="alert alert-danger mt-4">
+                                <i class="fas fa-exclamation-circle"></i>
+                                <strong>Warning:</strong> This action cannot be undone. All data listed above will be permanently deleted or unlinked.
+                            </div>
+
+                            <form method="POST" class="mt-4">
+                                {% csrf_token %}
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="submit" class="btn btn-danger btn-lg">
+                                        <i class="fas fa-trash"></i> Yes, Delete Class
+                                    </button>
+                                    <a href="{% url 'view_class' class_obj.id %}" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </a>
+                                    <a href="{% url 'manage_classes' %}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

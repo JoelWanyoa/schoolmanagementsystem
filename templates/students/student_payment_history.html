@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Payment History{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .payment-status-badge {
+        font-size: 0.85em;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+
+    .status-paid {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-pending {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .summary-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon-box {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 15px;
+    }
+
+    .bg-light-success {
+        background-color: rgba(46, 125, 50, 0.1);
+        color: #2e7d32;
+    }
+
+    .bg-light-warning {
+        background-color: rgba(239, 108, 0, 0.1);
+        color: #ef6c00;
+    }
+
+    .bg-light-info {
+        background-color: rgba(25, 118, 210, 0.1);
+        color: #1976d2;
+    }
+
+    /* Receipt Styling */
+    .receipt-container {
+        padding: 30px;
+        background: #fff;
+        border: 1px solid #eee;
+    }
+
+    .receipt-header {
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+    }
+
+    .receipt-footer {
+        border-top: 1px dashed #ccc;
+        padding-top: 15px;
+        margin-top: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Accounts</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Payment History</li>
+                </ul>
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="row gutters-20">
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Total Paid</div>
+                                    <div class="item-number">KES {{ total_paid|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Total Pending</div>
+                                    <div class="item-number">KES {{ total_pending|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-info">
+                                    <i class="fas fa-receipt"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Transactions</div>
+                                    <div class="item-number">{{ payment_history.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Fee Payment History</h3>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn-fill-lg btn-gradient-yellow text-white" onclick="window.print()">
+                                <i class="fas fa-print mr-2"></i>PRINT REPORT
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="paymentsTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Receipt No</th>
+                                    <th>Date</th>
+                                    <th>Fee Type</th>
+                                    <th>Session</th>
+                                    <th>Amount (KES)</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payment_history %}
+                                <tr>
+                                    <td><strong>#{{ payment.transaction_id|default:payment.id }}</strong></td>
+                                    <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                    <td>{{ payment.fee.get_fee_type_display }}</td>
+                                    <td>{{ payment.fee.academic_year.name }}</td>
+                                    <td><strong class="text-dark">KES {{ payment.amount_paid|floatformat:2 }}</strong>
+                                    </td>
+                                    <td>{{ payment.payment_method|default:"Online" }}</td>
+                                    <td><span class="payment-status-badge status-paid">Paid</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary view-receipt"
+                                            data-receipt-id="{{ payment.transaction_id|default:payment.id }}"
+                                            data-amount="{{ payment.amount_paid }}"
+                                            data-date="{{ payment.payment_date|date:'M d, Y' }}"
+                                            data-type="{{ payment.fee.get_fee_type_display }}">
+                                            <i class="fas fa-eye mr-1"></i> Receipt
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="empty-state py-4">
+                                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                                            <h4>No Payment Records</h4>
+                                            <p class="text-muted">You haven't made any fee payments yet.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {% if pending_fees %}
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Outstanding Balance</h3>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Fee Type</th>
+                                    <th>Academic Year</th>
+                                    <th>Due Date</th>
+                                    <th>Amount (KES)</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for fee in pending_fees %}
+                                <tr>
+                                    <td>{{ fee.get_fee_type_display }}</td>
+                                    <td>{{ fee.academic_year.name }}</td>
+                                    <td>{{ fee.due_date|date:"M d, Y"|default:"-" }}</td>
+                                    <td><strong class="text-danger">KES {{ fee.amount|floatformat:2 }}</strong></td>
+                                    <td><span class="payment-status-badge status-pending">Pending</span></td>
+                                    <td>
+                                        <a href="{% url 'student_fee_status' %}"
+                                            class="btn-fill-sml btn-gradient-yellow text-white">
+                                            PAY NOW
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="receiptContent">
+                <!-- Receipt content loaded via JS -->
+            </div>
+            <div class="modal-footer border-0 pt-0 justify-content-center">
+                <button type="button" class="btn-fill-lg btn-gradient-yellow text-white" onclick="printReceipt()">
+                    <i class="fas fa-print mr-2"></i>PRINT RECEIPT
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#paymentsTable').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "order": [[1, 'desc']], // Sort by date by default
+            "columnDefs": [
+                { "orderable": false, "targets": [7] }
+            ],
+            "language": {
+                "paginate": {
+                    "next": "Next",
+                    "previous": "Prev"
+                }
+            }
+        });
+
+        $('.view-receipt').on('click', function () {
+            const data = $(this).data();
+            const content = `
+                <div class="receipt-container" id="printableReceipt">
+                    <div class="receipt-header text-center mb-4">
+                        <img src="{% static 'img/logo1.png' %}" alt="logo" style="max-width: 150px;" class="mb-3">
+                        <h4 class="mb-1">Petra Education Centre</h4>
+                        <p class="text-muted small mb-0">Official Payment Receipt</p>
+                    </div>
+                    
+                    <div class="row mg-b-20">
+                        <div class="col-6">
+                            <span class="text-muted small">RECEIPT TO:</span><br>
+                            <strong>{{ student.full_name }}</strong><br>
+                            <span class="small">ID: {{ student.student_id }}</span><br>
+                            <span class="small">{{ student.current_class.name }}</span>
+                        </div>
+                        <div class="col-6 text-right">
+                            <span class="text-muted small">RECEIPT NO:</span><br>
+                            <strong>#${data.receiptId}</strong><br>
+                            <span class="small">DATE: ${data.date}</span>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-bordered mb-4">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>Description</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>${data.type} Fees</td>
+                                <td class="text-right">KES ${parseFloat(data.amount).toLocaleString()}</td>
+                            </tr>
+                            <tr class="font-weight-bold">
+                                <td>TOTAL PAID</td>
+                                <td class="text-right">KES ${parseFloat(data.amount).toLocaleString()}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-success text-center">
+                        <i class="fas fa-check-circle mr-2"></i> PAYMENT RECEIVED IN FULL
+                    </div>
+                    
+                    <div class="receipt-footer mt-5 text-center">
+                        <p class="small text-muted mb-0">Thank you for your timely payment.</p>
+                        <p class="small text-muted">This is an electronically generated receipt.</p>
+                    </div>
+                </div>
+            `;
+            $('#receiptContent').html(content);
+            $('#receiptModal').modal('show');
+        });
+    });
+
+    function printReceipt() {
+        const printContent = document.getElementById('printableReceipt').innerHTML;
+        const originalContent = document.body.innerHTML;
+
+        const style = `
+            <style>
+                body { padding: 30px; font-family: sans-serif; }
+                .receipt-container { width: 100%; border: none !important; }
+                .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                .table td, .table th { border: 1px solid #dee2e6; padding: 12px; }
+                .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .mb-4 { margin-bottom: 24px; }
+                .font-weight-bold { font-weight: bold; }
+                .bg-light { background-color: #f8f9fa; }
+                .alert-success { background-color: #d4edda; color: #155724; padding: 15px; border-radius: 4px; border: 1px solid #c3e6cb; }
+            </style>
+        `;
+
+        const win = window.open('', '', 'height=700,width=900');
+        win.document.write('<html><head><title>Print Receipt</title>');
+        win.document.write(style);
+        win.document.write('</head><body>');
+        win.document.write(printContent);
+        win.document.write('</body></html>');
+        win.document.close();
+        win.print();
+    }
+</script>
+{% endblock %}

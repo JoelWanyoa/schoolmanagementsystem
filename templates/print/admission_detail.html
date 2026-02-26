@@ -1,0 +1,249 @@
+{% load static %}
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Admission {{ admission.id }}</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 20mm 15mm 20mm 15mm;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      color: #111827;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #1f2937;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+
+    .header p {
+      margin: 3px 0;
+      font-size: 11px;
+      color: #4b5563;
+    }
+
+    .meta {
+      text-align: right;
+      font-size: 11px;
+      margin-bottom: 15px;
+    }
+
+    .status {
+      padding: 4px 12px;
+      font-size: 10px;
+      font-weight: bold;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .pending {
+      background: #fff4e5;
+      color: #b45309;
+    }
+
+    .approved {
+      background: #e6f9f0;
+      color: #065f46;
+    }
+
+    .rejected {
+      background: #fde8e8;
+      color: #991b1b;
+    }
+
+    h2 {
+      font-size: 13px;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #d1d5db;
+      padding-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    .label {
+      font-weight: bold;
+      width: 40%;
+      background: #f9fafb;
+    }
+
+    .value {
+      width: 60%;
+    }
+
+    .signature {
+      margin-top: 40px;
+      width: 100%;
+    }
+
+    .signature td {
+      border: none;
+      padding-top: 40px;
+      text-align: center;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: -10px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 10px;
+      color: #6b7280;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>Petra Education Centre</h1>
+    <p>Official Admission Report</p>
+    <p>Generated on {{ generated_at|date:"M d, Y H:i" }}</p>
+  </div>
+
+  <!-- META -->
+  <div class="meta">
+    Admission No: <strong>#{{ admission.id }}</strong><br>
+
+    {% if admission.status == 'PENDING' %}
+    <span class="status pending">PENDING</span>
+    {% elif admission.status == 'APPROVED' %}
+    <span class="status approved">APPROVED</span>
+    {% else %}
+    <span class="status rejected">REJECTED</span>
+    {% endif %}
+  </div>
+
+
+  <!-- STUDENT DETAILS -->
+  <h2>Student Information</h2>
+  <table>
+    <tr>
+      <td class="label">Full Name</td>
+      <td class="value">{{ admission.first_name }} {{ admission.last_name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Gender</td>
+      <td class="value">{{ admission.get_gender_display }}</td>
+    </tr>
+    <tr>
+      <td class="label">Date of Birth</td>
+      <td class="value">{{ admission.date_of_birth|date:"M d, Y" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Admission Student ID</td>
+      <td class="value">{{ admission.admission_student_id|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">National ID</td>
+      <td class="value">{{ admission.national_id|default:"-" }}</td>
+    </tr>
+  </table>
+
+
+  <!-- ACADEMIC -->
+  <h2>Academic Details</h2>
+  <table>
+    <tr>
+      <td class="label">Class</td>
+      <td class="value">{{ admission.class_level.name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Section</td>
+      <td class="value">{{ admission.section.name }}</td>
+    </tr>
+    <tr>
+      <td class="label">Submitted On</td>
+      <td class="value">{{ admission.submitted_date|date:"M d, Y H:i" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Previous School</td>
+      <td class="value">{{ admission.previous_school|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Transfer Certificate No</td>
+      <td class="value">{{ admission.transfer_certificate_no|default:"-" }}</td>
+    </tr>
+  </table>
+
+
+  <!-- GUARDIAN -->
+  <h2>Guardian & Contact Information</h2>
+  <table>
+    <tr>
+      <td class="label">Father's Name</td>
+      <td class="value">{{ admission.father_name|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Mother's Name</td>
+      <td class="value">{{ admission.mother_name|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Guardian Phone</td>
+      <td class="value">{{ admission.guardian_phone|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Guardian Email</td>
+      <td class="value">{{ admission.guardian_email|default:"-" }}</td>
+    </tr>
+    <tr>
+      <td class="label">Address</td>
+      <td class="value">{{ admission.address|default:"-" }}</td>
+    </tr>
+  </table>
+
+
+  <!-- SIGNATURE SECTION -->
+  <table class="signature">
+    <tr>
+      <td>
+        ___________________________<br>
+        Admissions Officer
+      </td>
+      <td>
+        ___________________________<br>
+        School Principal
+      </td>
+    </tr>
+  </table>
+
+
+  <!-- FOOTER -->
+  <div class="footer">
+    Petra Education Centre | Official System Generated Document | Page 1
+  </div>
+
+</body>
+
+</html>

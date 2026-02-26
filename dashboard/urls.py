@@ -16,6 +16,13 @@ urlpatterns = [
     path('setup/create-academic-years/', views.create_initial_academic_years, name='create_initial_academic_years'),
     path('setup/complete/', views.complete_setup, name='complete_setup'),
     
+    path('academics/class-subjects/', views.class_subjects_management, name='class_subjects_management'),
+    path('academics/class-subjects/<int:class_id>/', views.class_subjects_management, name='class_subjects_management'),
+    path('academics/class-subjects/<int:class_id>/<int:section_id>/', views.class_subjects_management, name='class_subjects_management'),
+    
+    # View Subjects by Class/Section
+    path('academics/subjects-by-class/', views.subjects_by_class_section, name='subjects_by_class_section'),
+    path('academics/class/<int:class_id>/section/<int:section_id>/subjects/', views.class_section_subjects, name='class_section_subjects'),
     # Finances
     path('financial-overview/', views.financial_overview, name='financial_overview'),
     path('expense-management/', views.expense_management, name='expense_management'),
@@ -38,7 +45,7 @@ urlpatterns = [
     path('fees/mark-bulk-paid/', views.mark_bulk_paid, name='mark_bulk_paid'),
     path('fees/send-reminder/<int:fee_id>/', views.send_fee_reminder, name='send_fee_reminder'),
 
-    # Students DRUD
+    # Students CRUD
     path('students/', views.all_students, name='all_students'),
     path('students/admit/', views.admit_form, name='admit_form'),
     path('students/details/<str:student_id>/', views.student_details, name='student_details'),
@@ -48,19 +55,46 @@ urlpatterns = [
     path('students/<str:student_id>/permanent-delete/', views.permanent_delete_student, name='permanent_delete_student'),
     path('students/promotion/', views.student_promotion, name='student_promotion'),
     path('students/promotion-history/', views.promotion_history, name='promotion_history'),
+    path('students/promotion/export/', views.export_promotion_summary, name='export_promotion_summary'),
+    path('students/promotion-details/', views.get_promotion_details, name='get_promotion_details'),
+    path('students/revert-promotion/', views.revert_promotion, name='revert_promotion'),
     
+    # Student URLs
+    path('student/subjects/', views.student_subjects, name='student_subjects'),
+    path('student/attendance/', views.student_attendance, name='student_attendance'),
+    path('student/results/', views.student_results, name='student_results'),
+    path('student/timetable/', views.student_timetable, name='student_timetable'),
+    path('student/fee-status/', views.student_fee_status, name='student_fee_status'),
+    path('student/payment-history/', views.student_payment_history, name='student_payment_history'),
+    # path('student/books/', views.student_books, name='student_books'),
+    path('student/borrowed-books/', views.student_borrowed_books, name='student_borrowed_books'),
+    path('student/books/borrow/<int:book_id>/', views.student_borrow_book, name='student_borrow_book'),
+    path('student/assignments/', views.student_assignments, name='student_assignments'),
+
     # Admissions Management
     path('students/admissions/', views.manage_admissions, name='manage_admissions'),
     path('students/admissions/approve/<int:admission_id>/', views.approve_admission, name='approve_admission'),
     path('students/admissions/reject/<int:admission_id>/', views.reject_admission, name='reject_admission'),
     path('students/admissions/<int:admission_id>/', views.admission_details, name='admission_details'),
+    path('students/admissions/export/pdf/', views.export_admissions_pdf, name='export_admissions_pdf'),
+    path('students/admissions/export/csv/', views.export_admissions_csv, name='export_admissions_csv'),
+    path('students/admissions/export/excel/', views.export_admissions_excel, name='export_admissions_excel'),
+    path('students/admissions/<int:admission_id>/export/pdf/', views.export_admission_detail_pdf, name='export_admission_detail_pdf'),
 
     # Parents
     path('parents/', views.all_parents, name='all_parents'),
     path('parents/details/<int:parent_id>/', views.parent_details, name='parent_details'),
+    path('parents/add/', views.add_parent_with_students, name='add_parent_with_students'),
     path('parents/add/', views.add_parent, name='add_parent'),
     path('parents/<int:parent_id>/update/', views.update_parent, name='update_parent'),
     path('parents/<int:parent_id>/delete/', views.delete_parent, name='delete_parent'),
+    path('parent/check-fee-updates/', views.check_fee_updates, name='check_fee_updates'),
+
+    path('parent/fees/', views.parent_fee_payments, name='parent_fee_payments'),
+    path('parent/fees/make-payment/<int:fee_id>/', views.make_payment, name='make_payment'),
+    path('parent/fees/history/', views.payment_history, name='payment_history'),
+    path('parent/fees/check-updates/', views.check_fee_updates, name='check_fee_updates'),
+
     # Parent functionality URLs
     path('parents/send-message/<int:parent_id>/', views.send_message_to_parent, name='send_message_to_parent'),
     path('parents/link-children/<int:parent_id>/', views.link_children_to_parent, name='link_children_to_parent'),
@@ -74,6 +108,7 @@ urlpatterns = [
     path('teachers/add/', views.add_teacher, name='add_teacher'),
     path('teachers/<str:teacher_id>/update/', views.update_teacher, name='update_teacher'),
     path('teachers/<str:teacher_id>/delete/', views.delete_teacher, name='delete_teacher'),
+    path('teachers/export/', views.export_teachers_csv, name='export_teachers_csv'),
     # Teacher class assignment URLs
     path('teachers/<str:teacher_id>/assign-classes/', views.assign_teacher_classes, name='assign_teacher_classes'),
     path('teachers/<str:teacher_id>/remove-class/<int:class_id>/', views.remove_teacher_class, name='remove_teacher_class'),
@@ -83,7 +118,7 @@ urlpatterns = [
     
     # Teacher Dashboard URLs
     path('teacher/my-classes/', views.teacher_my_classes, name='teacher_my_classes'),
-    path('teacher/class-schedule/', views.teacher_class_schedule, name='teacher_class_schedule'),
+    path('teacher/class-schedule/', views.class_teacher_timetable, name='teacher_class_schedule'),
     path('teacher/my-students/', views.teacher_my_students, name='teacher_my_students'),
     path('teacher/attendance/', views.teacher_attendance, name='teacher_attendance'),
     path('teacher/subjects/', views.teacher_subjects, name='teacher_subjects'),
@@ -96,6 +131,10 @@ urlpatterns = [
     path('teacher/assignments/<int:assignment_id>/edit/', views.assignment_edit, name='assignment_edit'),
     path('teacher/assignments/<int:assignment_id>/delete/', views.assignment_delete, name='assignment_delete'),
     path('teacher/assignments/<int:assignment_id>/download-submissions/', views.assignment_download_submissions, name='assignment_download_submissions'),
+    path('teacher/grade-submission/<int:submission_id>/', views.grade_submission, name='grade_submission'),
+    
+    # Student Action URLs
+    path('student/assignments/<int:assignment_id>/submit/', views.submit_assignment, name='submit_assignment'),
     
     # Teacher AJAX endpoints
     path('teacher/mark-attendance/', views.mark_attendance, name='mark_attendance'),
@@ -119,10 +158,19 @@ urlpatterns = [
     path('teacher/class-results/<int:class_id>/', views.class_results, name='class_results_detail'),
     path('teacher/report-card/<int:student_id>/', views.generate_report_card, name='generate_report_card'),
     path('teacher/report-card/<int:student_id>/<str:term>/', views.generate_report_card, name='generate_report_card_term'),
+    path('teacher/timetable/', views.teacher_timetable, name='teacher_timetable'),
+    path('teacher/timetable-data/', views.teacher_timetable_data, name='teacher_timetable_data'),
+
+    path('teacher-payment/', views.teacher_payment, name='teacher_payment'),
+    path('teacher-payment/history/', views.teacher_payment_history, name='teacher_payment_history'),
+    path('teacher-payment/delete/<int:payment_id>/', views.delete_payment, name='delete_payment'),
+    path('teacher-payment/summary/', views.payment_summary_report, name='payment_summary_report'),
+     path('teacher-payment/export/', views.export_payments, name='export_payments'),
     
     # Academic Management (Missing URLs)
     path('academic/classes/', views.manage_classes, name='manage_classes'),
     path('academic/classes/add/', views.add_class, name='add_class'),
+    path('academic/classes/<int:class_id>/', views.view_class, name='view_class'),
     path('academic/classes/<int:class_id>/edit/', views.edit_class, name='edit_class'),
     path('academic/classes/<int:class_id>/delete/', views.delete_class, name='delete_class'),
     
@@ -130,10 +178,23 @@ urlpatterns = [
     path('academic/subjects/add/', views.add_subject, name='add_subject'),
     path('academic/subjects/<int:subject_id>/edit/', views.edit_subject, name='edit_subject'),
     path('academic/subjects/<int:subject_id>/delete/', views.delete_subject, name='delete_subject'),
-    
+    path('academic/subjects/<int:subject_id>/results/', views.subject_results, name='subject_results'),
+    path('academic/subjects/get-teachers/', views.get_subject_teachers, name='get_subject_teachers'),
+    path('academic/subjects/assign-teachers/', views.assign_teachers_to_subject, name='assign_teachers_to_subject'),
+
     path('academic/timetable/', views.manage_timetable, name='manage_timetable'),
     path('academic/timetable/generate/', views.generate_timetable, name='generate_timetable'),
     path('academic/timetable/<int:class_id>/', views.class_timetable, name='class_timetable'),
+    path('academic/timetable/', views.manage_timetable, name='manage_timetable'),
+    path('academic/timetable/add/', views.add_timetable_entry, name='add_timetable_entry'),
+    path('academic/timetable/<int:pk>/edit/', views.edit_timetable_entry, name='edit_timetable_entry'),
+    path('academic/timetable/<int:pk>/delete/', views.delete_timetable_entry, name='delete_timetable_entry'),
+    path('ajax/load-sections/', views.load_sections, name='load_sections'),
+    path('ajax/load-teachers/', views.load_teachers, name='load_teachers'),
+    path('timetable/save-period-ajax/', views.save_period_ajax, name='save_period_ajax'),
+    path('timetable/get-timetable-data/', views.get_timetable_data, name='get_timetable_data'),
+    path('timetable/check-conflict/', views.check_period_conflict, name='check_period_conflict'),
+    path('timetable/subjects-by-class/<int:class_id>/', views.get_subjects_by_class, name='get_subjects_by_class'),
     
     # Library Management (Missing URLs)
     path('library/books/', views.all_books, name='all_books'),
@@ -142,6 +203,7 @@ urlpatterns = [
     path('library/books/<int:book_id>/edit/', views.edit_book, name='edit_book'),
     path('library/books/<int:book_id>/delete/', views.delete_book, name='delete_book'),
     path('library/borrow/', views.borrow_book, name='borrow_book'),
+    path('library/borrowed-list/', views.borrowed_books, name='borrowed_books'),
     path('library/return/<int:borrow_id>/', views.return_book, name='return_book'),
     
     # Examination Management (Missing URLs)
@@ -149,18 +211,41 @@ urlpatterns = [
     path('examinations/schedule/create/', views.create_exam_schedule, name='create_exam_schedule'),
     path('examinations/grades/', views.exam_grades, name='exam_grades'),
     path('examinations/grades/setup/', views.setup_grading_system, name='setup_grading_system'),
+    path('examinations/grades/<int:grade_id>/edit/', views.edit_grading_system, name='edit_grading_scale'),
+    path('examinations/grades/<int:grade_id>/delete/', views.delete_grading_system, name='delete_grading_scale'),
+    path('examinations/add/', views.add_exam, name='add_exam'),
+    path('examinations/<int:exam_id>/edit/', views.edit_exam, name='edit_exam'),
+    path('examinations/<int:exam_id>/delete/', views.delete_exam, name='delete_exam'),
+    path('examinations/<int:exam_id>/results/', views.exam_results, name='exam_results'),
     
-    # Transport Management (Missing URLs)
+    # Transport Management
     path('transport/', views.transport_management, name='transport_management'),
     path('transport/routes/', views.transport_routes, name='transport_routes'),
+    path('transport/routes/generate/', views.generate_standard_routes, name='generate_standard_routes'),
+    path('transport/routes/add/', views.add_route, name='add_route'),
+    path('transport/routes/<int:pk>/edit/', views.edit_route, name='edit_route'),
+    path('transport/routes/<int:pk>/delete/', views.delete_route, name='delete_route'),
     path('transport/vehicles/', views.transport_vehicles, name='transport_vehicles'),
+    path('transport/vehicles/add/', views.add_vehicle, name='add_vehicle'),
+    path('transport/vehicles/<int:pk>/edit/', views.edit_vehicle, name='edit_vehicle'),
+    path('transport/vehicles/<int:pk>/delete/', views.delete_vehicle, name='delete_vehicle'),
     path('transport/assign/', views.assign_transport, name='assign_transport'),
+    path('transport/assign/auto/', views.auto_assign_transport, name='auto_assign_transport'),
+    path('transport/assign/<int:student_id>/remove/', views.remove_transport_assignment, name='remove_transport_assignment'),
     
-    # Hostel Management (Missing URLs)
+    # Hostel Management
     path('hostel/', views.hostel_management, name='hostel_management'),
+    path('hostel/list/', views.hostel_list, name='hostel_list'),
+    path('hostel/add/', views.add_hostel, name='add_hostel'),
+    path('hostel/<int:pk>/edit/', views.edit_hostel, name='edit_hostel'),
+    path('hostel/<int:pk>/delete/', views.delete_hostel, name='delete_hostel'),
     path('hostel/rooms/', views.hostel_rooms, name='hostel_rooms'),
+    path('hostel/rooms/add/', views.add_hostel_room, name='add_hostel_room'),
+    path('hostel/rooms/<int:pk>/edit/', views.edit_hostel_room, name='edit_hostel_room'),
+    path('hostel/rooms/<int:pk>/delete/', views.delete_hostel_room, name='delete_hostel_room'),
     path('hostel/allocations/', views.hostel_allocations, name='hostel_allocations'),
     path('hostel/allocate/', views.allocate_hostel, name='allocate_hostel'),
+    path('hostel/allocation/<int:pk>/cancel/', views.cancel_hostel_allocation, name='cancel_hostel_allocation'),
     
     # UI Elements
     path('ui/buttons/', views.buttons, name='buttons'),
@@ -176,6 +261,7 @@ urlpatterns = [
     path('messaging/send-message-ajax/', views.send_message_ajax, name='send_message_ajax'),
     path('messaging/mark-all-read/', views.mark_all_read, name='mark_all_read'),
     path('messaging/download-file/<int:message_id>/', views.download_message_file, name='download_message_file'),
+    path('get-conversations-ajax/', views.get_conversations_ajax, name='get_conversations_ajax'),
     
     # Notices
     path('notice-board/', views.notice_board, name='notice_board'),
@@ -185,6 +271,7 @@ urlpatterns = [
     
     # Account
     path('account-settings/', views.account_settings, name='account_settings'),
+    path('student/account-settings/', views.account_settings, name='student_account_settings'),
     
     # AJAX/API Endpoints
     path('ajax/sections-by-class/<int:class_id>/', views.get_sections_by_class, name='get_sections_by_class'),
@@ -192,4 +279,9 @@ urlpatterns = [
     path('ajax/check-email/', views.check_email_availability, name='check_email_availability'),
     path('ajax/get-students-by-class/<int:class_id>/', views.get_students_by_class, name='get_students_by_class'),
     path('ajax/get-subjects-by-class/<int:class_id>/', views.get_subjects_by_class, name='get_subjects_by_class'),
+
+    # Admin User Management
+    path('admin/users/', views.admin_user_management, name='admin_user_management'),
+    path('admin/users/<int:user_id>/change-password/', views.admin_change_password, name='admin_change_password'),
+    path('admin/users/<int:user_id>/toggle-status/', views.admin_toggle_user_status, name='admin_toggle_user_status'),
 ]

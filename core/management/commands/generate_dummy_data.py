@@ -449,7 +449,7 @@ class Command(BaseCommand):
                 
                 class_obj = classes[class_index]
                 
-                # Get sections for this class and assign a random section (A, B, C, or D)
+                # FIX: Use the correct field name 'class_name' instead of 'class_level'
                 class_sections = Section.objects.filter(class_name=class_obj)
                 section = random.choice(list(class_sections)) if class_sections.exists() else None
                 
@@ -491,7 +491,7 @@ class Command(BaseCommand):
                         'phone': father_parent.phone,  # Same phone as parents
                         'email': f"{first_name.lower()}.{family['surname'].lower()}@petra.edu",
                         'current_class': class_obj,
-                        'current_section': section,  # Always assign a section (A, B, C, or D)
+                        'current_section': section,
                         'roll_number': f"RN{family['surname'][:3].upper()}{kid_num:02d}",
                         'admission_date': f'{random.randint(2018, 2023)}-{random.randint(1, 12):02d}-{random.randint(1, 28):02d}',
                         'father_name': f"{father_parent.first_name} {father_parent.last_name}",
@@ -556,22 +556,43 @@ class Command(BaseCommand):
         today = timezone.now().date()
         attendance_count = 0
         
+        # Debug info
+        self.stdout.write(f"  Creating attendance for {len(students)} students...")
+        
         for i in range(30):
             date = today - timedelta(days=i)
-            if date.weekday() < 5:  # Only weekdays
-                for student in random.sample(students, min(40, len(students))):
-                    attendance, created = Attendance.objects.get_or_create(
-                        student=student,
-                        date=date,
-                        defaults={
-                            'status': random.choices([True, False], weights=[0.9, 0.1])[0],
-                            'remarks': '' if random.random() > 0.1 else 'Late arrival'
-                        }
-                    )
-                    if created:
-                        attendance_count += 1
+            if date.weekday() < 5:  # Only weekdays (Monday-Friday)
+                # Take a sample of students for each day (not all students every day)
+                students_sample = random.sample(
+                    list(students), 
+                    min(len(students), random.randint(20, len(students)))
+                )
+                
+                for student in students_sample:
+                    try:
+                        # Check if attendance already exists for this student and date
+                        existing_attendance = Attendance.objects.filter(
+                            student=student,
+                            date=date
+                        ).exists()
+                        
+                        if not existing_attendance:
+                            # Create attendance record
+                            status = random.choices([True, False], weights=[0.92, 0.08])[0]  # 92% present, 8% absent
+                            
+                            attendance = Attendance.objects.create(
+                                student=student,
+                                date=date,
+                                status=status,
+                                remarks='' if status else random.choice(['Sick', 'Late', 'Family issue', ''])
+                            )
+                            attendance_count += 1
+                            
+                    except Exception as e:
+                        self.stdout.write(f"    Error creating attendance for {student}: {e}")
         
         self.stdout.write(f'✓ Created {attendance_count} attendance records')
+        return attendance_count
 
     def create_exams_and_results(self, classes, subjects, students):
         """Create exams and results"""
@@ -580,6 +601,9 @@ class Command(BaseCommand):
         exam_count = 0
         result_count = 0
         
+        # Get admin user for created_by field
+        admin_user = User.objects.get(username='admin')
+        
         for class_obj in classes:
             class_subjects = random.sample(list(subjects), min(5, len(subjects)))
             for subject in class_subjects:
@@ -587,16 +611,33 @@ class Command(BaseCommand):
                 exam_name = f"{class_obj.name} {subject.name} {exam_names[exam_types.index(exam_type)]}"
                 total_marks = random.randint(40, 100)
                 passing_marks = random.randint(20, total_marks - 10)  # always less than total
+                
+                # Generate random exam date and times
+                exam_date = timezone.now().date() - timedelta(days=random.randint(1, 60))
+                start_time = timezone.now().replace(
+                    hour=random.randint(8, 14),  # Between 8 AM and 2 PM
+                    minute=0,
+                    second=0,
+                    microsecond=0
+                )
+                duration_hours = random.randint(1, 3)  # 1-3 hour exams
+                end_time = start_time + timedelta(hours=duration_hours)
 
                 exam, created = Exam.objects.get_or_create(
                     name=exam_name,
                     subject=subject,
-                    class_name=class_obj,
+                    class_level=class_obj,
                     defaults={
                         'exam_type': exam_type,
-                        'exam_date': timezone.now().date() - timedelta(days=random.randint(1, 60)),
+                        'exam_date': exam_date,
+                        'start_time': start_time,
+                        'end_time': end_time,
+                        'duration': f"{duration_hours}",
                         'total_marks': total_marks,
                         'passing_marks': passing_marks,
+                        'room': f"Room {random.randint(1, 20)}",
+                        'status': 'COMPLETED',  # Since these are past exams
+                        'created_by': admin_user,  # ADD THIS REQUIRED FIELD
                     }
                 )
                 if created:
@@ -605,18 +646,53 @@ class Command(BaseCommand):
                 # Create results for students in this class
                 class_students = Student.objects.filter(current_class=class_obj)
                 for student in class_students:
-                    marks = random.randint(int(exam.passing_marks), int(exam.total_marks))
+                    # Some students might be absent
+                    if random.random() > 0.05:  # 95% attendance rate for exams
+                        marks = random.randint(int(exam.passing_marks), int(exam.total_marks))
+                    else:
+                        marks = 0  # Absent students get 0
+                    
                     result, created = ExamResult.objects.get_or_create(
                         exam=exam,
                         student=student,
                         defaults={
                             'marks_obtained': marks,
+                            'grade': self.calculate_grade(marks, exam.total_marks),
+                            'remarks': 'Good performance' if marks >= exam.passing_marks else 'Needs improvement',
                         }
                     )
                     if created:
                         result_count += 1
         
         self.stdout.write(f'✓ Created {exam_count} exams and {result_count} results')
+        return exam_count, result_count
+
+    def calculate_grade(self, marks_obtained, total_marks):
+        """Calculate grade based on marks"""
+        percentage = (marks_obtained / total_marks) * 100
+        
+        if percentage >= 80:
+            return 'A'
+        elif percentage >= 75:
+            return 'A-'
+        elif percentage >= 70:
+            return 'B+'
+        elif percentage >= 65:
+            return 'B'
+        elif percentage >= 60:
+            return 'B-'
+        elif percentage >= 55:
+            return 'C+'
+        elif percentage >= 50:
+            return 'C'
+        elif percentage >= 45:
+            return 'C-'
+        elif percentage >= 40:
+            return 'D+'
+        elif percentage >= 35:
+            return 'D'
+        else:
+            return 'E'
 
     def create_fees_and_payments(self, students, academic_year):
         """Create fees and payment records"""
@@ -631,7 +707,7 @@ class Command(BaseCommand):
             'activity': 'Activity Fee'
         }
         
-        admin_user = User.objects.get(username='admin')
+        admin_user = User.objects.get(username='admin')  # Get admin user
         fee_count = 0
         payment_count = 0
         
@@ -652,11 +728,13 @@ class Command(BaseCommand):
                         'status': random.choices(['paid', 'unpaid'], weights=[0.7, 0.3])[0],
                         'due_date': timezone.now().date() + timedelta(days=random.randint(1, 30)),
                         'description': f"{fee_names[fee_type]} for {academic_year.name}",
-                        'created_by': admin_user,
+                        'created_by': admin_user,  # This should already be here
                     }
                 )
                 if created:
                     fee_count += 1
+                    
+                # Rest of the method remains the same...
                 
                 # Create payment if fee is paid
                 if fee.status == 'paid':
@@ -687,7 +765,7 @@ class Command(BaseCommand):
             'other': 'Miscellaneous Expenses'
         }
         
-        admin_user = User.objects.get(username='admin')
+        admin_user = User.objects.get(username='admin')  # Get admin user
         expense_count = 0
         
         for i in range(20):
@@ -702,7 +780,7 @@ class Command(BaseCommand):
                     'status': random.choice(['paid', 'pending', 'due']),
                     'date': timezone.now().date() - timedelta(days=random.randint(1, 60)),
                     'description': f"Payment for {expense_names[expense_type].lower()}",
-                    'created_by': admin_user,
+                    'created_by': admin_user,  # Ensure this is included
                 }
             )
             if created:
@@ -739,7 +817,7 @@ class Command(BaseCommand):
             },
         ]
         
-        admin_user = User.objects.get(username='admin')
+        admin_user = User.objects.get(username='admin')  # Get admin user
         notice_count = 0
         
         for notice_data in notices_data:
@@ -749,7 +827,7 @@ class Command(BaseCommand):
                     'content': notice_data['content'],
                     'priority': notice_data['priority'],
                     'target_audience': notice_data['target_audience'],
-                    'posted_by': admin_user,
+                    'posted_by': admin_user,  # This might be posted_by instead of created_by
                     'expiry_date': timezone.now().date() + timedelta(days=30),
                 }
             )

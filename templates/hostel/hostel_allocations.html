@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hostel Allocations — School Management System{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Hostel Allocations</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'hostel_management' %}">Hostel Management</a>
+                    </li>
+                    <li>All Allocations</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Allocation History</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a href="{% url 'allocate_hostel' %}" class="btn-fill-lg btn-gradient-yellow text-white">
+                                <i class="fas fa-plus mr-2"></i>New Allocation
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table display data-table text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Hostel</th>
+                                    <th>Room</th>
+                                    <th>Allocated Date</th>
+                                    <th>Completion Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for allocation in allocations %}
+                                <tr>
+                                    <td>
+                                        {{ allocation.student.get_full_name }}
+                                        <br>
+                                        <small class="text-muted">{{ allocation.student.student_id }}</small>
+                                    </td>
+                                    <td>{{ allocation.room.hostel.name }}</td>
+                                    <td>{{ allocation.room.room_number }}</td>
+                                    <td>{{ allocation.allocated_date }}</td>
+                                    <td>{{ allocation.completion_date|default:"-" }}</td>
+                                    <td>
+                                        <span
+                                            class="badge badge-pill {% if allocation.status == 'ACTIVE' %}badge-success{% elif allocation.status == 'COMPLETED' %}badge-info{% else %}badge-danger{% endif %}">
+                                            {{ allocation.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if allocation.status == 'ACTIVE' %}
+                                        <form action="{% url 'cancel_hostel_allocation' allocation.pk %}" method="POST"
+                                            style="display:inline;"
+                                            onsubmit="return confirm('Mark this allocation as completed?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-info">
+                                                Complete
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">No allocations found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

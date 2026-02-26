@@ -4,87 +4,55 @@ from django.urls import reverse
 from .models import Class, Section, AcademicYear
 from django.utils import timezone
 from django.core.cache import cache
+import re
 
-# core/middleware.py - SIMPLER FIX
 class SetupRequiredMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
+        # Define setup-related URLs that should always be accessible
+        self.setup_urls = [
+            '/dashboard/setup/',
+            '/dashboard/setup/create-classes/',
+            '/dashboard/setup/create-sections/', 
+            '/dashboard/setup/create-academic-years/',
+            '/dashboard/setup/complete/',
+            '/logout/',
+            '/admin/'
+        ]
 
     def __call__(self, request):
-        # Skip for static files, admin, auth, and setup pages
-        excluded_paths = [
-            '/static/', '/admin/', '/setup/', '/login/', '/logout/',
-            '/password-reset/', '/api/', '/health/', '/dashboard/setup/complete/'
-        ]
-        
-        if any(request.path.startswith(path) for path in excluded_paths):
+        # Skip for static files and media
+        if any(request.path.startswith(path) for path in ['/static/', '/media/', '/admin/']):
             return self.get_response(request)
 
         # Skip for anonymous users
         if not request.user.is_authenticated:
             return self.get_response(request)
 
-        # Check if setup is required - BE LESS STRICT
-        try:
-            classes_exist = Class.objects.exists()
-            academic_years_exist = AcademicYear.objects.exists()
-            
-            # Only require classes and academic years, not sections
-            setup_complete = classes_exist and academic_years_exist
-            
-            # If NO data exists at all, then redirect to setup
-            if (not classes_exist and not academic_years_exist and 
-                not request.path.startswith('/setup/') and
-                request.path != reverse('logout')):
-                
-                return redirect('initial_setup')
-                
-        except Exception as e:
-            # If there's any database error, allow access
-            print(f"Middleware error: {e}")
-        
-        response = self.get_response(request)
-        return response
-        # Skip for static files, admin, auth, and setup pages
-        excluded_paths = [
-            '/static/', '/admin/', '/setup/', '/login/', '/logout/',
-            '/password-reset/', '/api/', '/health/'
-        ]
-        
-        if any(request.path.startswith(path) for path in excluded_paths):
-            return self.get_response(request)
-
-        # Skip for anonymous users
-        if not request.user.is_authenticated:
+        # Skip if this is a setup-related URL
+        if any(request.path.startswith(url) for url in self.setup_urls):
             return self.get_response(request)
 
         # Check if setup is required
         try:
             classes_exist = Class.objects.exists()
-            sections_exist = Section.objects.exists()
             academic_years_exist = AcademicYear.objects.exists()
             
-            setup_complete = classes_exist and sections_exist and academic_years_exist
+            # Setup is complete if we have basic data
+            setup_complete = classes_exist and academic_years_exist
             
-            # If setup is not complete and user is trying to access other pages, redirect to setup
-            if (not setup_complete and 
-                not request.path.startswith('/setup/') and
-                request.path != reverse('logout')):
-                
-                # ADD THIS: Don't redirect if we're coming from complete_setup
-                if not request.session.get('from_complete_setup', False):
+            # If setup is not complete, redirect to setup page
+            if not setup_complete:
+                # Only redirect if we're not already going to setup
+                if not request.path.startswith('/dashboard/setup/'):
                     return redirect('initial_setup')
-                
+                    
         except Exception as e:
-            # If there's any database error, allow access but log the error
-            print(f"Middleware error: {e}")
+            # If database isn't ready or there's an error, allow access
+            print(f"Setup middleware error (non-critical): {e}")
+            # Don't redirect on database errors
         
-        # Reset the flag
-        if request.session.get('from_complete_setup'):
-            del request.session['from_complete_setup']
-            
-        response = self.get_response(request)
-        return response
+        return self.get_response(request)
 
 class OnlineStatusMiddleware:
     def __init__(self, get_response):

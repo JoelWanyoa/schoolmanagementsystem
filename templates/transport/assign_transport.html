@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assign Transport — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .assignment-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: none;
+        padding: 30px;
+    }
+
+    .form-label {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: 50px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+    }
+
+    .btn-assign {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-assign:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .current-assignments {
+        margin-top: 40px;
+    }
+
+    .student-row {
+        transition: all 0.2s;
+    }
+
+    .student-row:hover {
+        background: #f8fafc;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>Transport Assignment</h3>
+                        <ul>
+                            <li><a href="{% url 'dashboard' %}">Home</a></li>
+                            <li><a href="{% url 'transport_management' %}">Transport</a></li>
+                            <li>Assign</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'auto_assign_transport' %}"
+                        class="btn btn-fill-lg btn-gradient-yellow text-decoration-none">
+                        <i class="fas fa-magic mr-2"></i>Smart Auto-Assign
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-5">
+                    <div class="assignment-card">
+                        <h4 class="font-weight-bold mb-4">New Assignment</h4>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="form-group mb-4">
+                                <label class="form-label">Select Student</label>
+                                <div class="mb-3">
+                                    <select id="student_id" name="student_id"
+                                        class="form-select select2 shadow-sm rounded-3"
+                                        required
+                                        style="width: 100%;">
+                                        
+                                        <option value="" disabled selected>
+                                            🔎 Search and Select Student...
+                                        </option>
+
+                                        {% for student in students %}
+                                        <option value="{{ student.id }}">
+                                            {{ student.full_name }} 
+                                            • ID: {{ student.student_id }} 
+                                            • Class: {{ student.current_class }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+
+                                    <div class="form-text">
+                                        Start typing to quickly find a student.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-4">
+                                <label class="form-label">Select Route</label>
+                                <select name="route_id" class="select2" required>
+                                    <option value="">Select Route...</option>
+                                    {% for route in routes %}
+                                    <option value="{{ route.id }}">{{ route.name }} (KSh {{ route.fare }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-assign w-100">
+                                <i class="fas fa-link mr-2"></i> Assign Transport
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <h4 class="font-weight-bold mb-4">Current Transport Roster</h4>
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Class</th>
+                                            <th>Route</th>
+                                            <th>Fare</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                        {% if student.transport_route %}
+                                        <tr class="student-row">
+                                            <td>
+                                                <div class="font-weight-bold">{{ student.full_name }}</div>
+                                                <small class="text-muted">{{ student.student_id }}</small>
+                                            </td>
+                                            <td>{{ student.current_class }}</td>
+                                            <td><span class="badge badge-pill badge-info"
+                                                    style="background: #e0f2fe; color: #0369a1;">{{ student.transport_route.name }}</span></td>
+                                            <td class="font-weight-bold">KSh {{ student.transport_route.fare }}</td>
+                                            <td>
+                                                <a href="{% url 'remove_transport_assignment' student.id %}"
+                                                    class="btn btn-sm btn-outline-danger" title="Remove Assignment"
+                                                    onclick="return confirm('Are you sure you want to remove transport for this student?')">
+                                                    <i class="fas fa-unlink"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

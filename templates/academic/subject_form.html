@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Subjects</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'manage_subjects' %}">Manage Subjects</a>
+                    </li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+            
+            <!-- Add/Edit Subject Form Area Start Here -->
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title">{{ title }}</h4>
+                            <a href="{% url 'manage_subjects' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Subjects
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {% csrf_token %}
+                                
+                                {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Please correct the errors below:</strong>
+                                    <ul>
+                                        {% for field in form %}
+                                            {% for error in field.errors %}
+                                                <li>{{ field.label }}: {{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.name.id_for_label }}" class="form-label">Subject Name *</label>
+                                            {{ form.name }}
+                                            <div class="form-text">e.g., Mathematics, English, Science, etc.</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.code.id_for_label }}" class="form-label">Subject Code *</label>
+                                            {{ form.code }}
+                                            <div class="form-text">Unique code for the subject</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                                            {{ form.category }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="{{ form.credit_hours.id_for_label }}" class="form-label">Credit Hours *</label>
+                                            {{ form.credit_hours }}
+                                            <div class="form-text">Number of credit hours per week</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    <div class="form-text">Optional description of the subject</div>
+                                </div>
+
+                                <div class="form-group mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> {{ subject|yesno:"Update,Create" }} Subject
+                                    </button>
+                                    <a href="{% url 'manage_subjects' %}" class="btn btn-secondary">Cancel</a>
+                                    
+                                    {% if subject %}
+                                    <a href="{% url 'delete_subject' subject.id %}" class="btn btn-danger float-end">
+                                        <i class="fas fa-trash"></i> Delete Subject
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Add/Edit Subject Form Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Add Bootstrap classes to form fields
+    $('input, select, textarea').addClass('form-control');
+    
+    // Auto-generate code from name
+    $('#id_name').on('blur', function() {
+        const name = $(this).val();
+        if (name && !$('#id_code').val()) {
+            const code = name.substring(0, 3).toUpperCase();
+            $('#id_code').val(code);
+        }
+    });
+});
+</script>
+{% endblock %}

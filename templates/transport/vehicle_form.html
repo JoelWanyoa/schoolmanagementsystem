@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        border: none;
+        padding: 40px;
+        margin-top: 20px;
+    }
+
+    .form-header {
+        border-bottom: 2px solid #f1f5f9;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+    }
+
+    .form-group label {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 10px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 20px;
+        height: auto;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-cancel {
+        background: #f1f5f9;
+        color: #475569;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Transport Management</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'transport_vehicles' %}">Vehicles</a></li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="form-card">
+                        <div class="form-header">
+                            <h4 class="font-weight-bold mb-0">{{ title }}</h4>
+                        </div>
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.vehicle_number.label }}</label>
+                                        {{ form.vehicle_number }}
+                                        {% if form.vehicle_number.errors %}
+                                        <div class="text-danger small mt-1">{{ form.vehicle_number.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.model.label }}</label>
+                                        {{ form.model }}
+                                        {% if form.model.errors %}
+                                        <div class="text-danger small mt-1">{{ form.model.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.vehicle_type.label }}</label>
+                                        {{ form.vehicle_type }}
+                                        {% if form.vehicle_type.errors %}
+                                        <div class="text-danger small mt-1">{{ form.vehicle_type.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.capacity.label }}</label>
+                                        {{ form.capacity }}
+                                        {% if form.capacity.errors %}
+                                        <div class="text-danger small mt-1">{{ form.capacity.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.driver_name.label }}</label>
+                                        {{ form.driver_name }}
+                                        {% if form.driver_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.driver_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.driver_phone.label }}</label>
+                                        {{ form.driver_phone }}
+                                        {% if form.driver_phone.errors %}
+                                        <div class="text-danger small mt-1">{{ form.driver_phone.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.insurance_expiry.label }}</label>
+                                        {{ form.insurance_expiry }}
+                                        {% if form.insurance_expiry.errors %}
+                                        <div class="text-danger small mt-1">{{ form.insurance_expiry.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.status.label }}</label>
+                                        {{ form.status }}
+                                        {% if form.status.errors %}
+                                        <div class="text-danger small mt-1">{{ form.status.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group mb-4">
+                                        <label>{{ form.route.label }}</label>
+                                        {{ form.route }}
+                                        {% if form.route.errors %}
+                                        <div class="text-danger small mt-1">{{ form.route.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn-submit">
+                                    <i class="fas fa-save mr-2"></i> Save Vehicle
+                                </button>
+                                <a href="{% url 'transport_vehicles' %}" class="btn-cancel">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        $('.select2').select2({
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

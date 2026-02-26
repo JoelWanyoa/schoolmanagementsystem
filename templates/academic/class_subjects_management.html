@@ -1,0 +1,513 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Manage Class Subjects{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .badge {
+        font-size: 0.8em;
+    }
+    .table img.rounded-circle {
+        object-fit: cover;
+    }
+    .dropdown-menu {
+        min-width: 180px;
+    }
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+        margin-right: 5px;
+    }
+    .card .card-body.text-center h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+    }
+    .subject-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid #28a745;
+    }
+    .subject-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+    .stats-card .card-body {
+        padding: 1.5rem;
+    }
+    .stats-card i {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+    .teacher-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .timetable-info {
+        font-size: 0.8em;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Class Subjects</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'manage_classes' %}">Classes</a>
+                    </li>
+                    <li>{{ class_obj.name }} - Subjects</li>
+                </ul>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3>{{ current_subjects|length }}</h3>
+                                    <p class="mb-0">Assigned Subjects</p>
+                                </div>
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card stats-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3>{{ all_subjects.count }}</h3>
+                                    <p class="mb-0">Total Subjects</p>
+                                </div>
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card stats-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3>{{ class_obj.students.count }}</h3>
+                                    <p class="mb-0">Students</p>
+                                </div>
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="card stats-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h3>{{ teachers.count }}</h3>
+                                    <p class="mb-0">Available Teachers</p>
+                                </div>
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Display Messages -->
+            {% if messages %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <strong>{{ message.tags|title }}!</strong> {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <!-- Current Subjects Table -->
+                <div class="col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Assigned Subjects - {{ class_obj.name }}</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                        aria-expanded="false">...</a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'manage_classes' %}">
+                                            <i class="fas fa-arrow-left text-primary"></i> Back to Classes
+                                        </a>
+                                        <a class="dropdown-item" href="#">
+                                            <i class="fas fa-redo-alt text-orange-peel"></i> Refresh
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if current_subjects %}
+                            <div class="table-responsive">
+                                <table class="table table-hover display data-table text-nowrap" id="subjectsTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject Name</th>
+                                            <th>Code</th>
+                                            <th>Credit Hours</th>
+                                            <th>Category</th>
+                                            <th>Assigned Teacher</th>
+                                            <th>Timetable Info</th>
+                                            <th>Description</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in current_subjects %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ item.subject.name }}</strong>
+                                            </td>
+                                            <td>
+                                                <code>{{ item.subject.code }}</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-info">{{ item.subject.credit_hours }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-{% if item.subject.category == 'CORE' %}success{% else %}warning{% endif %}">
+                                                    {{ item.subject.get_category_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {% if item.teacher %}
+                                                <div class="d-flex align-items-center">
+                                                    {% if item.teacher.photo %}
+                                                    <img src="{{ item.teacher.photo.url }}" alt="{{ item.teacher.full_name }}" 
+                                                         class="teacher-avatar me-2">
+                                                    {% else %}
+                                                    <div class="teacher-avatar bg-secondary me-2 d-flex align-items-center justify-content-center">
+                                                        <i class="fas fa-user text-white fa-sm"></i>
+                                                    </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <div class="font-weight-bold">{{ item.teacher.full_name }}</div>
+                                                        <small class="text-muted">{{ item.teacher.qualification }}</small>
+                                                    </div>
+                                                </div>
+                                                {% else %}
+                                                <span class="badge badge-secondary">No teacher assigned</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if item.section and item.day and item.period %}
+                                                <div class="timetable-info">
+                                                    <strong>{{ item.section.name }}</strong><br>
+                                                    {{ item.day|title }}, Period {{ item.period }}
+                                                </div>
+                                                {% else %}
+                                                <span class="text-muted">Not scheduled</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ item.subject.description|truncatewords:8|default:"No description" }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                        <span class="flaticon-more-button-of-three-dots"></span>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item" href="#">
+                                                            <i class="fas fa-eye text-info"></i> View Details
+                                                        </a>
+                                                        <a class="dropdown-item" href="#">
+                                                            <i class="fas fa-edit text-warning"></i> Edit Schedule
+                                                        </a>
+                                                        <a class="dropdown-item assign-teachers-btn" href="#" data-subject-id="{{ item.subject.id }}" data-subject-name="{{ item.subject.name }}">
+                                                            <i class="fas fa-chalkboard-teacher text-primary"></i> Change Teacher
+                                                        </a>
+                                                        <div class="dropdown-divider"></div>
+                                                        <a class="dropdown-item text-danger" href="#" onclick="return confirm('Are you sure you want to remove this subject from the class?')">
+                                                            <i class="fas fa-trash"></i> Remove Subject
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+                                <h4>No Subjects Assigned</h4>
+                                <p class="text-muted mb-4">This class doesn't have any subjects assigned yet.</p>
+                                <button class="btn btn-primary" data-toggle="collapse" data-target="#addSubjectForm">
+                                    <i class="fas fa-plus"></i> Add First Subject
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Subject Section -->
+                <div class="col-lg-4">
+                    <!-- Add Subject Form -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <h4 class="card-title">Add Subject to Class</h4>
+                            </div>
+                            <form method="post" id="addSubjectForm">
+                                {% csrf_token %}
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Select Subject *</label>
+                                    <select name="subject" class="form-control" required>
+                                        <option value="">-- Choose Subject --</option>
+                                        {% for subject in all_subjects %}
+                                        <option value="{{ subject.id }}">{{ subject.name }} ({{ subject.code }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Select Teacher</label>
+                                    <select name="teacher" class="form-control">
+                                        <option value="">-- Choose Teacher --</option>
+                                        {% for teacher in teachers %}
+                                        <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <!-- Timetable Options -->
+                                {% if sections %}
+                                <div class="form-group">
+                                    <label class="form-label">Section *</label>
+                                    <select name="section" class="form-control" required>
+                                        <option value="">-- Choose Section --</option>
+                                        {% for section in sections %}
+                                        <option value="{{ section.id }}">{{ section.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
+
+                                {% if days %}
+                                <div class="form-group">
+                                    <label class="form-label">Day *</label>
+                                    <select name="day" class="form-control" required>
+                                        <option value="">-- Choose Day --</option>
+                                        {% for day in days %}
+                                        <option value="{{ day }}">{{ day|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
+
+                                {% if period_numbers %}
+                                <div class="form-group">
+                                    <label class="form-label">Period *</label>
+                                    <select name="period_number" class="form-control" required>
+                                        <option value="">-- Choose Period --</option>
+                                        {% for period in period_numbers %}
+                                        <option value="{{ period }}">Period {{ period }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                                    <i class="fas fa-plus"></i> Add Subject to Class
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Class Information -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Class Information</h5>
+                            <div class="class-details">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong>Class:</strong>
+                                    <span>{{ class_obj.name }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong>Level:</strong>
+                                    <span class="badge badge-info">{{ class_obj.get_level_category_display }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong>Grade:</strong>
+                                    <span class="badge badge-primary">{{ class_obj.get_grade_level_display }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong>Code:</strong>
+                                    <code>{{ class_obj.code }}</code>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <strong>Students:</strong>
+                                    <span class="badge badge-success">{{ class_obj.students.count }}</span>
+                                </div>
+                                {% if class_obj.class_teacher %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <strong>Class Teacher:</strong>
+                                    <span>{{ class_obj.class_teacher.full_name }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Quick Actions</h5>
+                            <div class="quick-actions">
+                                <a href="{% url 'manage_classes' %}" class="btn btn-outline-primary btn-block mb-2">
+                                    <i class="fas fa-arrow-left"></i> Back to Classes
+                                </a>
+                                <a href="{% url 'manage_subjects' %}" class="btn btn-outline-info btn-block mb-2">
+                                    <i class="fas fa-book"></i> Manage All Subjects
+                                </a>
+                                <a href="#" class="btn btn-outline-success btn-block">
+                                    <i class="fas fa-download"></i> Export Subjects
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable for subjects
+        if ($.fn.DataTable.isDataTable('#subjectsTable')) {
+            $('#subjectsTable').DataTable().destroy();
+        }
+
+        var dataTable = $('#subjectsTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            "responsive": true,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Search subjects:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ subjects",
+                "infoEmpty": "Showing 0 to 0 of 0 subjects",
+                "infoFiltered": "(filtered from _MAX_ total subjects)",
+                "zeroRecords": "No matching subjects found",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            },
+            "columnDefs": [
+                {
+                    "targets": 7, // Actions column
+                    "orderable": false,
+                    "searchable": false
+                }
+            ],
+            "order": [[0, 'asc']] // Sort by subject name
+        });
+
+        // Form validation
+        $('#addSubjectForm').on('submit', function(e) {
+            const subjectSelect = $('select[name="subject"]');
+            const sectionSelect = $('select[name="section"]');
+            const daySelect = $('select[name="day"]');
+            const periodSelect = $('select[name="period_number"]');
+            
+            if (!subjectSelect.val()) {
+                e.preventDefault();
+                alert('Please select a subject to add to the class.');
+                subjectSelect.focus();
+                return false;
+            }
+            if (!sectionSelect.val()) {
+                e.preventDefault();
+                alert('Please select a section.');
+                sectionSelect.focus();
+                return false;
+            }
+            if (!daySelect.val()) {
+                e.preventDefault();
+                alert('Please select a day.');
+                daySelect.focus();
+                return false;
+            }
+            if (!periodSelect.val()) {
+                e.preventDefault();
+                alert('Please select a period.');
+                periodSelect.focus();
+                return false;
+            }
+            
+            return confirm('Are you sure you want to add this subject to ' + '{{ class_obj.name }}' + '?');
+        });
+
+        // Enhanced hover effects
+        $('.subject-card').hover(
+            function() { 
+                $(this).css({
+                    'transform': 'translateY(-5px)',
+                    'box-shadow': '0 8px 25px rgba(0,0,0,0.15)'
+                });
+            },
+            function() { 
+                $(this).css({
+                    'transform': 'translateY(0)',
+                    'box-shadow': '0 4px 15px rgba(0,0,0,0.1)'
+                });
+            }
+        );
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            $('.alert').alert('close');
+        }, 5000);
+    });
+</script>
+{% endblock %}

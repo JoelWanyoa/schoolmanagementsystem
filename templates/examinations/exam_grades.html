@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Grading System Management{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Examinations</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>Grading System</li>
+                </ul>
+            </div>
+
+            <div class="row">
+                <!-- Add New Grade Form -->
+                <div class="col-4-xxxl col-xl-4 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Add New Grade Range</h3>
+                                </div>
+                            </div>
+                            <form class="new-added-form" method="POST">
+                                {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-12 form-group">
+                                        <label>Scale Name *</label>
+                                        {{ form.name }}
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label>Grade (A, B, C...) *</label>
+                                        {{ form.grade }}
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label>Min Mark *</label>
+                                        {{ form.min_mark }}
+                                    </div>
+                                    <div class="col-6 form-group">
+                                        <label>Max Mark *</label>
+                                        {{ form.max_mark }}
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label>Grade Points *</label>
+                                        {{ form.points }}
+                                    </div>
+                                    <div class="col-12 form-group">
+                                        <label>Remarks *</label>
+                                        {{ form.remarks }}
+                                    </div>
+                                    <div class="col-12 form-group mg-t-8">
+                                        <button type="submit"
+                                            class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Save</button>
+                                        <button type="reset"
+                                            class="btn-fill-lg bg-blue-dark btn-hover-yellow">Reset</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grading System List -->
+                <div class="col-8-xxxl col-xl-8 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Grading Scales</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a href="{% url 'setup_grading_system' %}"
+                                        class="btn-fill-md btn-gradient-yellow text-white"
+                                        onclick="return confirm('Initialize default grading system?')">
+                                        <i class="fas fa-magic mr-1"></i> Default Setup
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table display data-table text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Grade</th>
+                                            <th>Marks Range</th>
+                                            <th>Points</th>
+                                            <th>Remarks</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for g in grading_system %}
+                                        <tr>
+                                            <td>
+                                                <span class="badge badge-pill badge-primary">
+                                                    {{ g.grade }}
+                                                </span>
+                                            </td>
+                                            <td>{{ g.min_mark }} - {{ g.max_mark }}</td>
+                                            <td>{{ g.points }}</td>
+                                            <td>{{ g.remarks }}</td>
+                                            <td>
+                                                <div class="dropdown">
+                                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                        aria-expanded="false">
+                                                        <span class="flaticon-more-button-of-three-dots"></span>
+                                                    </a>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item"
+                                                            href="{% url 'edit_grading_scale' g.id %}">
+                                                            <i class="fas fa-edit text-dark-pastel-green mr-2"></i>Edit
+                                                        </a>
+                                                        <form action="{% url 'delete_grading_scale' g.id %}"
+                                                            method="POST" style="display: inline;"
+                                                            onsubmit="return confirm('Delete this grading scale?')">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="dropdown-item">
+                                                                <i class="fas fa-trash text-orange-red mr-2"></i>Delete
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                No grading system defined. Click "Default Setup" to initialize.
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

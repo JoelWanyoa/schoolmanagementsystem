@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — School Management System{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>{{ title }}</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'hostel_rooms' %}">Hostel Rooms</a></li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Room Details</h3>
+                        </div>
+                    </div>
+                    <form class="new-added-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Room Number *</label>
+                                {{ form.room_number }}
+                                {% if form.room_number.errors %}
+                                <div class="text-danger small">{{ form.room_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Hostel *</label>
+                                {{ form.hostel }}
+                                {% if form.hostel.errors %}
+                                <div class="text-danger small">{{ form.hostel.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Room Type *</label>
+                                {{ form.room_type }}
+                                {% if form.room_type.errors %}
+                                <div class="text-danger small">{{ form.room_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Capacity (Beds) *</label>
+                                {{ form.capacity }}
+                                {% if form.capacity.errors %}
+                                <div class="text-danger small">{{ form.capacity.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Cost per Student *</label>
+                                {{ form.cost_per_student }}
+                                {% if form.cost_per_student.errors %}
+                                <div class="text-danger small">{{ form.cost_per_student.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Status *</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 form-group">
+                                <label>Facilities</label>
+                                {{ form.facilities }}
+                                {% if form.facilities.errors %}
+                                <div class="text-danger small">{{ form.facilities.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit"
+                                    class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Save</button>
+                                <a href="{% url 'hostel_rooms' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow text-white">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Manage Subjects{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .badge {
+        font-size: 0.8em;
+    }
+    .table img.rounded-circle {
+        object-fit: cover;
+    }
+    .dropdown-menu {
+        min-width: 180px;
+    }
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+        margin-right: 5px;
+    }
+    .card .card-body.text-center h3 {
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+    }
+
+    /* Modal and Assign Teachers Styles */
+    #teachersSelect {
+        min-height: 200px;
+    }
+
+    .current-teachers-section {
+        border-top: 1px solid #dee2e6;
+        padding-top: 1rem;
+    }
+
+    .teacher-item {
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 0.25rem;
+    }
+
+    .teacher-search-container {
+        position: relative;
+    }
+
+    .teacher-search-container .form-control {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Make the modal slightly wider */
+    .modal-lg {
+        max-width: 600px;
+    }
+
+    /* Loading state for buttons */
+    .btn:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Subjects</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>Manage Subjects</li>
+                </ul>
+            </div>
+            
+            <!-- Subjects Table Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>All Subjects Data</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form class="mg-b-20" method="GET" id="searchForm">
+                        <div class="row gutters-8">
+                            <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <input type="text" name="search" placeholder="Search by Subject Name ..." class="form-control" value="{{ request.GET.search }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-4 col-lg-3 col-12 form-group">
+                                <input type="text" name="code" placeholder="Search by Code ..." class="form-control" value="{{ request.GET.code }}">
+                            </div>
+                            <div class="col-4-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                                <select name="category" class="form-control">
+                                    <option value="">All Categories</option>
+                                    <option value="CORE" {% if request.GET.category == 'CORE' %}selected{% endif %}>Core</option>
+                                    <option value="ELECTIVE" {% if request.GET.category == 'ELECTIVE' %}selected{% endif %}>Elective</option>
+                                </select>
+                            </div>
+                            <div class="col-1-xxxl col-xl-2 col-lg-3 col-12 form-group">
+                                <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if subjects %}
+                    <div class="table-responsive">
+                        <table class="table table-hover display data-table text-nowrap" id="subjectsTable">
+                            <thead>
+                                <tr>
+                                    <th>Subject Name</th>
+                                    <th>Code</th>
+                                    <th>Credit Hours</th>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Teachers</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in subjects %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ subject.name }}</strong>
+                                    </td>
+                                    <td>
+                                        <code>{{ subject.code }}</code>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ subject.credit_hours }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-{% if subject.category == 'CORE' %}success{% else %}warning{% endif %}">
+                                            {{ subject.get_category_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ subject.description|truncatewords:10|default:"No description" }}</small>
+                                    </td>
+                                    <td>
+                                        <!-- Teachers Column - Fixed -->
+                                        {% if subject.teachers.all %}
+                                            <span class="badge badge-primary">{{ subject.teachers.all.count }} teacher{{ subject.teachers.all.count|pluralize }}</span>
+                                            <br>
+                                            <small class="text-muted">
+                                                {% for teacher in subject.teachers.all|slice:":2" %}
+                                                    {{ teacher.user.get_full_name|default:teacher.user.username }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                                {% if subject.teachers.all.count > 2 %}...{% endif %}
+                                            </small>
+                                        {% else %}
+                                            <span class="badge badge-secondary">No teachers</span>
+                                            <br>
+                                            <small class="text-muted">Click to assign</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Actions Column - Fixed (only one) -->
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'edit_subject' subject.id %}">
+                                                    <i class="fas fa-edit text-warning"></i> Edit Subject
+                                                </a>
+                                                <a class="dropdown-item assign-teachers-btn" href="#" data-subject-id="{{ subject.id }}" data-subject-name="{{ subject.name }}">
+                                                    <i class="fas fa-chalkboard-teacher text-primary"></i> Assign Teachers
+                                                </a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="{% url 'delete_subject' subject.id %}">
+                                                    <i class="fas fa-trash text-danger"></i> Delete Subject
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-book fa-4x text-muted mb-3"></i>
+                        <h4>No Subjects Found</h4>
+                        <p class="text-muted">You haven't created any subjects yet.</p>
+                        <a href="{% url 'add_subject' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Create First Subject
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- Subjects Table Area End Here -->
+        </div>
+    </div>
+
+    <!-- Assign Teachers Modal -->
+    <div class="modal fade" id="assignTeachersModal" tabindex="-1" role="dialog" aria-labelledby="assignTeachersModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="assignTeachersModalLabel">Assign Teachers to Subject</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="assignTeachersForm" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" id="subjectId" name="subject_id">
+                        
+                        <div class="form-group">
+                            <label for="subjectName" class="form-label">Subject</label>
+                            <input type="text" class="form-control" id="subjectName" readonly>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="teachersSelect" class="form-label">Select Teachers</label>
+                            <select multiple class="form-control" id="teachersSelect" name="teachers" size="8">
+                                {% for teacher in all_teachers %}
+                                <option value="{{ teacher.id }}">
+                                    {{ teacher.user.get_full_name|default:teacher.user.username }} 
+                                    {% if teacher.department %}({{ teacher.department }}){% endif %}
+                                </option>
+                                {% empty %}
+                                <option disabled>No teachers available</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Hold Ctrl (or Cmd on Mac) to select multiple teachers</div>
+                        </div>
+                        
+                        <div class="current-teachers-section mt-4">
+                            <h6>Currently Assigned Teachers:</h6>
+                            <div id="currentTeachersList" class="p-3 bg-light rounded">
+                                <span class="text-muted">No teachers assigned yet</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveTeachersBtn">
+                        <i class="fas fa-save"></i> Save Assignments
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Initialize DataTable
+        if ($.fn.DataTable.isDataTable('#subjectsTable')) {
+            $('#subjectsTable').DataTable().destroy();
+        }
+
+        var dataTable = $('#subjectsTable').DataTable({
+            "pageLength": 25,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            "responsive": true,
+            "dom": '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ subjects",
+                "infoEmpty": "Showing 0 to 0 of 0 subjects",
+                "infoFiltered": "(filtered from _MAX_ total subjects)",
+                "zeroRecords": "No matching subjects found",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            },
+            "columnDefs": [
+                {
+                    "targets": 6, // Actions column
+                    "orderable": false,
+                    "searchable": false
+                }
+            ],
+            "order": [[0, 'asc']]
+        });
+
+        // Search functionality
+        let searchTimeout;
+        $('input[name="search"]').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                dataTable.columns(0).search(this.value).draw();
+            }, 500);
+        });
+
+        $('input[name="code"]').on('keyup', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                dataTable.columns(1).search(this.value).draw();
+            }, 500);
+        });
+
+        $('select[name="category"]').on('change', function() {
+            dataTable.columns(3).search(this.value).draw();
+        });
+
+        // Assign Teachers Modal Functionality
+        $('.assign-teachers-btn').on('click', function() {
+            const subjectId = $(this).data('subject-id');
+            const subjectName = $(this).data('subject-name');
+            
+            $('#assignTeachersModalLabel').text(`Assign Teachers to ${subjectName}`);
+            $('#subjectName').val(subjectName);
+            $('#subjectId').val(subjectId);
+            
+            loadCurrentTeachers(subjectId);
+            $('#assignTeachersModal').modal('show');
+        });
+        
+        function loadCurrentTeachers(subjectId) {
+            $.ajax({
+                url: '{% url "get_subject_teachers" %}',
+                type: 'GET',
+                data: {
+                    'subject_id': subjectId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const currentTeachersList = $('#currentTeachersList');
+                        const teachersSelect = $('#teachersSelect');
+                        
+                        teachersSelect.val(null);
+                        
+                        if (response.teachers.length > 0) {
+                            let teachersHtml = '';
+                            response.teachers.forEach(function(teacher) {
+                                teachersHtml += `
+                                    <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
+                                        <span>${teacher.name}</span>
+                                        <small class="text-muted">${teacher.department || ''}</small>
+                                    </div>
+                                `;
+                            });
+                            currentTeachersList.html(teachersHtml);
+                            
+                            const teacherIds = response.teachers.map(teacher => teacher.id.toString());
+                            teachersSelect.val(teacherIds);
+                        } else {
+                            currentTeachersList.html('<span class="text-muted">No teachers assigned yet</span>');
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading teachers:', error);
+                    $('#currentTeachersList').html('<span class="text-danger">Error loading teachers</span>');
+                }
+            });
+        }
+        
+        $('#saveTeachersBtn').on('click', function() {
+            const subjectId = $('#subjectId').val();
+            const selectedTeachers = $('#teachersSelect').val();
+            
+            const saveBtn = $(this);
+            const originalText = saveBtn.html();
+            saveBtn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+            saveBtn.prop('disabled', true);
+            
+            $.ajax({
+                url: '{% url "assign_teachers_to_subject" %}',
+                type: 'POST',
+                data: {
+                    'subject_id': subjectId,
+                    'teachers': selectedTeachers,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showAlert('Teachers assigned successfully!', 'success');
+                        $('#assignTeachersModal').modal('hide');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message || 'Error assigning teachers', 'error');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error saving assignments:', error);
+                    showAlert('Error saving teacher assignments', 'error');
+                },
+                complete: function() {
+                    saveBtn.html(originalText);
+                    saveBtn.prop('disabled', false);
+                }
+            });
+        });
+        
+        function showAlert(message, type) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            const alertHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
+                     style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            `;
+            $('body').append(alertHtml);
+            
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+        }
+        
+        // Teacher search functionality
+        $('#teachersSelect').before(`
+            <div class="form-group">
+                <input type="text" class="form-control" id="teacherSearch" placeholder="Search teachers...">
+            </div>
+        `);
+        
+        $('#teacherSearch').on('keyup', function() {
+            const searchText = $(this).val().toLowerCase();
+            $('#teachersSelect option').each(function() {
+                const optionText = $(this).text().toLowerCase();
+                if (optionText.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,5 +1,10 @@
 import os
+import mimetypes
 from pathlib import Path
+
+# Fix for Windows MIME type issue
+mimetypes.add_type("text/css", ".css", True)
+mimetypes.add_type("text/javascript", ".js", True)
 # Message tags for Bootstrap classes
 from django.contrib.messages import constants as messages
 
@@ -51,6 +56,7 @@ TEMPLATES = [
                 # 'core.simple_context_processors.setup_required', 
                 # 'core.context_processors.setup_required',
                 # 'core.context_processors.user_role',
+                'core.access_control.role_context',
             ],
         },
     },
@@ -98,7 +104,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 USE_TZ = True
 

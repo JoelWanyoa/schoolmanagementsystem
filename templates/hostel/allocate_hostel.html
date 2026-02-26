@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}New Hostel Allocation — School Management System{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Allocate Hostel</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
+                    <li>New Allocation</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Allocation Details</h3>
+                        </div>
+                    </div>
+                    <form class="new-added-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Student *</label>
+                                {{ form.student }}
+                                {% if form.student.errors %}
+                                <div class="text-danger small">{{ form.student.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Room *</label>
+                                {{ form.room }}
+                                <small class="text-muted">Only rooms with available beds are shown.</small>
+                                {% if form.room.errors %}
+                                <div class="text-danger small">{{ form.room.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Allocation Date *</label>
+                                {{ form.allocated_date }}
+                                {% if form.allocated_date.errors %}
+                                <div class="text-danger small">{{ form.allocated_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Status *</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit"
+                                    class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Allocate</button>
+                                <a href="{% url 'hostel_allocations' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow text-white">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Info Card -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0" style="border-radius: 15px; background: #f0f4f8;">
+                        <div class="card-body">
+                            <h5><i class="fas fa-info-circle text-primary mr-2"></i> Allocation Information</h5>
+                            <p class="mb-0">
+                                When you allocate a student to a room, the available beds in that room will decrease
+                                automatically.
+                                If the room reaches its full capacity, its status will change to
+                                <strong>OCCUPIED</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        if ($.fn.select2) {
+            $('.select2').select2({
+                width: '100%'
+            });
+        }
+    });
+</script>
+{% endblock %}

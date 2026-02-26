@@ -49,13 +49,16 @@
                     <form class="mg-b-20" method="GET">
                         <div class="row gutters-8">
                             <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
-                                <input type="text" name="search" placeholder="Search by Name ..." class="form-control" value="{{ request.GET.search }}">
+                                <input type="text" name="search" placeholder="Search by Name ..." class="form-control"
+                                    value="{{ request.GET.search }}">
                             </div>
                             <div class="col-4-xxxl col-xl-4 col-lg-3 col-12 form-group">
-                                <input type="text" name="email" placeholder="Search by Email ..." class="form-control" value="{{ request.GET.email }}">
+                                <input type="text" name="email" placeholder="Search by Email ..." class="form-control"
+                                    value="{{ request.GET.email }}">
                             </div>
                             <div class="col-4-xxxl col-xl-3 col-lg-3 col-12 form-group">
-                                <input type="text" name="phone" placeholder="Search by Phone ..." class="form-control" value="{{ request.GET.phone }}">
+                                <input type="text" name="phone" placeholder="Search by Phone ..." class="form-control"
+                                    value="{{ request.GET.phone }}">
                             </div>
                             <div class="col-1-xxxl col-xl-2 col-lg-3 col-12 form-group">
                                 <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
@@ -95,9 +98,11 @@
                                     </td>
                                     <td class="text-center">
                                         {% if parent.photo %}
-                                        <img src="{{ parent.photo.url }}" alt="parent" class="rounded-circle" width="40" height="40">
+                                        <img src="{{ parent.photo.url }}" alt="parent" class="rounded-circle" width="40"
+                                            height="40">
                                         {% else %}
-                                        <img src="{% static 'img/figure/admin.jpg' %}" alt="parent" class="rounded-circle" width="40" height="40">
+                                        <img src="{% static 'img/figure/admin.jpg' %}" alt="parent"
+                                            class="rounded-circle" width="40" height="40">
                                         {% endif %}
                                     </td>
                                     <td>
@@ -106,57 +111,39 @@
                                         <br><small class="text-muted">User: {{ parent.user.username }}</small>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        {{ parent.email|default:"-" }}
-                                        {% if parent.user and parent.user.is_active %}
-                                        <br><small class="text-success">Active Account</small>
-                                        {% elif parent.user %}
-                                        <br><small class="text-warning">Inactive</small>
-                                        {% else %}
-                                        <br><small class="text-danger">No Account</small>
-                                        {% endif %}
-                                    </td>
+                                    <td>{{ parent.email|default:"-" }}</td>
                                     <td>{{ parent.phone|default:"-" }}</td>
                                     <td>
-                                        {% if parent.students.count > 0 %}
-                                            <span class="badge badge-info">{{ parent.students.count }}</span>
-                                            <br>
-                                            <small class="text-muted">
-                                                {% for student in parent.students.all|slice:":2" %}
-                                                    {{ student.first_name }}{% if not forloop.last %}, {% endif %}
-                                                {% endfor %}
-                                                {% if parent.students.count > 2 %}...{% endif %}
-                                            </small>
-                                        {% else %}
-                                            <span class="badge badge-secondary">0</span>
-                                        {% endif %}
+                                        <span class="badge badge-info">{{ parent.students.count }}</span>
                                     </td>
-                                    <td>{{ parent.occupation|default:"Not specified" }}</td>
+                                    <td>{{ parent.occupation|default:"-" }}</td>
                                     <td>
-                                        <small>{{ parent.address|truncatewords:3|default:"Not provided" }}</small>
+                                        <small>{{ parent.address|truncatewords:2|default:"-" }}</small>
                                     </td>
                                     <td>
                                         {% if parent.user and parent.user.is_active %}
-                                            <span class="badge badge-success">Active</span>
+                                        <span class="badge badge-success">Active</span>
                                         {% elif parent.user %}
-                                            <span class="badge badge-warning">Inactive</span>
+                                        <span class="badge badge-warning">Inactive</span>
                                         {% else %}
-                                            <span class="badge badge-danger">No Account</span>
+                                        <span class="badge badge-danger">No Account</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
                                                 <span class="flaticon-more-button-of-three-dots"></span>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
                                                 <a class="dropdown-item" href="{% url 'parent_details' parent.id %}">
                                                     <i class="fas fa-eye text-info"></i> View Details
                                                 </a>
-                                                <a class="dropdown-item" href="#">
+                                                <a class="dropdown-item" href="{% url 'update_parent' parent.id %}">
                                                     <i class="fas fa-edit text-warning"></i> Edit
                                                 </a>
-                                                <a class="dropdown-item" href="#">
+                                                <a class="dropdown-item"
+                                                    href="{% url 'link_children_to_parent' parent.id %}">
                                                     <i class="fas fa-link text-primary"></i> Link Students
                                                 </a>
                                                 {% if parent.user %}
@@ -201,27 +188,27 @@
 <!-- Data Table Js -->
 <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Wait for the table to be completely loaded
-        setTimeout(function() {
+        setTimeout(function () {
             initializeDataTable();
         }, 100);
     });
-    
+
     function initializeDataTable() {
         var table = $('#parentsTable');
-        
+
         if (!table.length) {
             console.log('Table not found');
             return;
         }
-    
+
         // Check if already initialized
         if ($.fn.dataTable.isDataTable(table)) {
             console.log('DataTable already initialized, destroying...');
             table.DataTable().destroy();
         }
-    
+
         // Initialize with error handling
         try {
             var dataTable = table.DataTable({
@@ -261,41 +248,41 @@
                 ],
                 "order": [[2, 'asc']]
             });
-    
+
             console.log('DataTable initialized successfully');
             setupCustomFilters(dataTable);
-            
+
         } catch (error) {
             console.error('Error initializing DataTable:', error);
         }
     }
-    
+
     function setupCustomFilters(dataTable) {
         // Search functionality with debounce
         let timeout;
-        $('input[name="search"]').on('keyup', function() {
+        $('input[name="search"]').on('keyup', function () {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 dataTable.columns(2).search(this.value).draw();
             }, 300);
         });
-    
-        $('input[name="email"]').on('keyup', function() {
+
+        $('input[name="email"]').on('keyup', function () {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 dataTable.columns(3).search(this.value).draw();
             }, 300);
         });
-    
-        $('input[name="phone"]').on('keyup', function() {
+
+        $('input[name="phone"]').on('keyup', function () {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 dataTable.columns(4).search(this.value).draw();
             }, 300);
         });
-    
+
         // Check all functionality
-        $('.checkAll').on('change', function() {
+        $('.checkAll').on('change', function () {
             $('tbody input[type="checkbox"]').prop('checked', this.checked);
         });
 
@@ -311,40 +298,40 @@
 </script>
 
 <style>
-.empty-state {
-    text-align: center;
-    padding: 20px;
-}
+    .empty-state {
+        text-align: center;
+        padding: 20px;
+    }
 
-.empty-state i {
-    opacity: 0.5;
-}
+    .empty-state i {
+        opacity: 0.5;
+    }
 
-.badge {
-    font-size: 0.75em;
-}
+    .badge {
+        font-size: 0.75em;
+    }
 
-.table img.rounded-circle {
-    object-fit: cover;
-}
+    .table img.rounded-circle {
+        object-fit: cover;
+    }
 
-.parent-children-list {
-    max-width: 150px;
-}
+    .parent-children-list {
+        max-width: 150px;
+    }
 
-.status-badge {
-    font-size: 0.7em;
-    padding: 3px 8px;
-}
+    .status-badge {
+        font-size: 0.7em;
+        padding: 3px 8px;
+    }
 
-.dropdown-menu {
-    min-width: 180px;
-}
+    .dropdown-menu {
+        min-width: 180px;
+    }
 
-.dropdown-item i {
-    width: 20px;
-    text-align: center;
-    margin-right: 5px;
-}
+    .dropdown-item i {
+        width: 20px;
+        text-align: center;
+        margin-right: 5px;
+    }
 </style>
 {% endblock %}

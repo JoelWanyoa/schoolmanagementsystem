@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Petra Education Centre | Academic Assignments{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .asgn-status-badge {
+        font-size: 0.85em;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-submitted {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-pending {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .status-missed {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .summary-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-light-indigo {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .bg-light-success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .bg-light-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .bg-light-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .modal-content-luxe {
+        border-radius: 20px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header-luxe {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        padding: 24px 28px;
+        color: #fff;
+    }
+
+    .file-drop-zone {
+        border: 2px dashed #c7d2fe;
+        border-radius: 14px;
+        padding: 28px;
+        text-align: center;
+        background: #f5f3ff;
+        cursor: pointer;
+        transition: all .25s;
+    }
+
+    .file-drop-zone:hover {
+        border-color: #6366f1;
+        background: #ede9fe;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Academic Assignments</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Assignments</li>
+                </ul>
+            </div>
+
+            <!-- Summary Statistics -->
+            <div class="row gutters-20">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-indigo">
+                                    <i class="fas fa-book-open"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Upcoming</div>
+                                    <div class="item-number">{{ upcoming_assignments.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Submitted</div>
+                                    <div class="item-number">{{ submissions|length }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Next Deadline</div>
+                                    <div class="item-number" style="font-size: 1rem;">
+                                        {% if upcoming_assignments %}
+                                        {{ upcoming_assignments.0.due_date|timeuntil }}
+                                        {% else %}
+                                        None
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Past Due</div>
+                                    <div class="item-number">{{ past_assignments.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>My Assignments List</h3>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table id="assignmentsTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Assignment Title</th>
+                                    <th>Teacher</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Score</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Upcoming Assignments -->
+                                {% for assignment in upcoming_assignments %}
+                                <tr>
+                                    <td><strong>{{ assignment.subject.name }}</strong></td>
+                                    <td>{{ assignment.title }}</td>
+                                    <td>{{ assignment.teacher.full_name }}</td>
+                                    <td>{{ assignment.due_date|date:"M d, Y" }} <br><small>{{
+                                            assignment.due_date|date:"h:i A" }}</small></td>
+                                    <td>
+                                        {% with submission=submissions|get_item:assignment.id %}
+                                        {% if submission and submission.submitted %}
+                                        <span class="asgn-status-badge status-submitted">Submitted</span>
+                                        {% else %}
+                                        <span class="asgn-status-badge status-pending">Pending</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with submission=submissions|get_item:assignment.id %}
+                                        {% if submission and submission.marks_obtained is not None %}
+                                        <strong class="text-success">{{ submission.marks_obtained }}/{{
+                                            assignment.total_marks }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                {% with submission=submissions|get_item:assignment.id %}
+                                                {% if not submission or not submission.submitted %}
+                                                <a class="dropdown-item btn-submit-asgn" href="#" data-toggle="modal"
+                                                    data-target="#submitModal" data-assignment-id="{{ assignment.id }}"
+                                                    data-assignment-title="{{ assignment.title }}"
+                                                    data-assignment-subject="{{ assignment.subject.name }}"
+                                                    data-assignment-due="{{ assignment.due_date|date:'d M Y, h:i A' }}"
+                                                    data-assignment-marks="{{ assignment.total_marks }}">
+                                                    <i class="fas fa-upload text-primary"></i> Submit Work
+                                                </a>
+                                                {% endif %}
+                                                {% endwith %}
+                                                {% if assignment.attachment %}
+                                                <a class="dropdown-item" href="{{ assignment.attachment.url }}"
+                                                    target="_blank">
+                                                    <i class="fas fa-paperclip text-info"></i> View Attachment
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                                <!-- Past Assignments -->
+                                {% for assignment in past_assignments %}
+                                <tr style="background-color: #f8fafc;">
+                                    <td><span class="text-muted">{{ assignment.subject.name }}</span></td>
+                                    <td><span class="text-muted">{{ assignment.title }}</span></td>
+                                    <td><span class="text-muted">{{ assignment.teacher.full_name }}</span></td>
+                                    <td><span class="text-muted">{{ assignment.due_date|date:"M d, Y" }}</span></td>
+                                    <td>
+                                        {% with submission=submissions|get_item:assignment.id %}
+                                        {% if submission and submission.submitted %}
+                                        <span class="asgn-status-badge status-submitted">Completed</span>
+                                        {% else %}
+                                        <span class="asgn-status-badge status-missed">Missed</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with submission=submissions|get_item:assignment.id %}
+                                        {% if submission and submission.marks_obtained is not None %}
+                                        <strong>{{ submission.marks_obtained }}/{{ assignment.total_marks }}</strong>
+                                        {% else %}
+                                        <span class="text-muted">--</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                    <td>
+                                        {% with submission=submissions|get_item:assignment.id %}
+                                        {% if submission and submission.submission_file %}
+                                        <a href="{{ submission.submission_file.url }}" target="_blank"
+                                            class="text-primary small">
+                                            <i class="fas fa-file-download mr-1"></i> My File
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted small">No Submission</span>
+                                        {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- SUBMISSION MODAL -->
+<div class="modal fade" id="submitModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-luxe">
+            <div class="modal-header-luxe">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div>
+                        <h5 class="text-white mb-0">Submit Assignment</h5>
+                        <p class="mb-0 small text-white-50" id="modal-subject-line"></p>
+                    </div>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+
+            <form method="POST" id="submissionForm" action="#" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="mb-4 p-3 rounded bg-light">
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="small text-muted mb-0 d-block">Title</label>
+                                <strong id="modal-title-display"></strong>
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted mb-0 d-block">Marks</label>
+                                <strong id="modal-marks-display" class="text-success"></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold">Upload File</label>
+                        <div class="file-drop-zone" onclick="document.getElementById('id_submission_file').click()">
+                            <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                            <p class="mb-0">Click to browse or drag & drop file</p>
+                            <small class="text-muted" id="fileNameDisplay">PDF, DOC, DOCX, JPG, PNG (Max 20MB)</small>
+                        </div>
+                        <input type="file" name="submission_file" id="id_submission_file" style="display:none;"
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.zip">
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label class="font-weight-bold">Written Response (Optional)</label>
+                        <textarea class="form-control" name="submission_text" id="id_submission_text" rows="4"
+                            placeholder="Type your answer here..."></textarea>
+                    </div>
+
+                    <button type="submit"
+                        class="btn-fill-lg btn-gradient-yellow text-white w-100 py-3 font-weight-bold">
+                        <i class="fas fa-paper-plane mr-2"></i>SUBMIT NOW
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#assignmentsTable').DataTable({
+            "paging": true,
+            "searching": true,
+            "ordering": true,
+            "info": true,
+            "order": [[3, 'asc']], // Sort by Due Date by default
+            "columnDefs": [
+                { "orderable": false, "targets": [6] }
+            ],
+            "language": {
+                "paginate": {
+                    "next": "Next",
+                    "previous": "Prev"
+                }
+            }
+        });
+
+        // Populate submission modal
+        $('.btn-submit-asgn').on('click', function () {
+            const data = $(this).data();
+            $('#modal-title-display').text(data.assignmentTitle);
+            $('#modal-subject-line').text(data.assignmentSubject);
+            $('#modal-marks-display').text(data.assignmentMarks + ' pts');
+
+            const form = $('#submissionForm');
+            form.attr('action', '/dashboard/student/assignments/' + data.assignmentId + '/submit/');
+
+            // Reset fields
+            $('#id_submission_file').val('');
+            $('#fileNameDisplay').text('PDF, DOC, DOCX, JPG, PNG (Max 20MB)');
+            $('#id_submission_text').val('');
+        });
+
+        $('#id_submission_file').on('change', function () {
+            if (this.files.length) {
+                $('#fileNameDisplay').text('Selected: ' + this.files[0].name).addClass('text-primary font-weight-bold');
+            }
+        });
+
+        $('#submissionForm').on('submit', function (e) {
+            const file = $('#id_submission_file');
+            const text = $('#id_submission_text');
+            if (!file.val() && !text.val().trim()) {
+                e.preventDefault();
+                alert('Please upload a file or write a response before submitting.');
+            }
+        });
+    });
+</script>
+{% endblock %}

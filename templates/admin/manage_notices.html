@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Notices — School Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .placeholder-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        margin-top: 40px;
+    }
+    .placeholder-icon {
+        width: 100px;
+        height: 100px;
+        background: #f0f7ff;
+        color: #007bff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        margin: 0 auto 30px;
+    }
+    .placeholder-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        margin-bottom: 15px;
+    }
+    .placeholder-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+        max-width: 500px;
+        margin: 0 auto 30px;
+    }
+    .btn-return {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+        padding: 12px 30px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s;
+        display: inline-block;
+    }
+    .btn-return:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Manage Notices</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>Manage Notices</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <div class="placeholder-card">
+                <div class="placeholder-icon">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h2 class="placeholder-title">Manage Notices Module</h2>
+                <p class="placeholder-subtitle">
+                    This module ("admin/manage_notices.html") is currently under development. 
+                    Our team is working hard to bring you the best experience for manage notices management.
+                </p>
+                <a href="{% url 'dashboard' %}" class="btn-return">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+                </a>
+            </div>
+            
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.</div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

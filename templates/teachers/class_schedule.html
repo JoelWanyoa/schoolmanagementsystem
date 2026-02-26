@@ -11,141 +11,201 @@
         {% include 'includes/sidebar.html' %}
         
         <div class="dashboard-content-one">
-    <!-- Page Header -->
-    <div class="row">
-        <div class="col-12">
-            <div class="page-title-box">
-                <div class="page-title-right">
-                    <ol class="breadcrumb m-0">
-                        <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
-                        <li class="breadcrumb-item active">Class Schedule</li>
-                    </ol>
-                </div>
-                <h4 class="page-title">Class Schedule</h4>
-            </div>
-        </div>
-    </div>
-
-    <!-- Schedule Overview -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="header-title">Weekly Timetable</h4>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-print"></i> Print
-                            </button>
-                            <button class="btn btn-outline-success btn-sm">
-                                <i class="fas fa-download"></i> Export
-                            </button>
+            <!-- Page Header -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="page-title-box">
+                        <div class="page-title-right">
+                            <ol class="breadcrumb m-0">
+                                <li class="breadcrumb-item"><a href="{% url 'teacher_dashboard' %}">Teacher</a></li>
+                                <li class="breadcrumb-item active">Class Schedule</li>
+                            </ol>
                         </div>
+                        <h4 class="page-title">Class Schedule</h4>
                     </div>
+                </div>
+            </div>
 
-                    {% if schedule %}
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-centered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Time</th>
-                                    <th>Monday</th>
-                                    <th>Tuesday</th>
-                                    <th>Wednesday</th>
-                                    <th>Thursday</th>
-                                    <th>Friday</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Sample timetable structure -->
-                                <tr>
-                                    <td class="fw-bold">8:00 - 9:00</td>
-                                    <td>
-                                        <div class="schedule-item bg-primary text-white p-2 rounded">
-                                            <strong>Mathematics</strong><br>
-                                            Grade 7A<br>
-                                            Room 101
-                                        </div>
-                                    </td>
-                                    <td>-</td>
-                                    <td>
-                                        <div class="schedule-item bg-success text-white p-2 rounded">
-                                            <strong>Science</strong><br>
-                                            Grade 8B<br>
-                                            Room 102
-                                        </div>
-                                    </td>
-                                    <td>-</td>
-                                    <td>
-                                        <div class="schedule-item bg-primary text-white p-2 rounded">
-                                            <strong>Mathematics</strong><br>
-                                            Grade 7A<br>
-                                            Room 101
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold">9:00 - 10:00</td>
-                                    <td>-</td>
-                                    <td>
-                                        <div class="schedule-item bg-info text-white p-2 rounded">
-                                            <strong>English</strong><br>
-                                            Grade 7B<br>
-                                            Room 103
-                                        </div>
-                                    </td>
-                                    <td>-</td>
-                                    <td>
-                                        <div class="schedule-item bg-warning text-dark p-2 rounded">
-                                            <strong>Social Studies</strong><br>
-                                            Grade 8A<br>
-                                            Room 104
-                                        </div>
-                                    </td>
-                                    <td>-</td>
-                                </tr>
-                                <!-- Add more time slots as needed -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Current Day Schedule -->
-                    <div class="mt-4">
-                        <h5 class="mb-3">Today's Schedule ({{ today|date:"l, F j, Y" }})</h5>
-                        <div class="row">
-                            {% for item in schedule %}
-                            <div class="col-md-6 col-lg-4 mb-3">
-                                <div class="card border">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <h6 class="card-title mb-1">{{ item.subject.name|default:"General" }}</h6>
-                                                <p class="text-muted mb-1">{{ item.class_level.name }}</p>
-                                                <small class="text-muted">{{ item.room }}</small>
-                                            </div>
+            <!-- Teacher's Classes Overview -->
+            {% if teacher_classes %}
+            <div class="row mb-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">My Classes (Class Teacher)</h5>
+                            <div class="row">
+                                {% for class_obj in teacher_classes %}
+                                <div class="col-md-4 col-lg-3 mb-2">
+                                    <div class="class-card p-3 border rounded">
+                                        <h6 class="mb-1">{{ class_obj.name }}</h6>
+                                        <small class="text-muted">{{ class_obj.get_level_category_display }}</small>
+                                        <div class="mt-2">
                                             <span class="badge bg-primary">
-                                                {{ item.start_time|time:"H:i" }} - {{ item.end_time|time:"H:i" }}
+                                                {{ class_obj.students.count }} Students
                                             </span>
+                                            {% for cls, entries in timetable_data.items %}
+                                                {% if cls == class_obj %}
+                                                    <span class="badge bg-success">
+                                                        {{ entries|length }} Periods
+                                                    </span>
+                                                {% endif %}
+                                            {% endfor %}
                                         </div>
                                     </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <i class="flaticon-calendar display-1 text-muted"></i>
-                        <h4 class="mt-3">No Schedule Available</h4>
-                        <p class="text-muted">Your class schedule hasn't been set up yet.</p>
-                    </div>
-                    {% endif %}
                 </div>
             </div>
+            {% endif %}
+
+            <!-- Timetable for Each Class -->
+            {% for class_obj, schedule in timetable_data.items %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="header-title">{{ class_obj.name }} - Weekly Timetable</h4>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-info">{{ schedule.count }} scheduled periods</span>
+                                    <button class="btn btn-outline-primary btn-sm print-timetable" data-class="{{ class_obj.id }}">
+                                        <i class="fas fa-print"></i> Print
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm export-timetable" data-class="{{ class_obj.id }}">
+                                        <i class="fas fa-download"></i> Export
+                                    </button>
+                                </div>
+                            </div>
+
+                            {% if schedule %}
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-centered timetable-table">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 120px;">Time</th>
+                                            <th>Monday</th>
+                                            <th>Tuesday</th>
+                                            <th>Wednesday</th>
+                                            <th>Thursday</th>
+                                            <th>Friday</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for period in periods %}
+                                        <tr>
+                                            <td class="fw-bold timetable-time">
+                                                {{ period.start_time|time:"H:i" }} - {{ period.end_time|time:"H:i" }}
+                                                <br>
+                                                <small class="text-muted">Period {{ period.number }}</small>
+                                            </td>
+                                            {% for day in days %}
+                                            <td class="timetable-cell" style="min-height: 80px;">
+                                                {% for entry in schedule %}
+                                                    {% if entry.day == day.0 and entry.period_number == period.number %}
+                                                        {% if entry.is_break %}
+                                                        <div class="schedule-item break-item p-2 rounded text-center">
+                                                            <strong>{{ entry.break_name }}</strong>
+                                                            <br>
+                                                            <small class="text-dark">Break</small>
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="schedule-item subject-item p-2 rounded" 
+                                                             data-bs-toggle="tooltip" 
+                                                             title="{{ entry.subject.name|default:'No Subject' }} - {{ entry.teacher.full_name|default:'No Teacher' }} - {{ entry.room|default:'No Room' }}">
+                                                            <strong class="d-block">{{ entry.subject.name|default:"Free Period" }}</strong>
+                                                            <small class="d-block">{{ entry.teacher.full_name|default:"No Teacher" }}</small>
+                                                            <small class="d-block">({{ entry.class_level.name|default:"No Class" }}{{ entry.section.name|default:"No Section" }})</small>
+                                                            <small class="text-light">{{ entry.room|default:"No Room" }}</small>
+                                                        </div>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                {% empty %}
+                                                <div class="schedule-item free-item p-2 rounded text-center">
+                                                    <small class="text-muted">Free Period</small>
+                                                </div>
+                                                {% endfor %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="flaticon-calendar display-1 text-muted"></i>
+                                <h4 class="mt-3">No Schedule Available</h4>
+                                <p class="text-muted">Timetable hasn't been set up for {{ class_obj.name }} yet.</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="flaticon-calendar display-1 text-muted"></i>
+                            <h4 class="mt-3">No Classes Assigned</h4>
+                            <p class="text-muted">You are not assigned as class teacher for any classes.</p>
+                            <a href="{% url 'teacher_dashboard' %}" class="btn btn-primary mt-2">Return to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Today's Schedule for All Classes -->
+            {% if today_schedule %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Today's Schedule ({{ today|date:"l, F j, Y" }})</h5>
+                                <span class="badge bg-primary">{{ today_schedule.count }} classes today</span>
+                            </div>
+                            <div class="row">
+                                {% for item in today_schedule %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card border schedule-card">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="card-title mb-1 text-primary">{{ item.subject.name|default:"Free Period" }}</h6>
+                                                    <p class="text-muted mb-1">
+                                                        {{ item.class_level.name }} - Section {{ item.section.name }}
+                                                    </p>
+                                                    <small class="text-muted">
+                                                        {{ item.teacher.full_name|default:"No Teacher" }} • {{ item.room|default:"No Room" }}
+                                                    </small>
+                                                </div>
+                                                <span class="badge bg-primary">
+                                                    {{ item.start_time|time:"H:i" }}
+                                                </span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    Period {{ item.period_number }} • {{ item.start_time|time:"H:i" }} - {{ item.end_time|time:"H:i" }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-</div>
-</div>
 </div>
 {% endblock %}
 
@@ -154,9 +214,74 @@
 .schedule-item {
     transition: transform 0.2s;
     cursor: pointer;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+
 .schedule-item:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.subject-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-left: 4px solid #4a5568;
+}
+
+.break-item {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-left: 4px solid #c53030;
+}
+
+.free-item {
+    background: #f8f9fa;
+    color: #6c757d;
+    border-left: 4px solid #dee2e6;
+}
+
+.timetable-time {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.timetable-cell {
+    min-width: 150px;
+    vertical-align: middle;
+    padding: 4px !important;
+}
+
+.class-card {
+    transition: all 0.3s ease;
+    border-left: 4px solid #667eea !important;
+}
+
+.class-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.schedule-card {
+    transition: all 0.3s ease;
+}
+
+.schedule-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.timetable-table th {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.timetable-table td {
+    text-align: center;
+    vertical-align: middle;
 }
 </style>
 {% endblock %}
@@ -166,11 +291,38 @@
 $(document).ready(function() {
     // Add click handlers for schedule items
     $('.schedule-item').click(function() {
-        alert('Class details would appear here in a real application.');
+        const subject = $(this).find('strong').text();
+        const teacher = $(this).find('small').first().text();
+        const room = $(this).find('small.text-light').text() || $(this).find('small.text-muted').text();
+        
+        Swal.fire({
+            title: subject,
+            html: `<p><strong>Teacher:</strong> ${teacher}</p>
+                   <p><strong>Room:</strong> ${room}</p>`,
+            icon: 'info',
+            confirmButtonText: 'Close'
+        });
+    });
+    
+    // Print timetable for specific class
+    $('.print-timetable').click(function() {
+        const classId = $(this).data('class');
+        window.print();
+    });
+    
+    // Export timetable for specific class
+    $('.export-timetable').click(function() {
+        const classId = $(this).data('class');
+        Swal.fire({
+            title: 'Export Timetable',
+            text: 'Export functionality will be implemented here',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
     });
     
     // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-bs-toggle="tooltip"]').tooltip();
 });
 </script>
 {% endblock %}

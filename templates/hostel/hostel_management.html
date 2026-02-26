@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hostel Management — School Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-left: 5px solid #4e73df;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .stats-card.boys {
+        border-left-color: #4e73df;
+    }
+
+    .stats-card.girls {
+        border-left-color: #e74a3b;
+    }
+
+    .stats-card.rooms {
+        border-left-color: #1cc88a;
+    }
+
+    .stats-card.beds {
+        border-left-color: #f6c23e;
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        opacity: 0.3;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+    .stats-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2e59d9;
+        margin-bottom: 5px;
+    }
+
+    .stats-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #858796;
+        letter-spacing: 1px;
+    }
+
+    .card-title-custom {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-title-custom i {
+        margin-right: 10px;
+        color: #4e73df;
+    }
+
+    .action-btn {
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .action-btn i {
+        margin-right: 8px;
+    }
+
+    .table-custom thead th {
+        background: #f8f9fc;
+        border-top: none;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        color: #4e73df;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Hostel Management</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>Hostel Management</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Stats Start Here -->
+            <div class="row gutters-20 mb-4">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stats-card boys">
+                        <i class="fas fa-male stats-icon text-primary"></i>
+                        <div class="stats-value">{{ boys_hostels }}</div>
+                        <div class="stats-label">Boys Hostels</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stats-card girls">
+                        <i class="fas fa-female stats-icon text-danger"></i>
+                        <div class="stats-value">{{ girls_hostels }}</div>
+                        <div class="stats-label">Girls Hostels</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stats-card rooms">
+                        <i class="fas fa-door-open stats-icon text-success"></i>
+                        <div class="stats-value">{{ total_rooms }}</div>
+                        <div class="stats-label">Total Rooms</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="stats-card beds">
+                        <i class="fas fa-bed stats-icon text-warning"></i>
+                        <div class="stats-value">{{ occupied_beds }} / {{ total_capacity }}</div>
+                        <div class="stats-label">Occupied Beds</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Quick Actions -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm border-0" style="border-radius: 15px;">
+                        <div class="card-body">
+                            <h5 class="card-title-custom">
+                                <i class="fas fa-bolt"></i> Quick Actions
+                            </h5>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'hostel_list' %}" class="btn btn-primary action-btn">
+                                    <i class="fas fa-hotel"></i> Manage Hostels
+                                </a>
+                                <a href="{% url 'add_hostel' %}" class="btn btn-outline-primary action-btn">
+                                    <i class="fas fa-plus"></i> Add New Hostel
+                                </a>
+                                <a href="{% url 'hostel_rooms' %}" class="btn btn-success action-btn">
+                                    <i class="fas fa-door-closed"></i> Room Management
+                                </a>
+                                <a href="{% url 'allocate_hostel' %}" class="btn btn-warning action-btn text-white">
+                                    <i class="fas fa-user-plus"></i> New Allocation
+                                </a>
+                                <a href="{% url 'hostel_allocations' %}" class="btn btn-info action-btn text-white">
+                                    <i class="fas fa-list-ul"></i> Allocation History
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Allocations -->
+                <div class="col-lg-8">
+                    <div class="card h-100 shadow-sm border-0" style="border-radius: 15px;">
+                        <div class="card-body">
+                            <h5 class="card-title-custom">
+                                <i class="fas fa-history"></i> Recent Allocations
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>Student</th>
+                                            <th>Hostel</th>
+                                            <th>Room</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for allocation in recent_allocations %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm mr-3">
+                                                        <span
+                                                            class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                            {{ allocation.student.first_name|first }}{{allocation.student.last_name|first }}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ allocation.student.get_full_name }}</h6>
+                                                        <small class="text-muted">{{ allocation.student.student_id }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ allocation.room.hostel.name }}</td>
+                                            <td>{{ allocation.room.room_number }}</td>
+                                            <td>{{ allocation.allocated_date|date:"M d, Y" }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge badge-pill {% if allocation.status == 'ACTIVE' %}badge-success{% else %}badge-secondary{% endif %}">
+                                                    {{ allocation.status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">No recent allocations
+                                                found</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

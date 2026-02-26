@@ -1,0 +1,622 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Timetable - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .teacher-timetable-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .teacher-timetable-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+    }
+
+    .teacher-timetable-grid {
+        display: grid;
+        grid-template-columns: 100px repeat(5, 1fr);
+        gap: 1px;
+        background: #e9ecef;
+    }
+
+    .teacher-time-slot {
+        background: white;
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .teacher-day-header {
+        background: #495057;
+        color: white;
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .teacher-period-slot {
+        background: white;
+        padding: 15px 10px;
+        min-height: 100px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .teacher-period-slot.my-class {
+        background: #e8f5e8;
+        border-left: 4px solid #28a745;
+    }
+
+    .teacher-period-slot.break-period {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+
+    .teacher-period-slot.free-period {
+        background: #f8f9fa;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .class-name {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+
+    .subject-name {
+        font-weight: 600;
+        color: #2c5530;
+        margin-bottom: 3px;
+        font-size: 13px;
+    }
+
+    .room-number {
+        font-size: 11px;
+        color: #28a745;
+        font-weight: 600;
+        background: #d4edda;
+        padding: 2px 6px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .time-display {
+        font-size: 11px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .teacher-stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .teacher-timetable-grid {
+            grid-template-columns: 80px repeat(5, 1fr);
+            font-size: 12px;
+        }
+        
+        .teacher-period-slot {
+            padding: 10px 5px;
+            min-height: 80px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>My Teaching Timetable</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                    <li>My Timetable</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Teacher Stats -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-primary">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Total Periods</div>
+                                    <div class="item-number"><span class="counter" id="totalPeriodsCount">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-chalkboard text-success"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Classes</div>
+                                    <div class="item-number"><span class="counter" id="totalClassesCount">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-book text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Subjects</div>
+                                    <div class="item-number"><span class="counter" id="totalSubjectsCount">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-info">
+                                    <i class="fas fa-clock text-info"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Today's Periods</div>
+                                    <div class="item-number"><span class="counter" id="todayPeriodsCount">0</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teacher Information -->
+            <div class="teacher-stats-card">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="text-white mb-1">Welcome, {{ teacher.full_name }}</h4>
+                        <p class="text-white mb-0">Teacher ID: {{ teacher.teacher_id }} | {{ teacher.qualification }}</p>
+                        <p class="text-light mb-0">Here's your teaching schedule for this week</p>
+                    </div>
+                    <div class="col-md-4 text-right">
+                        <button class="btn btn-light btn-sm" onclick="printTimetable()">
+                            <i class="fas fa-print"></i> Print Timetable
+                        </button>
+                        <button class="btn btn-outline-light btn-sm ml-2" onclick="refreshTimetable()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timetable Display -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Weekly Teaching Schedule</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="#" onclick="printTimetable()">
+                                    <i class="fas fa-print text-info"></i> Print
+                                </a>
+                                <a class="dropdown-item" href="#" onclick="refreshTimetable()">
+                                    <i class="fas fa-sync-alt text-primary"></i> Refresh
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timetable Grid -->
+                    <div class="teacher-timetable-container mt-4">
+                        <div class="teacher-timetable-header text-center">
+                            <h4 class="mb-0">My Teaching Timetable - Week {{ current_week }}</h4>
+                            <p class="mb-0" id="currentPeriodDisplay">Current Period: Loading...</p>
+                        </div>
+                        
+                        <div class="teacher-timetable-grid" id="teacherTimetableContent">
+                            <!-- Content will be loaded via JavaScript -->
+                            <div class="text-center py-5" id="loadingTimetable">
+                                <div class="spinner-border text-primary mb-3" role="status"></div>
+                                <p>Loading your timetable...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body py-2">
+                                    <h6 class="mb-2">Legend:</h6>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <span class="badge badge-success mr-2">Teaching Period</span>
+                                            <small>Your assigned classes</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="badge badge-warning mr-2">Break Period</span>
+                                            <small>Scheduled breaks</small>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <span class="badge badge-secondary mr-2">Free Period</span>
+                                            <small>No teaching assignment</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let teacherTimetableData = [];
+
+    $(document).ready(function () {
+        console.log('Teacher timetable page loaded');
+        
+        // Initialize counters
+        initializeCounters();
+        
+        // Load teacher timetable
+        loadTeacherTimetable();
+        
+        // Update current period display
+        updateCurrentPeriodDisplay();
+        setInterval(updateCurrentPeriodDisplay, 60000); // Update every minute
+        
+        // Set up auto-refresh every 5 minutes
+        setInterval(loadTeacherTimetable, 300000);
+    });
+
+    function initializeCounters() {
+        $('.counter').each(function () {
+            $(this).prop('Counter', 0).animate({
+                Counter: $(this).text()
+            }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function (now) {
+                    $(this).text(Math.ceil(now));
+                }
+            });
+        });
+    }
+
+    function loadTeacherTimetable() {
+        console.log('Loading teacher timetable...');
+        
+        $.ajax({
+            url: '{% url "teacher_timetable_data" %}',
+            method: 'GET',
+            success: function(response) {
+                console.log('Teacher timetable data loaded:', response.data);
+                teacherTimetableData = response.data;
+                renderTeacherTimetable(teacherTimetableData);
+                updateTeacherStats(teacherTimetableData);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading teacher timetable:', error);
+                showAlert('Error loading timetable. Please try again.', 'error');
+                $('#loadingTimetable').html(`
+                    <div class="text-center py-5 text-danger">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+                        <p>Failed to load timetable. Please refresh the page.</p>
+                        <button class="btn btn-primary btn-sm" onclick="loadTeacherTimetable()">
+                            <i class="fas fa-sync-alt"></i> Try Again
+                        </button>
+                    </div>
+                `);
+            }
+        });
+    }
+
+    function renderTeacherTimetable(data) {
+        console.log('Rendering teacher timetable with', data.length, 'entries');
+        
+        // Create timetable structure with proper period mapping
+        const timetableStructure = createTimetableStructure();
+        
+        // Fill structure with teacher's data - FIXED LOGIC
+        data.forEach(entry => {
+            if (entry.day && entry.period_number) {
+                // Map the entry to the correct day and period
+                if (timetableStructure[entry.day] && timetableStructure[entry.day][entry.period_number] !== undefined) {
+                    timetableStructure[entry.day][entry.period_number] = entry;
+                } else {
+                    console.warn('Invalid day or period number:', entry.day, entry.period_number, entry);
+                }
+            }
+        });
+        
+        // Debug: Log the structure to see what's being populated
+        console.log('Timetable structure:', timetableStructure);
+        
+        // Build timetable grid
+        const gridHtml = buildTimetableGrid(timetableStructure);
+        $('#teacherTimetableContent').html(gridHtml);
+        $('#loadingTimetable').remove();
+    }
+    
+    function createTimetableStructure() {
+        const structure = {};
+        const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+        
+        days.forEach(day => {
+            structure[day] = {};
+            // Create slots for all possible periods (1-8 as per your model)
+            for (let i = 1; i <= 8; i++) {
+                structure[day][i] = null; // Initialize as free period
+            }
+        });
+        
+        return structure;
+    }
+    
+    function buildTimetableGrid(timetableStructure) {
+        const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+        const timeSlots = [
+            { period: 1, start: '08:00', end: '08:40' },
+            { period: 2, start: '08:40', end: '09:20' },
+            { period: 3, start: '09:20', end: '10:00' },
+            { period: 4, start: '10:00', end: '10:20', is_break: true, break_name: 'Tea Break' },
+            { period: 5, start: '10:20', end: '11:00' },
+            { period: 6, start: '11:00', end: '11:40' },
+            { period: 7, start: '11:40', end: '12:20', is_break: true, break_name: 'Short Break' },
+            { period: 8, start: '12:20', end: '13:00' },
+            { period: 9, start: '13:00', end: '14:00', is_break: true, break_name: 'Lunch Break'  },
+            { period: 10, start: '14:00', end: '14:40' },
+            { period: 11, start: '14:40', end: '15:20' },
+            { period: 12, start: '15:20', end: '16:00' },
+            { period: 13, start: '16:00', end: '17:00', is_break: true, break_name: 'Games'  },
+        ];
+    
+        let gridHtml = `
+            <div class="teacher-time-slot">Time</div>
+            <div class="teacher-day-header">Monday</div>
+            <div class="teacher-day-header">Tuesday</div>
+            <div class="teacher-day-header">Wednesday</div>
+            <div class="teacher-day-header">Thursday</div>
+            <div class="teacher-day-header">Friday</div>
+        `;
+    
+        // Create rows for each time slot
+        timeSlots.forEach(timeSlot => {
+            // Time column
+            if (timeSlot.is_break) {
+                gridHtml += `
+                    <div class="teacher-time-slot break-period">
+                        ${timeSlot.start}<br>${timeSlot.end}
+                        <div class="small">${timeSlot.break_name}</div>
+                    </div>
+                `;
+            } else {
+                gridHtml += `
+                    <div class="teacher-time-slot">
+                        ${timeSlot.start}<br>${timeSlot.end}
+                        <div class="small">Period ${timeSlot.period}</div>
+                    </div>
+                `;
+            }
+    
+            // Day columns - only for teaching periods (not breaks)
+            if (!timeSlot.is_break) {
+                days.forEach(day => {
+                    const entry = timetableStructure[day][timeSlot.period];
+                    gridHtml += renderTeacherPeriodSlot(entry, day, timeSlot.period, timeSlot);
+                });
+            } else {
+                // For breaks, show break message in all day columns
+                days.forEach(() => {
+                    gridHtml += `
+                        <div class="teacher-period-slot break-period">
+                            <div><strong>${timeSlot.break_name}</strong></div>
+                            <div class="time-display">${timeSlot.start} - ${timeSlot.end}</div>
+                        </div>
+                    `;
+                });
+            }
+        });
+    
+        return gridHtml;
+    }
+    
+    function renderTeacherPeriodSlot(entry, day, periodNumber, timeSlot) {
+        // Free periods (no teaching assignment)
+        if (!entry) {
+            return `
+                <div class="teacher-period-slot free-period">
+                    <div>Free Period</div>
+                    <div class="time-display">${timeSlot.start} - ${timeSlot.end}</div>
+                    <div class="small text-muted">Period ${periodNumber}</div>
+                </div>
+            `;
+        }
+    
+        // Teaching periods
+        const className = entry.class_level ? `${entry.class_level.name} - Section ${entry.section.name}` : 'No Class';
+        const subjectName = entry.subject ? entry.subject.name : 'No Subject';
+        const room = entry.room || 'TBA';
+        const teacherName = entry.teacher ? entry.teacher.name : 'No Teacher Assigned';
+    
+        return `
+            <div class="teacher-period-slot my-class" 
+                 data-toggle="tooltip" 
+                 title="${subjectName} - ${className} - ${room}">
+                <div class="class-name">${className}</div>
+                <div class="subject-name">${subjectName}</div>
+                <div class="room-number">${room}</div>
+                <div class="time-display">${timeSlot.start} - ${timeSlot.end}</div>
+                <div class="small text-muted">Period ${periodNumber}</div>
+            </div>
+        `;
+    }
+
+
+    function updateTeacherStats(data) {
+        const totalPeriods = data.length;
+        const uniqueClasses = [...new Set(data.map(entry => 
+            entry.class_level ? entry.class_level.name : null
+        ).filter(Boolean))];
+        const uniqueSubjects = [...new Set(data.map(entry => 
+            entry.subject ? entry.subject.name : null
+        ).filter(Boolean))];
+        
+        // Calculate today's periods
+        const today = new Date().toLocaleString('en-us', { weekday: 'long' }).toUpperCase();
+        const todayPeriods = data.filter(entry => entry.day === today).length;
+
+        // Update counters with animation
+        animateCounter('totalPeriodsCount', totalPeriods);
+        animateCounter('totalClassesCount', uniqueClasses.length);
+        animateCounter('totalSubjectsCount', uniqueSubjects.length);
+        animateCounter('todayPeriodsCount', todayPeriods);
+    }
+
+    function animateCounter(elementId, targetValue) {
+        $({ count: 0 }).animate({ count: targetValue }, {
+            duration: 1000,
+            easing: 'swing',
+            step: function() {
+                $('#' + elementId).text(Math.round(this.count));
+            }
+        });
+    }
+
+    function updateCurrentPeriodDisplay() {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+        const currentDay = now.toLocaleString('en-us', { weekday: 'long' }).toUpperCase();
+        
+        let currentClass = 'No current class';
+        let foundCurrent = false;
+        
+        // Find current period
+        teacherTimetableData.forEach(entry => {
+            if (entry.day === currentDay) {
+                const startTime = convertTimeToMinutes(entry.start_time);
+                const endTime = convertTimeToMinutes(entry.end_time);
+                
+                if (currentTime >= startTime && currentTime <= endTime) {
+                    const className = entry.class_level ? `${entry.class_level.name} - ${entry.section.name}` : 'Class';
+                    currentClass = `${entry.subject.name} with ${className} in ${entry.room}`;
+                    foundCurrent = true;
+                }
+            }
+        });
+        
+        if (!foundCurrent) {
+            // Check if it's break time
+            const timeSlots = [
+                { start: '10:00', end: '10:20', name: 'Tea Break' },
+                { start: '11:40', end: '12:20', name: 'Short Break' },
+                { start: '13:00', end: '14:00', name: 'Lunch Break' },
+                { start: '15:20', end: '16:00', name: 'Games' },
+            ];
+            
+            timeSlots.forEach(slot => {
+                const start = convertTimeToMinutes(slot.start);
+                const end = convertTimeToMinutes(slot.end);
+                if (currentTime >= start && currentTime <= end) {
+                    currentClass = `${slot.name} (${slot.start} - ${slot.end})`;
+                }
+            });
+        }
+        
+        $('#currentPeriodDisplay').text(`Current: ${currentClass}`);
+    }
+
+    function convertTimeToMinutes(timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        return hours * 60 + minutes;
+    }
+
+    function refreshTimetable() {
+        showAlert('Refreshing timetable...', 'info');
+        loadTeacherTimetable();
+    }
+
+    function printTimetable() {
+        window.print();
+    }
+
+    function showAlert(message, type = 'info') {
+        // Remove existing alerts
+        $('.custom-alert').remove();
+        
+        const alertClass = type === 'error' ? 'alert-danger' : 
+                          type === 'success' ? 'alert-success' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                <strong>${type.toUpperCase()}:</strong> ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        
+        $('body').append(alertHtml);
+        
+        // Auto-remove success alerts after 3 seconds
+        if (type === 'success' || type === 'info') {
+            setTimeout(() => {
+                $('.custom-alert').alert('close');
+            }, 3000);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Borrowed Books List{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .status-badge {
+        font-size: 0.8em;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    .status-overdue {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .status-borrowed {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_books' %}">Books</a>
+                    </li>
+                    <li>Borrowed Books</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Currently Borrowed Books</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a href="{% url 'borrow_book' %}" class="btn-fill-lg btn-gradient-yellow text-white">
+                                <i class="fas fa-plus mr-2"></i>BORROW NEW BOOK
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Search Form -->
+                    <form class="mg-b-20" method="GET">
+                        <div class="row gutters-8">
+                            <div class="col-9-xxxl col-xl-8 col-lg-8 col-12 form-group">
+                                <input type="text" name="search" placeholder="Search by Book, Borrower Name..."
+                                    class="form-control" value="{{ search_query }}">
+                            </div>
+                            <div class="col-3-xxxl col-xl-4 col-lg-4 col-12 form-group text-right">
+                                <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="borrowedBooksTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Borrower</th>
+                                    <th>Borrowed Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Fine (Kshs)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for borrowing in borrowings %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'book_detail' borrowing.book.id %}"
+                                            class="text-dark font-weight-bold">
+                                            {{ borrowing.book.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ borrowing.borrower.get_full_name }}</td>
+                                    <td>{{ borrowing.borrowed_date }}</td>
+                                    <td>{{ borrowing.due_date }}</td>
+                                    <td>
+                                        {% if borrowing.is_overdue %}
+                                        <span class="status-badge status-overdue">{{ borrowing.overdue_summary }}</span>
+                                        {% else %}
+                                        <span class="status-badge status-borrowed">Borrowed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if borrowing.total_fine > 0 %}
+                                        <strong class="text-danger">{{ borrowing.total_fine }}</strong>
+                                        {% else %}
+                                        -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{% url 'return_book' borrowing.id %}"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-success"
+                                                onclick="return confirm('Confirm book return?')">
+                                                <i class="fas fa-undo mr-1"></i> Return
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No active borrowings found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table JS -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        var table = $('#borrowedBooksTable');
+        if (table.length > 0) {
+            // Check if already initialized and destroy if necessary
+            if ($.fn.DataTable.isDataTable(table)) {
+                table.DataTable().destroy();
+            }
+
+            table.DataTable({
+                "paging": true,
+                "searching": false,
+                "info": true,
+                "lengthChange": false,
+                "pageLength": 10,
+                "ordering": true,
+                "columnDefs": [
+                    { "orderable": false, "targets": [6] }
+                ]
+            });
+        }
+    });
+</script>
+{% endblock %}

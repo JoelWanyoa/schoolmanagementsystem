@@ -1,0 +1,543 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Repository | Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-luxe: #6366f1;
+        --secondary-luxe: #8b5cf6;
+        --success-luxe: #10b981;
+        --warning-luxe: #f59e0b;
+        --danger-luxe: #ef4444;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+
+    .dashboard-content-one {
+        background: #f8fafc;
+        padding: 30px;
+    }
+
+    /* Summary Stats */
+    .stat-card-luxe {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card-luxe:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-luxe);
+    }
+
+    .icon-box-luxe {
+        width: 50px;
+        height: 50px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 16px;
+    }
+
+    /* Filter Bar */
+    .filter-bar-luxe {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 30px;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .filter-label {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .filter-input-luxe {
+        border-radius: 12px;
+        border: 2px solid #f1f5f9;
+        padding: 12px 16px;
+        font-weight: 500;
+        height: 48px;
+        transition: all 0.2s;
+    }
+
+    .filter-input-luxe:focus {
+        border-color: var(--primary-luxe);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        background: #fff;
+        outline: none;
+    }
+
+    .btn-search-luxe {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        font-weight: 700;
+        border-radius: 12px;
+        padding: 12px 24px;
+        border: none;
+        transition: all 0.3s;
+        height: 48px;
+    }
+
+    .btn-search-luxe:hover {
+        box-shadow: 0 10px 15px rgba(99, 102, 241, 0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Table Luxe */
+    .table-container-luxe {
+        background: #fff;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    .table-luxe th {
+        background: #f8fafc;
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 20px 24px;
+        border: none;
+    }
+
+    .table-luxe td {
+        padding: 20px 24px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f5f9;
+        color: #334155;
+        font-size: 1rem;
+    }
+
+    /* User Avatar */
+    .avatar-luxe {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 1.15rem;
+    }
+
+    .avatar-superuser { background: #fde8ff; color: #7c3aed; }
+    .avatar-admin { background: #dbeafe; color: #1d4ed8; }
+    .avatar-teacher { background: #dcfce7; color: #15803d; }
+    .avatar-student { background: #fef3c7; color: #92400e; }
+    .avatar-parent { background: #f1f5f9; color: #475569; }
+
+    /* Badges */
+    .badge-luxe {
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-inactive { background: #fee2e2; color: #b91c1c; }
+
+    /* Actions */
+    .btn-action-luxe {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.2s;
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .btn-action-luxe:hover {
+        background: var(--primary-luxe);
+        color: #fff;
+        transform: scale(1.1);
+    }
+
+    .btn-delete-luxe:hover { background: var(--danger-luxe); }
+
+    /* Modal CPD */
+    .modal-content-luxe {
+        border-radius: 24px;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header-luxe {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        padding: 30px;
+        color: #fff;
+        border: none;
+    }
+
+    .modal-title-luxe { font-weight: 800; letter-spacing: -0.5px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap" style="gap:20px;">
+                <div>
+                    <h2 class="font-weight-bold mb-1" style="color:#1e293b; font-size: 2.2rem;">User Repository</h2>
+                    <ul class="d-flex align-items-center mb-0 p-0" style="list-style:none; font-size:1rem;">
+                        <li><a href="{% url 'dashboard' %}" class="text-muted">Portal</a></li>
+                        <li class="mx-2 text-muted">/</li>
+                        <li class="font-weight-bold" style="color:var(--primary-luxe);">User Management</li>
+                    </ul>
+                </div>
+                <div class="d-flex" style="gap:10px;">
+                    <button class="btn btn-search-luxe" onclick="window.location.reload()">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh List
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="stat-card-luxe">
+                        <div class="icon-box-luxe" style="background:rgba(99, 102, 241, 0.1); color:var(--primary-luxe);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ total_users }}</h3>
+                        <p class="text-muted small font-weight-bold text-uppercase mb-0">Total Accounts</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="stat-card-luxe">
+                        <div class="icon-box-luxe" style="background:rgba(16, 185, 129, 0.1); color:var(--success-luxe);">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ active_users }}</h3>
+                        <p class="text-muted small font-weight-bold text-uppercase mb-0">Active Sessions</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="stat-card-luxe">
+                        <div class="icon-box-luxe" style="background:rgba(245, 158, 11, 0.1); color:var(--warning-luxe);">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ teacher_users }}</h3>
+                        <p class="text-muted small font-weight-bold text-uppercase mb-0">Educators</p>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="stat-card-luxe">
+                        <div class="icon-box-luxe" style="background:rgba(124, 58, 237, 0.1); color:#7c3aed;">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ staff_users }}</h3>
+                        <p class="text-muted small font-weight-bold text-uppercase mb-0">Administrators</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Console -->
+            <div class="filter-bar-luxe">
+                <form method="GET" class="row align-items-end">
+                    <div class="col-md-5 mb-3 mb-md-0">
+                        <label class="filter-label">Search Identity</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-right-0" style="border-radius:12px 0 0 12px; border:2px solid #f1f5f9;">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                            </div>
+                            <input type="text" name="q" value="{{ search_query }}" class="form-control filter-input-luxe border-left-0" style="border-radius:0 12px 12px 0;" placeholder="Name, UID or @username...">
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3 mb-md-0">
+                        <label class="filter-label">Access Role</label>
+                        <select name="role" class="form-control filter-input-luxe">
+                            <option value="">All Roles</option>
+                            <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin Access</option>
+                            <option value="teacher" {% if role_filter == 'teacher' %}selected{% endif %}>Faculty</option>
+                            <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Student</option>
+                            <option value="parent" {% if role_filter == 'parent' %}selected{% endif %}>Guardian</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-3 mb-md-0">
+                        <label class="filter-label">Account Status</label>
+                        <select name="status" class="form-control filter-input-luxe">
+                            <option value="">Status: All</option>
+                            <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                            <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-search-luxe w-100">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Main Repository Table -->
+            <div class="table-container-luxe">
+                <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="font-weight-bold mb-0" style="color:#1e293b;">Accounts Found</h5>
+                    <span class="badge badge-primary-luxe" style="background:#eef2ff; color:var(--primary-luxe); padding:8px 16px; border-radius:10px; font-weight:800;">
+                        {{ page_obj.paginator.count }} Records
+                    </span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-luxe mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">#</th>
+                                <th>Identity</th>
+                                <th>Credentials</th>
+                                <th>System Role</th>
+                                <th>Status</th>
+                                <th class="text-right">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in page_obj %}
+                            {% with u=item.user %}
+                            <tr id="user-row-{{ u.id }}">
+                                <td class="text-muted small">{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-luxe mr-3 {% if u.is_superuser %}avatar-superuser{% elif u.is_staff %}avatar-admin{% elif item.role == 'Teacher' %}avatar-teacher{% elif item.role == 'Student' %}avatar-student{% else %}avatar-parent{% endif %}">
+                                            {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="font-weight-bold" style="color:#1e293b;">{{ u.get_full_name|default:u.username }}</div>
+                                            <small class="text-muted">{{ u.email|default:"No email verified" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:8px; font-size:0.8rem;">@{{ u.username }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge-luxe {% if u.is_superuser %}avatar-superuser{% elif u.is_staff %}avatar-admin{% elif item.role == 'Teacher' %}avatar-teacher{% elif item.role == 'Student' %}avatar-student{% else %}avatar-parent{% endif %}" style="background-color: transparent; border: 1px solid currentColor;">
+                                        {% if u.is_superuser %}<i class="fas fa-crown mr-1"></i>{% endif %}
+                                        {{ item.role }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge-luxe status-{{ u.is_active|yesno:'active,inactive' }}" id="status-badge-{{ u.id }}">
+                                        <i class="fas fa-circle mr-1" style="font-size:0.5rem;"></i>
+                                        {{ u.is_active|yesno:"Active,Inactive" }}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <div class="d-flex justify-content-end" style="gap:8px;">
+                                        <button class="btn-action-luxe change-pw-btn" data-user-id="{{ u.id }}" data-username="{{ u.username }}" data-toggle="tooltip" title="Reset Password">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <button class="btn-action-luxe toggle-status-btn {% if u.is_active %}btn-toggle-off{% else %}btn-toggle-on{% endif %}" data-user-id="{{ u.id }}" data-status="{{ u.is_active|yesno:'active,inactive' }}" data-toggle="tooltip" title="{{ u.is_active|yesno:'Deactivate,Activate' }}">
+                                            <i class="fas fa-power-off"></i>
+                                        </button>
+                                        <button class="btn-action-luxe btn-delete-luxe" onclick="return confirm('Securely delete this account?')" data-toggle="tooltip" title="Remove User">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="p-4 bg-light d-flex justify-content-center">
+                    <nav aria-label="Navigator">
+                        <ul class="pagination mb-0">
+                            {% if page_obj.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&role={{ role_filter }}&status={{ status_filter }}"><i class="fas fa-chevron-left text-primary"></i></a></li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ search_query }}&role={{ role_filter }}&status={{ status_filter }}">{{ num }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&role={{ role_filter }}&status={{ status_filter }}"><i class="fas fa-chevron-right text-primary"></i></a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Luxe Modal for Password Management -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-luxe">
+            <div class="modal-header modal-header-luxe">
+                <div>
+                    <h5 class="modal-title-luxe mb-1">Security Transition</h5>
+                    <p class="mb-0 small opacity-75">Update password for <span id="target-username" class="font-weight-bold">user</span></p>
+                </div>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="changePasswordForm">
+                    <input type="hidden" name="user_id" id="target-user-id">
+                    <div class="form-group mb-4">
+                        <label class="filter-label">Establish New Credentials</label>
+                        <div class="position-relative">
+                            <input type="password" name="new_password" id="new_password" class="form-control filter-input-luxe w-100" placeholder="Minimum 8 characters..." required>
+                            <i class="fas fa-eye position-absolute" style="right:15px; top:15px; cursor:pointer; color:#94a3b8;" id="togglePassword"></i>
+                        </div>
+                        <div class="mt-2 d-flex gap-1" id="strength-meter">
+                            <div class="flex-grow-1" style="height:4px; border-radius:2px; background:#f1f5f9;"></div>
+                            <div class="flex-grow-1" style="height:4px; border-radius:2px; background:#f1f5f9;"></div>
+                            <div class="flex-grow-1" style="height:4px; border-radius:2px; background:#f1f5f9;"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-search-luxe w-100 py-3 mt-2">
+                        Integrate New Security Policy
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script>
+    $(document).ready(function() {
+        // Toggle password visibility
+        $('#togglePassword').click(function() {
+            const type = $('#new_password').attr('type') === 'password' ? 'text' : 'password';
+            $('#new_password').attr('type', type);
+            $(this).toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // Initialize tooltips
+        if (typeof $().tooltip === 'function') {
+            $('[data-toggle="tooltip"]').tooltip();
+        }
+
+        // Handle password change modal
+        $('.change-pw-btn').click(function() {
+            const userId = $(this).data('user-id');
+            const username = $(this).data('username');
+            
+            $('#target-user-id').val(userId);
+            $('#target-username').text('@' + username);
+            $('#changePasswordModal').modal('show');
+        });
+
+        // Handle Password Change Submission
+        $('#changePasswordForm').on('submit', function(e) {
+            e.preventDefault();
+            const userId = $('#target-user-id').val();
+            const newPassword = $('#new_password').val();
+
+            if (newPassword.length < 8) {
+                alert('Security protocol requires minimum 8 characters.');
+                return;
+            }
+
+            $.ajax({
+                url: `/dashboard/admin/users/${userId}/change-password/`,
+                method: 'POST',
+                data: {
+                    'new_password': newPassword,
+                    'confirm_password': newPassword, // Pass both to satisfy view
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    if (response.success || response.status === 'success') {
+                        $('#changePasswordModal').modal('hide');
+                        $('#new_password').val('');
+                        alert('Identity credentials updated successfully.');
+                    } else {
+                        alert('System Error: ' + response.message);
+                    }
+                }
+            });
+        });
+
+        // Handle User Status Toggle
+        $('.toggle-status-btn').click(function() {
+            const btn = $(this);
+            const userId = btn.data('user-id');
+            const currentStatus = btn.data('status');
+            const action = currentStatus === 'active' ? 'Deactivate' : 'Activate';
+
+            if (confirm(`${action} this account access?`)) {
+                $.ajax({
+                    url: `/dashboard/admin/users/${userId}/toggle-status/`,
+                    method: 'POST',
+                    data: {
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        if (response.success || response.status === 'success') {
+                            const newStatus = response.is_active ? 'active' : 'inactive';
+                            const badge = $('#status-badge-' + userId);
+                            
+                            // Update badge
+                            badge.removeClass('status-active status-inactive').addClass('status-' + newStatus);
+                            badge.html(`<i class="fas fa-circle mr-1" style="font-size:0.5rem;"></i> ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`);
+                            
+                            // Update button
+                            btn.data('status', newStatus);
+                            if (newStatus === 'active') {
+                                btn.removeClass('btn-toggle-off').addClass('btn-toggle-on');
+                                btn.attr('title', 'Deactivate');
+                            } else {
+                                btn.removeClass('btn-toggle-on').addClass('btn-toggle-off');
+                                btn.attr('title', 'Activate');
+                            }
+                            // Refresh tooltips
+                            if (typeof btn.tooltip === 'function') {
+                                btn.tooltip('dispose');
+                                btn.tooltip();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

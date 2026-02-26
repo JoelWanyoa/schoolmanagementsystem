@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hostels — School Management System{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Hostels</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'hostel_management' %}">Hostel Management</a></li>
+                    <li>All Hostels</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Hostel List</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a href="{% url 'add_hostel' %}" class="btn-fill-lg btn-gradient-yellow text-white">
+                                <i class="fas fa-plus mr-2"></i>Add Hostel
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table display data-table text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Hostel Name</th>
+                                    <th>Type</th>
+                                    <th>Warden</th>
+                                    <th>Phone</th>
+                                    <th>Total Rooms</th>
+                                    <th>Available</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hostel in hostels %}
+                                <tr>
+                                    <td>{{ hostel.name }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {% if hostel.type == 'BOYS' %}badge-primary{% else %}badge-danger{% endif %} badge-pill">
+                                            {{ hostel.get_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ hostel.warden_name }}</td>
+                                    <td>{{ hostel.warden_phone }}</td>
+                                    <td>{{ hostel.total_rooms }}</td>
+                                    <td>{{ hostel.available_rooms }}</td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'edit_hostel' hostel.pk %}">
+                                                    <i class="fas fa-edit text-dark-pastel-green mr-2"></i>Edit
+                                                </a>
+                                                <form action="{% url 'delete_hostel' hostel.pk %}" method="POST"
+                                                    style="display:inline;"
+                                                    onsubmit="return confirm('Are you sure you want to delete this hostel?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="fas fa-trash text-orange-red mr-2"></i>Delete
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No hostels found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

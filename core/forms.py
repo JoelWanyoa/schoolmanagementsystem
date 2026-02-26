@@ -1,6 +1,19 @@
 from django import forms
-from .models import *
+from django.db import models
+from django.apps import apps
 from django.utils import timezone
+
+from .models import *
+
+class SystemSettings(models.Model):
+    setup_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @classmethod
+    def get_instance(cls):
+        obj, created = cls.objects.get_or_create(pk=1)
+        return obj
 
 class ExpenseForm(forms.ModelForm):
     class Meta:
@@ -272,65 +285,116 @@ class AssignmentSubmissionForm(forms.ModelForm):
             'submission_text': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Type your submission here...'}),
         }
 
-# In core/forms.py - Update the ExamForm
-class ExamForm(forms.ModelForm):
-    class Meta:
-        model = Exam
-        fields = ['name', 'exam_type', 'subject', 'class_level', 'exam_date', 'total_marks', 'passing_marks']
-        widgets = {
-            'exam_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter exam name'}),
-            'exam_type': forms.Select(attrs={'class': 'form-control'}),
-            'subject': forms.Select(attrs={'class': 'form-control'}),
-            'class_level': forms.Select(attrs={'class': 'form-control'}),
-            'total_marks': forms.NumberInput(attrs={
-                'class': 'form-control', 
-                'min': '1', 
-                'step': '0.5',
-                'placeholder': 'e.g., 100'
-            }),
-            'passing_marks': forms.NumberInput(attrs={
-                'class': 'form-control', 
-                'min': '0', 
-                'step': '0.5',
-                'placeholder': 'e.g., 40'
-            }),
-        }
+class ExamForm(forms.Form):
+    name = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter exam name'})
+    )
+    exam_type = forms.ChoiceField(
+        choices=[
+            ('MIDTERM', 'Midterm'),
+            ('FINAL', 'Final'),
+            ('QUIZ', 'Quiz'),
+            ('ASSIGNMENT', 'Assignment'),
+            ('PROJECT', 'Project'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter exam description (optional)'})
+    )
+    exam_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'})
+    )
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'})
+    )
+    end_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'})
+    )
+    duration = forms.IntegerField(
+        min_value=1,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Duration in minutes'})
+    )
+    room = forms.CharField(
+        required=False,
+        max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter room/venue (optional)'})
+    )
+    total_marks = forms.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'step': '0.5', 'placeholder': 'e.g., 100'})
+    )
+    passing_marks = forms.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.5', 'placeholder': 'e.g., 40'})
+    )
+    status = forms.ChoiceField(
+        choices=[
+            ('UPCOMING', 'Upcoming'),
+            ('ONGOING', 'Ongoing'),
+            ('COMPLETED', 'Completed'),
+            ('CANCELLED', 'Cancelled'),
+        ],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     
     def __init__(self, *args, **kwargs):
         teacher = kwargs.pop('teacher', None)
+        instance = kwargs.pop('instance', None)
         super().__init__(*args, **kwargs)
         
-        # Make fields required
-        self.fields['name'].required = True
-        self.fields['exam_type'].required = True
-        self.fields['subject'].required = True
-        self.fields['class_level'].required = True
-        self.fields['exam_date'].required = True
-        self.fields['total_marks'].required = True
-        self.fields['passing_marks'].required = True
+        # Import models here to avoid circular imports
+        Subject = apps.get_model('core', 'Subject')
+        Class = apps.get_model('core', 'Class')
         
-        # Set initial values and filter options if teacher is provided
-        if teacher:
-            # Filter subjects
-            if hasattr(teacher, 'subjects'):
-                self.fields['subject'].queryset = teacher.subjects.all()
-            else:
-                self.fields['subject'].queryset = Subject.objects.all()
-            
-            # Filter classes
-            self.fields['class_level'].queryset = Class.objects.filter(class_teacher=teacher)
-            
-            # Set initial values if only one option exists
-            if self.fields['subject'].queryset.count() == 1:
-                self.fields['subject'].initial = self.fields['subject'].queryset.first()
-            if self.fields['class_level'].queryset.count() == 1:
-                self.fields['class_level'].initial = self.fields['class_level'].queryset.first()
+        # Add dynamic fields
+        self.fields['subject'] = forms.ModelChoiceField(
+            queryset=Subject.objects.all(),
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )
+        self.fields['class_level'] = forms.ModelChoiceField(
+            queryset=Class.objects.all(),
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )
         
-        # Set default values
-        if not self.instance.pk:  # Only for new exams
+        # Set initial values from instance if editing
+        if instance:
+            for field in self.fields:
+                if hasattr(instance, field):
+                    self.fields[field].initial = getattr(instance, field)
+        
+        # Set default values for new exams
+        if not instance:
             self.fields['total_marks'].initial = 100
             self.fields['passing_marks'].initial = 40
+            self.fields['status'].initial = 'UPCOMING'
+            self.fields['duration'].initial = 120
+            self.fields['start_time'].initial = '09:00'
+            self.fields['end_time'].initial = '11:00'
+    
+    def save(self, created_by=None):
+        Exam = apps.get_model('core', 'Exam')  # or wherever your Exam model is
+        
+        exam_data = {field: self.cleaned_data[field] for field in self.cleaned_data}
+        
+        if hasattr(self, 'instance') and self.instance:
+            # Update existing instance
+            for field, value in exam_data.items():
+                setattr(self.instance, field, value)
+            exam = self.instance
+        else:
+            # Create new instance
+            exam = Exam(**exam_data)
+        
+        if created_by:
+            exam.created_by = created_by
+        
+        exam.save()
+        return exam
 
 class ExamResultForm(forms.ModelForm):
     class Meta:
@@ -367,27 +431,29 @@ class ClassForm(forms.ModelForm):
             'class_teacher': forms.Select(attrs={'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from core.models import Teacher
+        # Only show teachers who are NOT already class teachers of another class
+        # (excluding the current one)
+        occupied_teachers = Class.objects.filter(class_teacher__isnull=False)
+        if self.instance and self.instance.pk:
+            occupied_teachers = occupied_teachers.exclude(pk=self.instance.pk)
+        
+        occupied_teacher_ids = occupied_teachers.values_list('class_teacher_id', flat=True)
+        self.fields['class_teacher'].queryset = Teacher.objects.exclude(id__in=occupied_teacher_ids)
+
 class SubjectForm(forms.ModelForm):
     class Meta:
         model = Subject
-        fields = ['name', 'code', 'description', 'credit_hours']  # Add credit_hours here
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'credit_hours': forms.NumberInput(attrs={  # Add this widget
-                'class': 'form-control',
-                'min': '1',
-                'max': '10',
-                'step': '1'
-            }),
-        }
-        labels = {
-            'name': 'Subject Name',
-            'code': 'Subject Code',
-            'description': 'Description',
-            'credit_hours': 'Credit Hours',  # Add this label
-        }
+        fields = '__all__'  
+        
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Add CSS classes to all fields
+            for field_name, field in self.fields.items():
+                field.widget.attrs['class'] = 'form-control'
 
 class BookForm(forms.ModelForm):
     class Meta:
@@ -397,12 +463,23 @@ class BookForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'author': forms.TextInput(attrs={'class': 'form-control'}),
             'isbn': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
             'publisher': forms.TextInput(attrs={'class': 'form-control'}),
             'published_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'total_copies': forms.NumberInput(attrs={'class': 'form-control'}),
-            'available_copies': forms.NumberInput(attrs={'class': 'form-control'}),
+            'total_copies': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'available_copies': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        total_copies = cleaned_data.get('total_copies')
+        available_copies = cleaned_data.get('available_copies')
+
+        if total_copies is not None and available_copies is not None:
+            if available_copies > total_copies:
+                raise forms.ValidationError("Available copies cannot exceed total copies.")
+        
+        return cleaned_data
 
 class NoticeForm(forms.ModelForm):
     """Form for creating and editing notices"""
@@ -479,20 +556,116 @@ class MessageForm(forms.ModelForm):
             'file': 'Attachment (Optional)',
         }
 
+
 class TimetableForm(forms.ModelForm):
     """Form for timetable management"""
+    
     class Meta:
-        model = Timetable
-        fields = ['class_level', 'subject', 'teacher', 'day', 'start_time', 'end_time', 'room']
+        model = Timetable  # This references the model from models.py
+        fields = ['class_level', 'section', 'subject', 'teacher', 'day', 'period_number', 
+                 'start_time', 'end_time', 'room', 'is_break', 'break_name']
         widgets = {
-            'class_level': forms.Select(attrs={'class': 'form-control'}),
-            'subject': forms.Select(attrs={'class': 'form-control'}),
-            'teacher': forms.Select(attrs={'class': 'form-control'}),
-            'day': forms.Select(attrs={'class': 'form-control'}),
-            'start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
-            'end_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
-            'room': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter room number'}),
+            'class_level': forms.Select(attrs={
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'section': forms.Select(attrs={
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'subject': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'teacher': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'day': forms.Select(attrs={
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'period_number': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 12,
+                'required': 'required'
+            }),
+            'start_time': forms.TimeInput(attrs={
+                'type': 'time',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'end_time': forms.TimeInput(attrs={
+                'type': 'time',
+                'class': 'form-control',
+                'required': 'required'
+            }),
+            'room': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter room number'
+            }),
+            'is_break': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'break_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Break name (e.g., Lunch, Short Break)'
+            }),
         }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set initial sections based on class if instance exists
+        if self.instance and self.instance.pk:
+            self.fields['section'].queryset = Section.objects.filter(
+                class_name=self.instance.class_level
+            ).order_by('name')
+        
+        # Set initial teachers based on subject if instance exists
+        if self.instance and self.instance.pk and self.instance.subject:
+            self.fields['teacher'].queryset = Teacher.objects.filter(
+                subjects=self.instance.subject
+            ).distinct()
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+        class_level = cleaned_data.get('class_level')
+        section = cleaned_data.get('section')
+        day = cleaned_data.get('day')
+        period_number = cleaned_data.get('period_number')
+        is_break = cleaned_data.get('is_break')
+        subject = cleaned_data.get('subject')
+        teacher = cleaned_data.get('teacher')
+        
+        # Validate time
+        if start_time and end_time and start_time >= end_time:
+            raise forms.ValidationError("End time must be after start time.")
+        
+        # Validate that break periods don't have subject/teacher
+        if is_break and (subject or teacher):
+            raise forms.ValidationError("Break periods cannot have subjects or teachers assigned.")
+        
+        # Validate that non-break periods have subject and teacher
+        if not is_break and (not subject or not teacher):
+            raise forms.ValidationError("Non-break periods must have both subject and teacher assigned.")
+        
+        # Validate period number uniqueness
+        if class_level and section and day and period_number:
+            existing = Timetable.objects.filter(
+                class_level=class_level,
+                section=section,
+                day=day,
+                period_number=period_number
+            ).exclude(pk=self.instance.pk if self.instance else None)
+            
+            if existing.exists():
+                raise forms.ValidationError(
+                    f"A timetable entry already exists for {class_level.name} - Section {section.name} on {day} period {period_number}."
+                )
+        
+        return cleaned_data
 
 class AttendanceForm(forms.ModelForm):
     """Form for marking attendance"""
@@ -520,8 +693,9 @@ class FeePaymentForm(forms.ModelForm):
     """Form for fee payments"""
     class Meta:
         model = FeePayment
-        fields = ['fee', 'amount_paid', 'payment_date', 'payment_method', 'transaction_id', 'remarks']
+        fields = ['student', 'fee', 'amount_paid', 'payment_date', 'payment_method', 'transaction_id', 'remarks']
         widgets = {
+            'student': forms.Select(attrs={'class': 'form-control'}),
             'fee': forms.Select(attrs={'class': 'form-control'}),
             'amount_paid': forms.NumberInput(attrs={
                 'class': 'form-control',
@@ -608,7 +782,7 @@ class TransportRouteForm(forms.ModelForm):
     """Form for transport routes"""
     class Meta:
         model = TransportRoute
-        fields = ['name', 'description', 'start_point', 'end_point', 'distance', 'fare']
+        fields = ['name', 'description', 'start_point', 'end_point', 'distance', 'fare', 'is_active']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter route name'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter route description'}),
@@ -622,15 +796,32 @@ class VehicleForm(forms.ModelForm):
     """Form for vehicle management"""
     class Meta:
         model = Vehicle
-        fields = ['vehicle_number', 'model', 'capacity', 'driver_name', 'driver_phone', 'insurance_expiry', 'status']
+        fields = ['vehicle_number', 'model', 'capacity', 'vehicle_type', 'driver_name', 'driver_phone', 'insurance_expiry', 'status', 'route']
         widgets = {
             'vehicle_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter vehicle number'}),
             'model': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter vehicle model'}),
             'capacity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1', 'placeholder': 'Enter seating capacity'}),
+            'vehicle_type': forms.Select(attrs={'class': 'form-control'}),
             'driver_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter driver name'}),
             'driver_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter driver phone'}),
             'insurance_expiry': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
+            'route': forms.Select(attrs={'class': 'form-control select2'}),
+        }
+
+class HostelForm(forms.ModelForm):
+    """Form for hostel management"""
+    class Meta:
+        model = Hostel
+        fields = ['name', 'type', 'address', 'warden_name', 'warden_phone', 'total_rooms', 'available_rooms']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter hostel name'}),
+            'type': forms.Select(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter address'}),
+            'warden_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter warden name'}),
+            'warden_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter warden phone'}),
+            'total_rooms': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'available_rooms': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
         }
 
 class HostelRoomForm(forms.ModelForm):

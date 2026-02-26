@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Update Parent - {{ parent.full_name }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Update Parent</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_parents' %}">Parents</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'parent_details' parent.id %}">{{ parent.full_name }}</a>
+                    </li>
+                    <li>Update</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Update Parent Information</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'parent_details' parent.id %}">
+                                    <i class="fas fa-eye text-info"></i>View Profile
+                                </a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" class="new-added-form" id="updateParentForm">
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <!-- Basic Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading" style="font-weight: 700; color: #042954;">Basic Information
+                                </h4>
+                                <hr>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>First Name <span class="text-danger">*</span></label>
+                                <input type="text" name="first_name" id="first_name" value="{{ parent.first_name }}"
+                                    class="form-control" placeholder="Enter first name" required>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Last Name <span class="text-danger">*</span></label>
+                                <input type="text" name="last_name" id="last_name" value="{{ parent.last_name }}"
+                                    class="form-control" placeholder="Enter last name" required>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Email Address <span class="text-danger">*</span></label>
+                                <input type="email" name="email" id="email" value="{{ parent.email }}"
+                                    class="form-control" placeholder="parent@example.com" required>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Phone Number <span class="text-danger">*</span></label>
+                                <input type="tel" name="phone" id="phone" value="{{ parent.phone }}"
+                                    class="form-control" placeholder="+254 XXX XXX XXX" required>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Occupation</label>
+                                <input type="text" name="occupation" id="occupation" value="{{ parent.occupation }}"
+                                    class="form-control" placeholder="Enter occupation">
+                            </div>
+
+                            <div class="col-xl-9 col-lg-6 col-12 form-group">
+                                <label>Residential Address</label>
+                                <input type="text" name="address" id="address" value="{{ parent.address }}"
+                                    class="form-control" placeholder="Enter full address">
+                            </div>
+
+                            <!-- Family Information -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading" style="font-weight: 700; color: #042954;">Family Details</h4>
+                                <hr>
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Husband's Name</label>
+                                <input type="text" name="father_name" id="father_name" value="{{ parent.father_name }}"
+                                    class="form-control" placeholder="Enter husband's name">
+                            </div>
+
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Wife's Name</label>
+                                <input type="text" name="mother_name" id="mother_name" value="{{ parent.mother_name }}"
+                                    class="form-control" placeholder="Enter wife's name">
+                            </div>
+
+                            <!-- Photo Section -->
+                            <div class="col-12 mt-4">
+                                <h4 class="text-heading" style="font-weight: 700; color: #042954;">Profile Photo</h4>
+                                <hr>
+                            </div>
+
+                            <div class="col-lg-12 col-12 form-group">
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="current-photo" id="photoPreviewContainer"
+                                            style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 3px solid #eee;">
+                                            {% if parent.photo %}
+                                            <img src="{{ parent.photo.url }}" alt="{{ parent.full_name }}"
+                                                id="imagePreview" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% else %}
+                                            <img src="{% static 'img/figure/parent.png' %}" alt="parent"
+                                                id="imagePreview" style="width: 100%; height: 100%; object-fit: cover;">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div class="custom-file">
+                                            <input type="file" name="photo" id="photoInput" class="custom-file-input"
+                                                accept="image/*">
+                                            <label class="custom-file-label" for="photoInput">Choose new photo</label>
+                                        </div>
+                                        <small class="text-muted mt-2 d-block">Recommended size: 200x200px. JPG, PNG
+                                            compatible.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Form Actions -->
+                            <div class="col-12 form-group mg-t-30">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    Update Profile
+                                </button>
+                                <button type="reset" id="resetBtn" class="btn-fill-lg bg-blue-dark btn-hover-yellow">
+                                    Reset
+                                </button>
+                                <a href="{% url 'parent_details' parent.id %}"
+                                    class="btn-fill-lg btn-gradient-dark btn-hover-bluedark text-white ml-3">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Footer Start Here -->
+            <footer class="footer-wrap-layout1">
+                <div class="copyright text-center mt-5">© 2026 <a href="#">Petra Education Centre</a>. All rights
+                    reserved.</div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // REAL-TIME IMAGE PREVIEW
+        $('#photoInput').on('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Update label
+                let fileName = file.name;
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+
+                // Update Preview
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    $('#imagePreview').attr('src', event.target.result);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Reset functionality
+        $('#resetBtn').on('click', function () {
+            if (confirm('Are you sure you want to reset all changes?')) {
+                // Revert image preview if it was changed
+                {% if parent.photo %}
+                $('#imagePreview').attr('src', '{{ parent.photo.url }}');
+                {% else %}
+                $('#imagePreview').attr('src', '{% static "img/figure/parent.png" %}');
+                {% endif %}
+                $('.custom-file-label').removeClass("selected").html("Choose new photo");
+                return true;
+            }
+            return false;
+        });
+    });
+</script>
+{% endblock %}

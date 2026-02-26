@@ -1,0 +1,232 @@
+﻿{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Library Inventory{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .book-status-badge {
+        font-size: 0.8em;
+        padding: 5px 10px;
+        border-radius: 20px;
+    }
+
+    .status-available {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .status-borrowed {
+        background-color: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .status-lost {
+        background-color: #ffebee;
+        color: #c62828;
+    }
+
+    .status-damaged {
+        background-color: #eceff1;
+        color: #455a64;
+    }
+
+    .book-cover-placeholder {
+        width: 40px;
+        height: 60px;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>All Books</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Books Inventory</h3>
+                        </div>
+                        {% if request.user.is_staff %}
+                        <div class="dropdown">
+                            <a href="{% url 'add_book' %}" class="btn-fill-lg btn-gradient-yellow text-white">
+                                <i class="fas fa-plus mr-2"></i>ADD NEW BOOK
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Search Form -->
+                    <form class="mg-b-20" method="GET">
+                        <div class="row gutters-8">
+                            <div class="col-9-xxxl col-xl-8 col-lg-8 col-12 form-group">
+                                <input type="text" name="search" placeholder="Search by Title, Author, or ISBN..."
+                                    class="form-control" value="{{ search_query }}">
+                            </div>
+                            <div class="col-3-xxxl col-xl-4 col-lg-4 col-12 form-group text-right">
+                                <button type="submit" class="fw-btn-fill btn-gradient-yellow">SEARCH</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-responsive">
+                        <table id="booksTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ISBN</th>
+                                    <th>Book Image</th>
+                                    <th>Title</th>
+                                    <th>Author</th>
+                                    <th>Category</th>
+                                    <th>Available</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in books %}
+                                <tr>
+                                    <td>{{ book.isbn }}</td>
+                                    <td>
+                                        <div class="book-cover-placeholder">
+                                            <i class="fas fa-book text-muted"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'book_detail' book.id %}" class="text-dark font-weight-bold">
+                                            {{ book.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ book.author }}</td>
+                                    <td>{{ book.get_category_display }}</td>
+                                    <td>{{ book.available_copies }} / {{ book.total_copies }}</td>
+                                    <td>
+                                        {% if book.available_copies > 0 %}
+                                        <span class="book-status-badge status-available">Available</span>
+                                        {% else %}
+                                        <span class="book-status-badge status-borrowed">Out of Stock</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="{% url 'book_detail' book.id %}">
+                                                    <i class="fas fa-eye text-info"></i> View Details
+                                                </a>
+                                                {% if not request.user.is_staff and request.user.student %}
+                                                {% if book.available_copies > 0 %}
+                                                <form method="POST" action="{% url 'student_borrow_book' book.id %}"
+                                                    id="borrow-form-{{ book.id }}" style="display:none;">
+                                                    {% csrf_token %}
+                                                </form>
+                                                <a class="dropdown-item" href="#"
+                                                    onclick="if(confirm('Borrow this book?')) document.getElementById('borrow-form-{{ book.id }}').submit(); return false;">
+                                                    <i class="fas fa-book-reader text-success"></i> Borrow Book
+                                                </a>
+                                                {% endif %}
+                                                {% endif %}
+                                                {% if request.user.is_staff %}
+                                                <a class="dropdown-item" href="{% url 'edit_book' book.id %}">
+                                                    <i class="fas fa-edit text-warning"></i> Edit
+                                                </a>
+                                                <a class="dropdown-item" href="{% url 'delete_book' book.id %}">
+                                                    <i class="fas fa-trash text-danger"></i> Delete
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                            <h4>No Books Available</h4>
+                                            <p class="text-muted">Currently there are no books in the library.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Wait for the table to be completely loaded
+        setTimeout(function () {
+            initializeDataTable();
+        }, 100);
+    });
+
+    function initializeDataTable() {
+        var table = $('#booksTable');
+
+        if (!table.length) return;
+
+        // Check if already initialized and destroy if necessary
+        if ($.fn.dataTable.isDataTable(table)) {
+            table.DataTable().destroy();
+        }
+
+        try {
+            $('#booksTable').DataTable({
+                "pageLength": 25,
+                "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                "paging": true,
+                "searching": false, // Handled by backend search form
+                "ordering": true,
+                "info": true,
+                "responsive": true,
+                "language": {
+                    "paginate": {
+                        "next": "Next",
+                        "previous": "Prev"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": false, "targets": [1, 7] }
+                ],
+                "order": [[2, 'asc']] // Sort by Title by default
+            });
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+        }
+    }
+</script>
+{% endblock %}

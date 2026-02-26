@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | My Borrowed Books{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .status-badge-luxe {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .badge-returned { background: #e0f2fe; color: #0369a1; }
+    .badge-active { background: #dcfce7; color: #15803d; }
+    .badge-overdue { background: #fee2e2; color: #b91c1c; }
+
+    .book-thumb {
+        width: 45px;
+        height: 65px;
+        background: #f1f5f9;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+    }
+
+    tr:hover .book-thumb {
+        transform: scale(1.1);
+        border-color: #6366f1;
+        background: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library Services</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Borrowed Books</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>My Borrowing History</h3>
+                        </div>
+                        <a href="{% url 'all_books' %}" class="btn-fill-sml border bg-light text-muted">
+                            <i class="fas fa-search mr-2"></i>Browse Library
+                        </a>
+                    </div>
+
+                    <div class="table-responsive mt-4">
+                        <table id="borrowedBooksTable" class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>ISBN</th>
+                                    <th>Title & Author</th>
+                                    <th>Borrowed</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for borrowing in borrowed_books %}
+                                <tr>
+                                    <td><small class="text-muted font-weight-bold">#{{ borrowing.book.isbn }}</small></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="book-thumb mr-3">
+                                                <i class="fas fa-book text-muted opacity-50"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 font-weight-bold">{{ borrowing.book.title }}</h6>
+                                                <small class="text-muted">{{ borrowing.book.author }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ borrowing.borrowed_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="{% if borrowing.is_overdue_bool %}text-danger font-weight-bold{% endif %}">
+                                            {{ borrowing.due_date|date:"M d, Y" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if borrowing.status == 'RETURNED' %}
+                                            <span class="status-badge-luxe badge-returned">Returned</span>
+                                        {% elif borrowing.is_overdue_bool %}
+                                            <span class="status-badge-luxe badge-overdue">Overdue</span>
+                                        {% else %}
+                                            <span class="status-badge-luxe badge-active">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'book_detail' borrowing.book.id %}" class="btn btn-light btn-sm rounded-circle">
+                                            <i class="fas fa-eye text-primary"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.</div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#borrowedBooksTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "order": [[2, 'desc']],
+            "language": {
+                "paginate": {
+                    "next": "Next",
+                    "previous": "Prev"
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

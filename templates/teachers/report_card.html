@@ -63,12 +63,29 @@
                             <p class="mb-0 text-muted">{{ student.current_class.name }} | Term: {{ term }}</p>
                         </div>
                         <div class="btn-group">
-                            <button onclick="window.print()" class="btn btn-success">
-                                <i class="fas fa-print mr-2"></i>Print Report
-                            </button>
-                            <a href="#" class="btn btn-primary">
-                                <i class="fas fa-download mr-2"></i>Download PDF
-                            </a>
+                            <div class="btn-group">
+                                <button onclick="printDocument('.report-card')" class="btn btn-success">
+                                    <i class="fas fa-print mr-2"></i>Print Report
+                                </button>
+                                <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown">
+                                    <span class="sr-only">Toggle Dropdown</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-right">
+                                    <a class="dropdown-item" href="#" onclick="showExportMenu('.report-card', {filename: 'report_card_{{ student.student_id }}_{{ term }}'}); return false;">
+                                        <i class="fas fa-download"></i> All Export Options
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                    <a class="dropdown-item" href="#" onclick="exportToPDF('.report-card', {filename: 'report_card_{{ student.student_id }}_{{ term }}'}); return false;">
+                                        <i class="fas fa-file-pdf text-danger"></i> Export to PDF
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="printToImage('.report-card', {filename: 'report_card_{{ student.student_id }}_{{ term }}'}); return false;">
+                                        <i class="fas fa-image text-info"></i> Export as Image
+                                    </a>
+                                    <a class="dropdown-item" href="#" onclick="exportToWord('.report-card', {filename: 'report_card_{{ student.student_id }}_{{ term }}'}); return false;">
+                                        <i class="fas fa-file-word text-primary"></i> Export to Word
+                                    </a>
+                                </div>
+                            </div>
                             <a href="{% url 'class_results_detail' student.current_class.id %}" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left mr-2"></i>Back to Class
                             </a>

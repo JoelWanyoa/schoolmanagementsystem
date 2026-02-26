@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vehicle Fleet — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vehicle-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f1f5f9;
+        margin-bottom: 25px;
+        transition: all 0.3s;
+    }
+
+    .vehicle-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+        border-color: #6366f1;
+    }
+
+    .vehicle-icon {
+        width: 80px;
+        height: 80px;
+        background: #f0f7ff;
+        color: #6366f1;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+
+    .vehicle-plate {
+        font-family: 'Courier New', Courier, monospace;
+        background: #f8fafc;
+        padding: 4px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-weight: 800;
+        color: #334155;
+        letter-spacing: 1px;
+    }
+
+    .driver-badge {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3>Vehicle Fleet</h3>
+                        <ul>
+                            <li><a href="{% url 'dashboard' %}">Home</a></li>
+                            <li><a href="{% url 'transport_management' %}">Transport</a></li>
+                            <li>Vehicles</li>
+                        </ul>
+                    </div>
+                    <a href="{% url 'add_vehicle' %}" class="btn btn-fill-lg btn-gradient-yellow text-decoration-none">
+                        <i class="fas fa-plus mr-2"></i>Add Vehicle
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for vehicle in vehicles %}
+                <div class="col-xl-4 col-md-6 col-12">
+                    <div class="vehicle-card text-center">
+                        <div class="d-flex justify-content-center">
+                            <div class="vehicle-icon">
+                                <i
+                                    class="fas {% if vehicle.vehicle_type == 'VAN' %}fa-shuttle-van{% elif vehicle.vehicle_type == 'CAR' %}fa-car{% else %}fa-bus{% endif %}"></i>
+                            </div>
+                        </div>
+                        <h4 class="font-weight-bold mb-1">{{ vehicle.model }}</h4>
+                        <div class="mb-3">
+                            <span class="vehicle-plate">{{ vehicle.vehicle_number }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Capacity:</span>
+                            <span class="font-weight-bold">{{ vehicle.capacity }} Seats</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-muted">Route:</span>
+                            <span class="font-weight-bold text-primary">{{ vehicle.route.name|default:"Unassigned" }}</span>
+                        </div>
+
+                        <div class="driver-badge text-left">
+                            <label class="small text-muted text-uppercase font-weight-bold mb-1 d-block">Assigned
+                                Driver</label>
+                            <div class="d-flex align-items-center">
+                                <div class="bg-primary text-white rounded-circle mr-3 d-flex align-items-center justify-content-center"
+                                    style="width: 35px; height: 35px;">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold">{{ vehicle.driver_name }}</div>
+                                    <div class="small text-muted">{{ vehicle.driver_phone }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider my-3"></div>
+
+                        <div class="d-flex" style="gap: 10px;">
+                            <a href="{% url 'edit_vehicle' vehicle.pk %}"
+                                class="btn btn-sm btn-outline-primary flex-fill">Edit</a>
+                            <a href="{% url 'delete_vehicle' vehicle.pk %}"
+                                class="btn btn-sm btn-outline-danger flex-fill">Delete</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="card p-5 text-center">
+                        <i class="fas fa-bus fa-4x text-muted opacity-25 mb-4"></i>
+                        <h3>Your Fleet is Empty</h3>
+                        <p class="text-muted">Start by adding your first school bus or van.</p>
+                        <a href="{% url 'add_vehicle' %}" class="btn btn-fill-lg btn-gradient-yellow mt-3"
+                            style="width: fit-content; margin: 0 auto; text-decoration: none;">Add Vehicle</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Petra Education Centre | Academic Timetable{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timetable-luxe {
+        border-radius: 24px;
+        overflow: hidden;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        background: #fff;
+    }
+
+    .timetable-header-luxe {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: #fff;
+        padding: 30px;
+        border: none;
+    }
+
+    .day-header-luxe {
+        background: #f8fafc;
+        text-align: center;
+        padding: 15px !important;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: #64748b;
+        letter-spacing: 1px;
+    }
+
+    .period-col-luxe {
+        background: #f1f5f9;
+        font-weight: 800;
+        text-align: center;
+        color: #475569;
+        width: 100px;
+        vertical-align: middle !important;
+    }
+
+    .subject-card-luxe {
+        background: #fff;
+        border-radius: 16px;
+        padding: 15px;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .subject-card-luxe:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+        border-color: #6366f1;
+    }
+
+    .subject-title {
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .teacher-badge {
+        display: inline-flex;
+        align-items: center;
+        color: #64748b;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .time-slot {
+        background: #f8fafc;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #6366f1;
+        font-weight: 700;
+        margin-top: 8px;
+        display: inline-block;
+    }
+
+    .break-card-luxe {
+        background: #fffbeb;
+        border: 1px dashed #f59e0b;
+    }
+
+    .break-card-luxe .subject-title {
+        color: #b45309;
+    }
+
+    .empty-slot-luxe {
+        opacity: 0.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #94a3b8;
+    }
+
+    .current-day-luxe {
+        background: #eef2ff !important;
+        color: #6366f1 !important;
+    }
+
+    .summary-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Academic Timetable</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Timetable</li>
+                </ul>
+            </div>
+
+            {% if not timetable_entries %}
+            <div class="card p-5 text-center">
+                <div class="opacity-25 mb-4">
+                    <i class="fas fa-calendar-times fa-5x"></i>
+                </div>
+                <h3 class="font-weight-bold">No Timetable Found</h3>
+                <p class="text-muted">Your class schedule hasn't been published yet.</p>
+            </div>
+            {% else %}
+            <!-- Stats Overview -->
+            <div class="row gutters-20 mb-4">
+                <div class="col-md-4">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-indigo">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Current Time</div>
+                                    <div class="item-number" id="luxe-timer">00:00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Weekly Lessons</div>
+                                    <div class="item-number">{{ timetable_entries.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Active Instructors</div>
+                                    <div class="item-number">{{ timetable_entries.values_list.teacher.distinct.count|default:"8" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="timetable-luxe">
+                <div class="timetable-header-luxe">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h2 class="text-white font-weight-bold mb-1">{{ student.current_class.name }} Schedule</h2>
+                            <p class="text-white-50 mb-0">Spring Session 2024 • Section {{ student.current_section.name }}</p>
+                        </div>
+                        <button class="btn btn-white btn-sm px-4 font-weight-bold" onclick="window.print()">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered mb-0">
+                        <thead>
+                            <tr>
+                                <th class="day-header-luxe" style="width: 100px;">Period</th>
+                                {% for day in days_order %}
+                                <th class="day-header-luxe {% if day == current_day %}current-day-luxe{% endif %}">
+                                    {{ day }}
+                                </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period_num in period_nums %}
+                            <tr>
+                                <td class="period-col-luxe">
+                                    <small>Period</small><br>
+                                    {{ period_num }}
+                                </td>
+                                {% for day in days_order %}
+                                <td class="p-2" style="height: 140px; min-width: 160px;">
+                                    {% with day_entries=timetable_by_day|get_item:day %}
+                                    {% if day_entries %}
+                                    {% for entry in day_entries %}
+                                    {% if entry.period_number == period_num %}
+                                    <div class="subject-card-luxe {% if entry.is_break %}break-card-luxe{% endif %}">
+                                        <div class="subject-title">
+                                            {% if entry.is_break %}<i class="fas fa-coffee mr-1"></i>{% endif %}
+                                            {% if entry.is_break %}{{ entry.break_name|default:"Break" }}{% else %}{{ entry.subject.name|default:"Class" }}{% endif %}
+                                        </div>
+                                        <div class="teacher-badge">
+                                            <i class="fas fa-user-circle mr-1 opacity-50"></i>
+                                            {{ entry.teacher.full_name|default:"- - -" }}
+                                        </div>
+                                        <div class="time-slot">
+                                            {{ entry.start_time|time:"H:i" }} - {{ entry.end_time|time:"H:i" }}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% endif %}
+
+                                    {% if not day_entries or not day_entries|has_period:period_num %}
+                                    <div class="empty-slot-luxe">
+                                        <i class="fas fa-minus small"></i>
+                                    </div>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        function updateTime() {
+            var now = new Date();
+            var time = now.getHours().toString().padStart(2, '0') + ":" +
+                now.getMinutes().toString().padStart(2, '0');
+            $('#luxe-timer').text(time);
+        }
+        updateTime();
+        setInterval(updateTime, 10000);
+    });
+</script>
+{% endblock %}

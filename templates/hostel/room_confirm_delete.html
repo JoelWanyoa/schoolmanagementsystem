@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm Delete — School Management System{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Delete Room</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'hostel_rooms' %}">Hostel Rooms</a>
+                    </li>
+                    <li>Confirm Delete</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Are you sure you want to delete Room "{{ room.room_number }}" in {{ room.hostel.name }}?
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger">
+                        <strong>Warning!</strong> Deleting this room will also delete all student allocations associated
+                        with it.
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mg-t-8">
+                            <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Confirm
+                                Delete</button>
+                            <a href="{% url 'hostel_rooms' %}"
+                                class="btn-fill-lg bg-blue-dark btn-hover-yellow text-white">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

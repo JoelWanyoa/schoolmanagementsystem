@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fee Payments - Parent Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Fee Payments</h3>
+                <ul>
+                    <li><a href="{% url 'parent_dashboard' %}">Dashboard</a></li>
+                    <li>Fee Payments</li>
+                </ul>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row gutters-20">
+                <div class="col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Fee Payments Overview</h3>
+                                </div>
+                                <div class="dropdown">
+                                    <a class="dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </a>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{% url 'payment_history' %}">
+                                            <i class="fas fa-history mr-2"></i>Payment History
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'parent_dashboard' %}">
+                                            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Filters -->
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <form method="GET" class="row g-3">
+                                        <div class="col-md-4">
+                                            <label>Filter by Status</label>
+                                            <select name="status" class="form-control" onchange="this.form.submit()">
+                                                <option value="">All Status</option>
+                                                <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                                                <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
+                                                <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partial</option>
+                                            </select>
+                                        </div>
+                                        {% if children.count > 1 %}
+                                        <div class="col-md-4">
+                                            <label>Filter by Child</label>
+                                            <select name="child" class="form-control" onchange="this.form.submit()">
+                                                <option value="">All Children</option>
+                                                {% for child in children %}
+                                                <option value="{{ child.id }}" {% if child_filter == child.id|stringformat:"i" %}selected{% endif %}>
+                                                    {{ child.full_name }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <div class="mt-4">
+                                        <a href="{% url 'parent_dashboard' %}" class="btn btn-secondary">
+                                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Summary Cards -->
+                            <div class="row gutters-20 mb-4">
+                                <div class="col-md-4">
+                                    <div class="dashboard-summery-one">
+                                        <div class="row align-items-center">
+                                            <div class="col-4">
+                                                <div class="item-icon bg-light-danger text-danger">
+                                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-8">
+                                                <div class="item-content">
+                                                    <div class="item-title">Total Due</div>
+                                                    <div class="item-number">${{ total_due|floatformat:2 }}</div>
+                                                    <div class="item-status">
+                                                        <span class="badge badge-danger">{{ fees.filter.status='unpaid'|length }} unpaid</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="dashboard-summery-one">
+                                        <div class="row align-items-center">
+                                            <div class="col-4">
+                                                <div class="item-icon bg-light-success text-success">
+                                                    <i class="fas fa-check-circle fa-2x"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-8">
+                                                <div class="item-content">
+                                                    <div class="item-title">Total Paid</div>
+                                                    <div class="item-number">${{ total_paid|floatformat:2 }}</div>
+                                                    <div class="item-status">
+                                                        <span class="badge badge-success">{{ fees.filter.status='paid'|length }} paid</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="dashboard-summery-one">
+                                        <div class="row align-items-center">
+                                            <div class="col-4">
+                                                <div class="item-icon bg-light-info text-info">
+                                                    <i class="fas fa-users fa-2x"></i>
+                                                </div>
+                                            </div>
+                                            <div class="col-8">
+                                                <div class="item-content">
+                                                    <div class="item-title">Children</div>
+                                                    <div class="item-number">{{ children.count }}</div>
+                                                    <div class="item-status">
+                                                        <span class="badge badge-info">{{ fees.count }} fees</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Fees Table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Child</th>
+                                            <th>Fee Type</th>
+                                            <th>Amount</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% if fees %}
+                                            {% for fee in fees %}
+                                            <tr class="{% if fee.status == 'overdue' %}table-danger{% elif fee.status == 'unpaid' %}table-warning{% else %}table-success{% endif %}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        {% if fee.student.photo %}
+                                                            <img src="{{ fee.student.photo.url }}" class="rounded-circle mr-2" width="32" height="32" alt="{{ fee.student.full_name }}">
+                                                        {% else %}
+                                                            <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center mr-2" style="width: 32px; height: 32px;">
+                                                                <i class="fas fa-user"></i>
+                                                            </div>
+                                                        {% endif %}
+                                                        <div>
+                                                            <strong>{{ fee.student.full_name }}</strong>
+                                                            <small class="d-block text-muted">{{ fee.student.current_class.name|default:"-" }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ fee.fee_type }}</td>
+                                                <td>
+                                                    <strong>${{ fee.amount|floatformat:2 }}</strong>
+                                                    {% if fee.amount_paid > 0 %}
+                                                    <small class="d-block text-muted">Paid: ${{ fee.amount_paid|floatformat:2 }}</small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {{ fee.due_date|date:"d M Y" }}
+                                                    {% if fee.is_overdue %}
+                                                    <small class="d-block text-danger">
+                                                        <i class="fas fa-exclamation-circle"></i> Overdue
+                                                    </small>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if fee.status == 'paid' %}
+                                                        <span class="badge badge-success">Paid</span>
+                                                    {% elif fee.status == 'partial' %}
+                                                        <span class="badge badge-warning">Partial</span>
+                                                    {% elif fee.is_overdue %}
+                                                        <span class="badge badge-danger">Overdue</span>
+                                                    {% else %}
+                                                        <span class="badge badge-secondary">Unpaid</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    {% if fee.status != 'paid' %}
+                                                    <a href="{% url 'make_payment' fee.id %}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-credit-card mr-1"></i> Pay
+                                                    </a>
+                                                    {% else %}
+                                                    <button class="btn btn-sm btn-success" disabled>
+                                                        <i class="fas fa-check mr-1"></i> Paid
+                                                    </button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4">
+                                                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                                                <h5 class="text-success">No Fees Found!</h5>
+                                                <p class="text-muted">No fees have been assigned to your children yet.</p>
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Debug Information (remove in production) -->
+                            {% if debug %}
+                            <div class="mt-4 p-3 bg-light rounded">
+                                <h6>Debug Information:</h6>
+                                <p><strong>Children Count:</strong> {{ children.count }}</p>
+                                <p><strong>Fees Count:</strong> {{ fees.count }}</p>
+                                <p><strong>Total Due:</strong> ${{ total_due|floatformat:2 }}</p>
+                                <p><strong>Total Paid:</strong> ${{ total_paid|floatformat:2 }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-summery-one {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+.dashboard-summery-one:hover {
+    transform: translateY(-5px);
+}
+.item-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.bg-light-danger { background-color: #ffebee; }
+.bg-light-success { background-color: #e8f5e8; }
+.bg-light-info { background-color: #e3f2fd; }
+.text-danger { color: #f44336; }
+.text-success { color: #4caf50; }
+.text-info { color: #2196f3; }
+</style>
+{% endblock %}

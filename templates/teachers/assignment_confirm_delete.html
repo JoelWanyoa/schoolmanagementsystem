@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm Delete Assignment — Teacher Dashboard{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Delete Assignment</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'teacher_assignments' %}">Assignments</a></li>
+                    <li>Confirm Delete</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Are you sure?</h3>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Warning!</strong> You are about to delete the assignment <strong>"{{ assignment.title
+                            }}"</strong>.
+                        This action cannot be undone and all student submissions will be lost.
+                    </div>
+
+                    <div class="ui-modal-box">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <div class="d-flex" style="gap: 15px;">
+                                <a href="{% url 'teacher_assignments' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                                <button type="submit"
+                                    class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Permanently
+                                    Delete</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

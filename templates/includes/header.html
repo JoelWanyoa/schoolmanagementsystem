@@ -63,13 +63,13 @@
                     </div>
                     <div class="admin-img">
                         {% if request.user.teacher and request.user.teacher.photo %}
-                            <img src="{{ request.user.teacher.photo.url }}" alt="Teacher">
+                            <img src="{{ request.user.teacher.photo.url }}" alt="Teacher" class="img-rounded" width="40">
                         {% elif request.user.student and request.user.student.photo %}
-                            <img src="{{ request.user.student.photo.url }}" alt="Student">
+                            <img src="{{ request.user.student.photo.url }}" alt="Student" class="img-rounded" width="40">
                         {% elif request.user.parent and request.user.parent.photo %}
-                            <img src="{{ request.user.parent.photo.url }}" alt="Parent">
+                            <img src="{{ request.user.parent.photo.url }}" alt="Parent" class="img-rounded" width="40">
                         {% else %}
-                            <img src="{% static 'img/figure/admin.jpg' %}" alt="User">
+                            <img src="{% static 'img/figure/admin.jpg' %}" alt="User" class="img-rounded" width="40">
                         {% endif %}
                     </div>
                 </a>

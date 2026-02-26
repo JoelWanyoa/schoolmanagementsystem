@@ -1,0 +1,494 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Update Teacher{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<link rel="stylesheet" href="{% static 'css/select2.min.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Update Teacher</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_teachers' %}">Teachers</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'teacher_details' teacher.teacher_id %}">{{ teacher.full_name }}</a>
+                    </li>
+                    <li>Update</li>
+                </ul>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Teacher Update Form Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Update Teacher Information</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'teacher_details' teacher.teacher_id %}">
+                                    <i class="fas fa-eye text-info"></i>View Details
+                                </a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
+                                <a class="dropdown-item" href="#"><i
+                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" class="new-added-form" id="teacherUpdateForm">
+                        {% csrf_token %}
+
+                        <!-- Personal Information Section -->
+                        <div class="row">
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>First Name <span class="text-danger">*</span></label>
+                                <input type="text" name="first_name" value="{{ teacher.first_name }}"
+                                    class="form-control" placeholder="Enter first name" required>
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Last Name <span class="text-danger">*</span></label>
+                                <input type="text" name="last_name" value="{{ teacher.last_name }}" class="form-control"
+                                    placeholder="Enter last name" required>
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Email Address</label>
+                                <input type="email" name="email" value="{{ teacher.email|default:'' }}"
+                                    class="form-control" placeholder="teacher@example.com">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" name="phone" value="{{ teacher.phone|default:'' }}"
+                                    class="form-control" placeholder="+254 XXX XXX XXX">
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Address</label>
+                                <input type="text" name="address" value="{{ teacher.address|default:'' }}"
+                                    class="form-control" placeholder="Enter address">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Gender</label>
+                                <select name="gender" class="form-control">
+                                    <option value="">Select Gender</option>
+                                    <option value="M" {% if teacher.gender == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if teacher.gender == 'F' %}selected{% endif %}>Female</option>
+                                    <option value="O" {% if teacher.gender == 'O' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Date of Birth <span class="text-danger">*</span></label>
+                                <input type="date" name="date_of_birth" value="{{ teacher.date_of_birth|date:'Y-m-d' }}"
+                                    class="form-control" required>
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Religion</label>
+                                <input type="text" name="religion" value="{{ teacher.religion|default:'' }}"
+                                    class="form-control" placeholder="Enter religion">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Employee ID</label>
+                                <input type="text" class="form-control" value="{{ teacher.teacher_id }}" readonly
+                                    disabled>
+                                <small class="text-muted">Employee ID cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <!-- Photo Upload Section -->
+                        <div class="row">
+                            <div class="col-lg-12 col-12 form-group">
+                                <label>Teacher Photo</label>
+                                <div class="row align-items-center">
+                                    <div class="col-md-2">
+                                        <div class="current-photo">
+                                            {% if teacher.photo %}
+                                            <img src="{{ teacher.photo.url }}" alt="{{ teacher.full_name }}"
+                                                class="rounded-circle" width="100" height="100"
+                                                style="object-fit: cover;">
+                                            {% else %}
+                                            <img src="{% static 'img/figure/teacher.png' %}" alt="teacher"
+                                                class="rounded-circle" width="100" height="100">
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="photo" name="photo"
+                                                accept="image/*" onchange="updateFilename(this)">
+                                            <label class="custom-file-label" for="photo" id="photo-filename">Choose new
+                                                photo</label>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i> Allowed: JPG, PNG. Max size: 2MB
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professional Information Section -->
+                        <div class="heading-layout1 mg-t-30">
+                            <div class="item-title">
+                                <h3>Professional Information</h3>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Qualification</label>
+                                <input type="text" name="qualification" value="{{ teacher.qualification|default:'' }}"
+                                    class="form-control" placeholder="e.g., Bachelor of Education">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Specialization</label>
+                                <input type="text" name="specialization" value="{{ teacher.specialization|default:'' }}"
+                                    class="form-control" placeholder="e.g., Mathematics">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Years of Experience</label>
+                                <input type="number" name="experience" value="{{ teacher.experience|default:'' }}"
+                                    class="form-control" min="0" step="1" placeholder="0">
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Salary (KSh)</label>
+                                <input type="number" name="salary" value="{{ teacher.salary|default:'' }}"
+                                    class="form-control" min="0" step="0.01" placeholder="0.00">
+                            </div>
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Subjects Taught</label>
+                                <select name="subjects" class="form-control select2" multiple size="5">
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.id }}" {% if subject in teacher.subjects.all %}selected{% endif %}>
+                                        {{ subject.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
+                            </div>
+                        </div>
+
+                        <!-- Class Assignment Section -->
+                        <div class="heading-layout1 mg-t-30">
+                            <div class="item-title">
+                                <h3>Class Assignment</h3>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Class Teacher</label>
+                                <select name="class_teacher" class="form-control">
+                                    <option value="">None (Not a class teacher)</option>
+                                    {% for class in classes %}
+                                    <option value="{{ class.id }}" {% if teacher.class_teacher_id == class.id %}selected{% endif %}>
+                                        {{ class.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <small class="text-muted">Select if this teacher is a class teacher</small>
+                            </div>
+
+                            <div class="col-xl-6 col-lg-6 col-12 form-group">
+                                <label>Assigned Classes</label>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th>Class</th>
+                                                <th>Section</th>
+                                                <th>Assign</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for class in all_classes %}
+                                            <tr>
+                                                <td>{{ class.name }}</td>
+                                                <td>{{ class.section.name|default:'-' }}</td>
+                                                <td class="text-center">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input"
+                                                            name="assigned_classes" value="{{ class.id }}"
+                                                            id="class_{{ class.id }}" {% if class in teacher.assigned_classes.all %}checked{% endif %}>
+                                                        <label class="form-check-label"
+                                                            for="class_{{ class.id }}"></label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="text-center">No classes available</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% if teacher.class_teacher %}
+                                <small class="text-muted">
+                                    <i class="fas fa-star text-warning"></i>
+                                    Class Teacher for: {{ teacher.class_teacher.name }}
+                                </small>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Teaching Schedule Section -->
+                        <div class="heading-layout1 mg-t-30">
+                            <div class="item-title">
+                                <h3>Teaching Schedule</h3>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-12 col-12 form-group">
+                                <label>Weekly Schedule</label>
+                                <textarea name="schedule" class="form-control" rows="4"
+                                    placeholder="Enter teaching schedule (e.g., Monday: Math 8-10 AM, Tuesday: Science 9-11 AM)">{{ teacher.schedule|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row mg-t-30">
+                            <div class="col-12 form-group mg-t-8">
+                                <a href="{% url 'teacher_details' teacher.teacher_id %}"
+                                    class="btn-fill-lg btn-gradient-yellow">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn-fill-lg btn-gradient-dark">
+                                    <i class="fas fa-save"></i> Update Teacher
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Teacher Update Form Area End Here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'js/select2.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize select2
+        if ($.fn.select2) {
+            $('.select2').select2({
+                placeholder: "Select subjects",
+                allowClear: true,
+                width: '100%'
+            });
+        }
+
+        // Initialize any DataTables if needed
+        $('.table').DataTable({
+            "paging": false,
+            "searching": false,
+            "info": false
+        });
+
+        // Handle file input display
+        $('.custom-file-input').on('change', function () {
+            var fileName = $(this).val().split('\\').pop();
+            $(this).next('.custom-file-label').html(fileName);
+        });
+
+        // Handle class teacher selection and checkbox sync
+        $('select[name="class_teacher"]').on('change', function () {
+            var selectedClassId = $(this).val();
+
+            // Update checkboxes to reflect class teacher status
+            $('input[name="assigned_classes"]').each(function () {
+                var classId = $(this).val();
+                var row = $(this).closest('tr');
+
+                if (classId === selectedClassId) {
+                    $(this).prop('checked', true);
+                    row.addClass('table-primary');
+                } else {
+                    row.removeClass('table-primary');
+                }
+            });
+        });
+
+        // Highlight class teacher row on load
+        var classTeacherId = $('select[name="class_teacher"]').val();
+        if (classTeacherId) {
+            $('input[name="assigned_classes"]').each(function () {
+                if ($(this).val() === classTeacherId) {
+                    $(this).closest('tr').addClass('table-primary');
+                }
+            });
+        }
+    });
+
+    function updateFilename(input) {
+        if (input.files && input.files[0]) {
+            var fileName = input.files[0].name;
+            document.getElementById('photo-filename').innerHTML = fileName;
+
+            // Preview image
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                $('.current-photo img').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Confirm before leaving with unsaved changes
+    let formChanged = false;
+
+    $('#teacherUpdateForm input, #teacherUpdateForm select, #teacherUpdateForm textarea').on('change', function () {
+        formChanged = true;
+    });
+
+    $('#teacherUpdateForm').on('submit', function () {
+        formChanged = false;
+    });
+
+    $(window).on('beforeunload', function () {
+        if (formChanged) {
+            return 'You have unsaved changes. Are you sure you want to leave?';
+        }
+    });
+</script>
+
+<style>
+    .current-photo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .table-primary {
+        background-color: #e8f4fd !important;
+    }
+
+    .custom-file-label::after {
+        content: "Browse";
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+    }
+
+    .text-danger {
+        color: #dc3545;
+    }
+
+    .btn-fill-lg {
+        padding: 12px 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-fill-lg:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-gradient-yellow {
+        background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+        color: #333;
+        border: none;
+    }
+
+    .btn-gradient-dark {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #333;
+        background-color: #f8f9fa;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    select[multiple] {
+        height: auto;
+        min-height: 120px;
+    }
+
+    .heading-layout1 {
+        margin-bottom: 20px;
+    }
+
+    .mg-t-30 {
+        margin-top: 30px;
+    }
+
+    .mg-t-8 {
+        margin-top: 8px;
+    }
+
+    .alert {
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        border-color: #ffeeba;
+        color: #856404;
+    }
+
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>{{ title }}</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'manage_timetable' %}">Timetable</a></li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+            
+            <div class="card height-auto">
+                <div class="card-body">
+                    <form method="post" id="timetableForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.class_level.label_tag }}
+                                    {{ form.class_level }}
+                                    {{ form.class_level.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.section.label_tag }}
+                                    {{ form.section }}
+                                    {{ form.section.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.day.label_tag }}
+                                    {{ form.day }}
+                                    {{ form.day.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.period_number.label_tag }}
+                                    {{ form.period_number }}
+                                    {{ form.period_number.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <div class="form-check mt-4">
+                                        {{ form.is_break }}
+                                        {{ form.is_break.label_tag }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="subject-teacher-fields">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.subject.label_tag }}
+                                    {{ form.subject }}
+                                    {{ form.subject.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.teacher.label_tag }}
+                                    {{ form.teacher }}
+                                    {{ form.teacher.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row" id="break-field" style="display: none;">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    {{ form.break_name.label_tag }}
+                                    {{ form.break_name }}
+                                    {{ form.break_name.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.start_time.label_tag }}
+                                    {{ form.start_time }}
+                                    {{ form.start_time.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.end_time.label_tag }}
+                                    {{ form.end_time }}
+                                    {{ form.end_time.errors }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    {{ form.room.label_tag }}
+                                    {{ form.room }}
+                                    {{ form.room.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group text-right">
+                            <button type="submit" class="btn btn-primary">Save Timetable Entry</button>
+                            <a href="{% url 'manage_timetable' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Dynamic section loading
+        $('#id_class_level').change(function() {
+            const classId = $(this).val();
+            if (classId) {
+                $.ajax({
+                    url: '{% url "load_sections" %}',
+                    data: {
+                        'class_id': classId
+                    },
+                    success: function(data) {
+                        $('#id_section').html(data);
+                    }
+                });
+            } else {
+                $('#id_section').html('<option value="">Select a class first</option>');
+            }
+        });
+        
+        // Dynamic teacher loading
+        $('#id_subject').change(function() {
+            const subjectId = $(this).val();
+            if (subjectId) {
+                $.ajax({
+                    url: '{% url "load_teachers" %}',
+                    data: {
+                        'subject_id': subjectId
+                    },
+                    success: function(data) {
+                        $('#id_teacher').html(data);
+                    }
+                });
+            }
+        });
+        
+        // Toggle break fields
+        function toggleBreakFields() {
+            if ($('#id_is_break').is(':checked')) {
+                $('#subject-teacher-fields').hide();
+                $('#break-field').show();
+                $('#id_subject').val('').prop('required', false);
+                $('#id_teacher').val('').prop('required', false);
+            } else {
+                $('#subject-teacher-fields').show();
+                $('#break-field').hide();
+                $('#id_subject').prop('required', true);
+                $('#id_teacher').prop('required', true);
+            }
+        }
+        
+        $('#id_is_break').change(toggleBreakFields);
+        toggleBreakFields(); // Initial call
+    });
+</script>
+{% endblock %}{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Petra Education Centre{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>{{ title }}</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="{% url 'manage_timetable' %}">Timetable</a></li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <form method="post" id="timetableForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.class_level.id_for_label }}">Class *</label>
+                                    {{ form.class_level }}
+                                    {% if form.class_level.errors %}
+                                    <div class="text-danger">{{ form.class_level.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.section.id_for_label }}">Section *</label>
+                                    {{ form.section }}
+                                    {% if form.section.errors %}
+                                    <div class="text-danger">{{ form.section.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.day.id_for_label }}">Day *</label>
+                                    {{ form.day }}
+                                    {% if form.day.errors %}
+                                    <div class="text-danger">{{ form.day.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.period_number.id_for_label }}">Period Number *</label>
+                                    {{ form.period_number }}
+                                    {% if form.period_number.errors %}
+                                    <div class="text-danger">{{ form.period_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.room.id_for_label }}">Room</label>
+                                    {{ form.room }}
+                                    {% if form.room.errors %}
+                                    <div class="text-danger">{{ form.room.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.subject.id_for_label }}">Subject</label>
+                                    {{ form.subject }}
+                                    {% if form.subject.errors %}
+                                    <div class="text-danger">{{ form.subject.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.teacher.id_for_label }}">Teacher</label>
+                                    {{ form.teacher }}
+                                    {% if form.teacher.errors %}
+                                    <div class="text-danger">{{ form.teacher.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.start_time.id_for_label }}">Start Time *</label>
+                                    {{ form.start_time }}
+                                    {% if form.start_time.errors %}
+                                    <div class="text-danger">{{ form.start_time.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.end_time.id_for_label }}">End Time *</label>
+                                    {{ form.end_time }}
+                                    {% if form.end_time.errors %}
+                                    <div class="text-danger">{{ form.end_time.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <div class="form-check">
+                                        {{ form.is_break }}
+                                        <label class="form-check-label" for="{{ form.is_break.id_for_label }}">
+                                            Is this a break period?
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group" id="breakNameField" style="display: none;">
+                                    <label for="{{ form.break_name.id_for_label }}">Break Name</label>
+                                    {{ form.break_name }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group text-right">
+                            <button type="button" class="btn btn-secondary" onclick="window.history.back()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Entry</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Toggle break name field
+        $('#{{ form.is_break.id_for_label }}').change(function() {
+            if ($(this).is(':checked')) {
+                $('#breakNameField').show();
+                $('#{{ form.subject.id_for_label }}').prop('disabled', true);
+                $('#{{ form.teacher.id_for_label }}').prop('disabled', true);
+            } else {
+                $('#breakNameField').hide();
+                $('#{{ form.subject.id_for_label }}').prop('disabled', false);
+                $('#{{ form.teacher.id_for_label }}').prop('disabled', false);
+            }
+        }).trigger('change');
+
+        // Load sections when class changes
+        $('#{{ form.class_level.id_for_label }}').change(function() {
+            const classId = $(this).val();
+            if (classId) {
+                $.ajax({
+                    url: '{% url "load_sections" %}',
+                    data: {
+                        'class_id': classId
+                    },
+                    success: function(data) {
+                        $('#{{ form.section.id_for_label }}').html(data);
+                    }
+                });
+            }
+        });
+
+        // Load teachers when subject changes
+        $('#{{ form.subject.id_for_label }}').change(function() {
+            const subjectId = $(this).val();
+            if (subjectId) {
+                $.ajax({
+                    url: '{% url "load_teachers" %}',
+                    data: {
+                        'subject_id': subjectId
+                    },
+                    success: function(data) {
+                        $('#{{ form.teacher.id_for_label }}').html(data);
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}

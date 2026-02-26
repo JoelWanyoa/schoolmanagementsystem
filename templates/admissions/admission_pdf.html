@@ -1,0 +1,261 @@
+{% load static %}
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <style>
+        @page {
+            size: A4;
+            margin: 25mm 20mm 25mm 20mm;
+
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 10px;
+                color: #6b7280;
+            }
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 12px;
+            color: #111827;
+            position: relative;
+        }
+
+        /* WATERMARK */
+        .watermark {
+            position: fixed;
+            top: 40%;
+            left: 20%;
+            font-size: 80px;
+            color: rgba(200, 200, 200, 0.15);
+            transform: rotate(-30deg);
+            z-index: -1;
+        }
+
+        /* HEADER */
+        .header {
+            display: table;
+            width: 100%;
+            border-bottom: 2px solid #111827;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            display: table-cell;
+            width: 20%;
+        }
+
+        .logo img {
+            width: 90px;
+        }
+
+        .school-info {
+            display: table-cell;
+            width: 60%;
+            text-align: center;
+        }
+
+        .school-info h1 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .school-info p {
+            margin: 2px 0;
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        .photo {
+            display: table-cell;
+            width: 20%;
+            text-align: right;
+        }
+
+        .photo img {
+            width: 90px;
+            height: 100px;
+            object-fit: cover;
+            border: 1px solid #ccc;
+        }
+
+        /* SECTION TITLE */
+        h2 {
+            font-size: 13px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        /* TABLE */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+
+        td {
+            padding: 6px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .label {
+            font-weight: bold;
+            width: 40%;
+            background: #f9fafb;
+        }
+
+        /* FOOTER AREA */
+        .footer {
+            margin-top: 40px;
+        }
+
+        .signature td {
+            border: none;
+            padding-top: 40px;
+            text-align: center;
+        }
+
+        .stamp {
+            margin-top: 20px;
+            border: 2px dashed #9ca3af;
+            height: 100px;
+            text-align: center;
+            padding-top: 40px;
+            color: #6b7280;
+            font-weight: bold;
+        }
+
+        .qr {
+            text-align: right;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="watermark">CONFIDENTIAL</div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <img src="{{ logo_path }}">
+        </div>
+
+        <div class="school-info">
+            <h1>Petra Education Centre</h1>
+            <p>P.O Box 000 - Nairobi, Kenya</p>
+            <p>Official Admission Confirmation</p>
+        </div>
+
+        <div class="photo">
+            {% if admission.photo %}
+            <img src="{{ admission.photo.path }}">
+            {% endif %}
+        </div>
+    </div>
+
+
+    <p><strong>Admission No:</strong> {{ admission.id }}</p>
+    <p><strong>Date Generated:</strong> {{ generated_at }}</p>
+
+
+    <h2>Student Information</h2>
+    <table>
+        <tr>
+            <td class="label">Full Name</td>
+            <td>{{ admission.first_name }} {{ admission.last_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Gender</td>
+            <td>{{ admission.get_gender_display }}</td>
+        </tr>
+        <tr>
+            <td class="label">Date of Birth</td>
+            <td>{{ admission.date_of_birth }}</td>
+        </tr>
+        <tr>
+            <td class="label">Student ID</td>
+            <td>{{ admission.admission_student_id }}</td>
+        </tr>
+        <tr>
+            <td class="label">National ID</td>
+            <td>{{ admission.national_id|default:"-" }}</td>
+        </tr>
+    </table>
+
+
+    <h2>Academic Details</h2>
+    <table>
+        <tr>
+            <td class="label">Class</td>
+            <td>{{ admission.class_level.name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Section</td>
+            <td>{{ admission.section.name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Previous School</td>
+            <td>{{ admission.previous_school|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Transfer Certificate</td>
+            <td>{{ admission.transfer_certificate_no|default:"-" }}</td>
+        </tr>
+    </table>
+
+
+    <h2>Guardian Information</h2>
+    <table>
+        <tr>
+            <td class="label">Father Name</td>
+            <td>{{ admission.father_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Mother Name</td>
+            <td>{{ admission.mother_name }}</td>
+        </tr>
+        <tr>
+            <td class="label">Phone</td>
+            <td>{{ admission.guardian_phone }}</td>
+        </tr>
+        <tr>
+            <td class="label">Email</td>
+            <td>{{ admission.guardian_email }}</td>
+        </tr>
+        <tr>
+            <td class="label">Address</td>
+            <td>{{ admission.address }}</td>
+        </tr>
+    </table>
+
+
+    <!-- QR CODE -->
+    <div class="qr">
+        <img src="{{ qr_path }}" width="100">
+        <p style="font-size:10px;">Scan to verify admission</p>
+    </div>
+
+
+    <!-- SIGNATURE -->
+    <table class="signature">
+        <tr>
+            <td>_____________________<br>Admissions Officer</td>
+            <td>_____________________<br>Principal</td>
+        </tr>
+    </table>
+
+    <div class="stamp">
+        OFFICIAL SCHOOL STAMP
+    </div>
+
+</body>
+
+</html>

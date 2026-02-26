@@ -49,16 +49,18 @@
                     <form class="mg-b-20" method="GET">
                         <div class="row gutters-8">
                             <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
-                                <input type="text" name="search" placeholder="Search by Roll ..." class="form-control" value="{{ request.GET.search }}">
+                                <input type="text" name="search" placeholder="Search by Roll ..." class="form-control"
+                                    value="{{ request.GET.search }}">
                             </div>
                             <div class="col-4-xxxl col-xl-4 col-lg-3 col-12 form-group">
-                                <input type="text" name="class" placeholder="Search by Class ..." class="form-control" value="{{ request.GET.class }}">
+                                <input type="text" name="class" placeholder="Search by Class ..." class="form-control"
+                                    value="{{ request.GET.class }}">
                             </div>
                             <div class="col-4-xxxl col-xl-3 col-lg-3 col-12 form-group">
                                 <select name="section" class="form-control">
                                     <option value="">All Sections</option>
                                     {% for section in sections %}
-                                    <option value="{{ section.id }}" {% if request.GET.section == section.id|stringformat:"s" %}selected{% endif %}>
+                                    <option value="{{ section.id }}">
                                         {{ section.name }}
                                     </option>
                                     {% endfor %}
@@ -85,8 +87,7 @@
                                     <th>Gender</th>
                                     <th>Class</th>
                                     <th>Section</th>
-                                    <th>Father</th>
-                                    <th>Mother</th>
+                                    <th>Transport</th>
                                     <th>Phone</th>
                                     <th>Email</th>
                                     <th>Actions</th>
@@ -103,9 +104,11 @@
                                     </td>
                                     <td class="text-center">
                                         {% if student.photo %}
-                                        <img src="{{ student.photo.url }}" alt="student" class="rounded-circle" width="40" height="40">
+                                        <img src="{{ student.photo.url }}" alt="student" class="rounded-circle"
+                                            width="40" height="40">
                                         {% else %}
-                                        <img src="{% static 'img/figure/student2.png' %}" alt="student" class="rounded-circle" width="40" height="40">
+                                        <img src="{% static 'img/figure/student2.png' %}" alt="student"
+                                            class="rounded-circle" width="40" height="40">
                                         {% endif %}
                                     </td>
                                     <td>
@@ -114,32 +117,43 @@
                                     </td>
                                     <td>
                                         {% if student.gender == 'M' %}
-                                            <span class="badge badge-primary">Male</span>
+                                        <span class="badge badge-primary">Male</span>
                                         {% elif student.gender == 'F' %}
-                                            <span class="badge badge-success">Female</span>
+                                        <span class="badge badge-success">Female</span>
                                         {% else %}
-                                            <span class="badge badge-secondary">Other</span>
+                                        <span class="badge badge-secondary">Other</span>
                                         {% endif %}
                                     </td>
                                     <td>{{ student.current_class.name|default:"Not Assigned" }}</td>
-                                    <td>{{ student.current_section.name|default:"Not Assigned" }}</td>
-                                    <td>{{ student.father_name|default:"-" }}</td>
-                                    <td>{{ student.mother_name|default:"-" }}</td>
+                                    <td>{{ student.current_section.name|default:"-" }}</td>
+                                    <td>
+                                        {% if student.transport_route %}
+                                        <span class="badge badge-pill badge-info" style="font-size: 10px;">
+                                            <span>{{ student.transport_route.name }}</span>
+                                        </span>
+                                        {% else %}
+                                        <small class="text-muted">None</small>
+                                        {% endif %}
+                                    </td>
                                     <td>{{ student.guardian_phone|default:"-" }}</td>
                                     <td>{{ student.guardian_email|default:"-" }}</td>
                                     <td>
                                         <div class="dropdown">
-                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
                                                 <span class="flaticon-more-button-of-three-dots"></span>
                                             </a>
                                             <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item" href="{% url 'student_details' student.student_id %}">
+                                                <a class="dropdown-item"
+                                                    href="{% url 'student_details' student.student_id %}">
                                                     <i class="fas fa-eye text-info"></i> View Details
                                                 </a>
-                                                <a class="dropdown-item" href="{% url 'update_student' student.student_id %}">
+                                                <a class="dropdown-item"
+                                                    href="{% url 'update_student' student.student_id %}">
                                                     <i class="fas fa-edit text-warning"></i> Edit
                                                 </a>
-                                                <a class="dropdown-item" href="{% url 'delete_student' student.student_id %}">
+                                                <a class="dropdown-item"
+                                                    href="{% url 'delete_student' student.student_id %}">
                                                     <i class="fas fa-trash text-danger"></i> Delete
                                                 </a>
                                             </div>
@@ -175,27 +189,27 @@
 <!-- Data Table Js -->
 <script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
 <script>
-    $(document).ready(function() {
+    $(document).ready(function () {
         // Wait for the table to be completely loaded
-        setTimeout(function() {
+        setTimeout(function () {
             initializeDataTable();
         }, 100);
     });
-    
+
     function initializeDataTable() {
         var table = $('#studentsTable');
-        
+
         if (!table.length) {
             console.log('Table not found');
             return;
         }
-    
+
         // Check if already initialized
         if ($.fn.dataTable.isDataTable(table)) {
             console.log('DataTable already initialized, destroying...');
             table.DataTable().destroy();
         }
-    
+
         // Initialize with error handling
         try {
             var dataTable = table.DataTable({
@@ -231,59 +245,59 @@
                 ],
                 "order": [[2, 'asc']]
             });
-    
+
             console.log('DataTable initialized successfully');
             setupCustomFilters(dataTable);
-            
+
         } catch (error) {
             console.error('Error initializing DataTable:', error);
         }
     }
-    
+
     function setupCustomFilters(dataTable) {
         // Search functionality with debounce
         let timeout;
-        $('input[name="search"]').on('keyup', function() {
+        $('input[name="search"]').on('keyup', function () {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 dataTable.columns(2).search(this.value).draw();
             }, 300);
         });
-    
-        $('input[name="class"]').on('keyup', function() {
+
+        $('input[name="class"]').on('keyup', function () {
             clearTimeout(timeout);
             timeout = setTimeout(() => {
                 dataTable.columns(4).search(this.value).draw();
             }, 300);
         });
-    
-        $('select[name="section"]').on('change', function() {
+
+        $('select[name="section"]').on('change', function () {
             dataTable.columns(5).search(this.value).draw();
         });
-    
+
         // Check all functionality
-        $('.checkAll').on('change', function() {
+        $('.checkAll').on('change', function () {
             $('tbody input[type="checkbox"]').prop('checked', this.checked);
         });
     }
-    </script>
+</script>
 
 <style>
-.empty-state {
-    text-align: center;
-    padding: 20px;
-}
+    .empty-state {
+        text-align: center;
+        padding: 20px;
+    }
 
-.empty-state i {
-    opacity: 0.5;
-}
+    .empty-state i {
+        opacity: 0.5;
+    }
 
-.badge {
-    font-size: 0.75em;
-}
+    .badge {
+        font-size: 0.75em;
+    }
 
-.table img.rounded-circle {
-    object-fit: cover;
-}
+    .table img.rounded-circle {
+        object-fit: cover;
+    }
 </style>
 {% endblock %}

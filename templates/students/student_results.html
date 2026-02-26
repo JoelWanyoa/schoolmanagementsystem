@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Exam Results{% endblock %}
+
+{% block extra_css %}
+<style>
+    .summary-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-light-indigo {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .bg-light-success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .bg-light-warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .bg-light-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .grade-badge-luxe {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-a {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-b {
+        background: #e0f2fe;
+        color: #0369a1;
+    }
+
+    .badge-c {
+        background: #fef9c3;
+        color: #a16207;
+    }
+
+    .badge-d {
+        background: #ffedd5;
+        color: #9a3412;
+    }
+
+    .badge-f {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .transcript-header {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 15px;
+        padding: 25px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 30px;
+    }
+
+    .btn-print-luxe {
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        padding: 10px 25px;
+        border-radius: 12px;
+        font-weight: 700;
+        color: #475569;
+        transition: 0.3s;
+    }
+
+    .btn-print-luxe:hover {
+        background: #f8fafc;
+        border-color: #6366f1;
+        color: #6366f1;
+        transform: translateY(-2px);
+    }
+
+    .subject-pill {
+        background: #f1f5f9;
+        padding: 10px 15px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        transition: 0.3s;
+    }
+
+    .subject-pill:hover {
+        background: #fff;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        transform: scale(1.02);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Academic Transcript</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Results</li>
+                </ul>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row gutters-20">
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-indigo">
+                                    <i class="fas fa-medal"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Overall Rank</div>
+                                    <div class="item-number">
+                                        {% if avg_percentage >= 80 %}A
+                                        {% elif avg_percentage >= 70 %}B
+                                        {% elif avg_percentage >= 60 %}C
+                                        {% else %}D{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Average Score</div>
+                                    <div class="item-number">{{ avg_percentage|floatformat:1 }}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Exams Passed</div>
+                                    <div class="item-number">{{ total_passed|default:"0" }} / {{ results.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card height-auto mt-4">
+                <div class="card-body">
+                    <div class="transcript-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="font-weight-bold mb-1">Detailed Transcript</h3>
+                            <p class="text-muted mb-0">Academic Year 2024 - Term 1 Results</p>
+                        </div>
+                        <button class="btn-print-luxe" onclick="window.print()">
+                            <i class="fas fa-print mr-2"></i> Print Transcript
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table display text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>Subject & Exam</th>
+                                    <th>Date</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Score Ratio</th>
+                                    <th>Grade</th>
+                                    <th>Outcome</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in results %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light-indigo p-3 rounded mr-3">
+                                                <i class="fas fa-book-open"></i>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 font-weight-bold">{{ result.exam.subject.name }}</h6>
+                                                <small class="text-muted">{{ result.exam.name }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ result.exam.exam_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <span class="h6 mb-0 font-weight-bold text-primary">{{ result.marks_obtained
+                                            }}</span>
+                                        <span class="text-muted">/ {{ result.exam.total_marks }}</span>
+                                    </td>
+                                    <td style="width: 200px;">
+                                        {% widthratio result.marks_obtained result.exam.total_marks 100 as percentage %}
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 mr-3" style="height: 6px;">
+                                                <div class="progress-bar {% if percentage|add:0 >= 70 %}bg-success{% elif percentage|add:0 >= 50 %}bg-info{% else %}bg-danger{% endif %}"
+                                                    style="width: {{ percentage }}%"></div>
+                                            </div>
+                                            <small class="font-weight-bold">{{ percentage }}%</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="grade-badge-luxe 
+                                            {% if result.grade == 'A' %}badge-a
+                                            {% elif result.grade == 'B' %}badge-b
+                                            {% elif result.grade == 'C' %}badge-c
+                                            {% elif result.grade == 'D' %}badge-d
+                                            {% else %}badge-f{% endif %}">
+                                            {{ result.grade }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if result.marks_obtained >= result.exam.passing_marks %}
+                                        <span class="text-success font-weight-bold small"><i
+                                                class="fas fa-check-circle mr-1"></i> PASSED</span>
+                                        {% else %}
+                                        <span class="text-danger font-weight-bold small"><i
+                                                class="fas fa-times-circle mr-1"></i> FAILED</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-5">
+                                        <div class="opacity-25 mb-3">
+                                            <i class="fas fa-clipboard-list fa-4x"></i>
+                                        </div>
+                                        <h5 class="text-muted">No Results Published</h5>
+                                        <p class="small text-muted">Your exam results will appear here once they are
+                                            graded.</p>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

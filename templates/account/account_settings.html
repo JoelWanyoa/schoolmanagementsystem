@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Account Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .as-profile-card {
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .as-profile-banner {
+        height: 100px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+
+    .as-avatar-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: -50px;
+        padding: 0 20px 20px;
+    }
+
+    .as-avatar-ring {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 5px solid #fff;
+        background: #f8fafc;
+        overflow: hidden;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .as-avatar-ring img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .as-avatar-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        opacity: 0;
+        transition: 0.3s;
+    }
+
+    .as-avatar-ring:hover .as-avatar-overlay {
+        opacity: 1;
+    }
+
+    .as-nav-item {
+        display: block;
+        width: 100%;
+        padding: 15px 25px;
+        border: none;
+        background: none;
+        text-align: left;
+        font-weight: 600;
+        color: #64748b;
+        transition: 0.3s;
+        border-left: 4px solid transparent;
+    }
+
+    .as-nav-item i {
+        margin-right: 12px;
+        width: 20px;
+        text-align: center;
+    }
+
+    .as-nav-item:hover {
+        background: #f8fafc;
+        color: #6366f1;
+    }
+
+    .as-nav-item.active {
+        background: #eef2ff;
+        color: #6366f1;
+        border-left-color: #6366f1;
+    }
+
+    .as-tab-pane {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .as-tab-pane.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group label {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 1px solid #e2e8f0;
+        transition: 0.3s;
+        background: #f8fafc;
+    }
+
+    .form-control:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        background: #fff;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        border: none;
+        color: #fff;
+        font-weight: 700;
+        padding: 12px 30px;
+        border-radius: 12px;
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        transition: 0.3s;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.4);
+        color: #fff;
+    }
+
+    .as-strength-bar {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+
+    .as-strength-fill {
+        height: 100%;
+        width: 0;
+        transition: 0.4s;
+    }
+
+    .as-role-badge {
+        padding: 6px 15px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .role-student { background: #e0f2fe; color: #0369a1; }
+    .role-teacher { background: #dcfce7; color: #15803d; }
+    .role-parent { background: #fef9c3; color: #a16207; }
+    .role-admin { background: #fee2e2; color: #b91c1c; }
+
+    .as-info-box {
+        background: #f1f5f9;
+        border-left: 5px solid #6366f1;
+        padding: 20px;
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Account Settings</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Settings</li>
+                </ul>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="row">
+                <!-- Profile Sidebar -->
+                <div class="col-xl-3 col-lg-4">
+                    <div class="as-profile-card">
+                        <div class="as-profile-banner"></div>
+                        <div class="as-avatar-wrap">
+                            <label for="photoInput" class="as-avatar-ring">
+                                {% if request.user.student.photo %}
+                                    <img src="{{ request.user.student.photo.url }}" alt="Profile" id="photoPreview">
+                                {% elif request.user.teacher.photo %}
+                                    <img src="{{ request.user.teacher.photo.url }}" alt="Profile" id="photoPreview">
+                                {% elif request.user.parent.photo %}
+                                    <img src="{{ request.user.parent.photo.url }}" alt="Profile" id="photoPreview">
+                                {% else %}
+                                    <img src="{% static 'img/figure/user.jpg' %}" alt="Profile" id="photoPreview">
+                                {% endif %}
+                                <div class="as-avatar-overlay">
+                                    <i class="fas fa-camera"></i>
+                                </div>
+                            </label>
+                            <h4 class="mt-3 mb-1 font-weight-bold">{{ request.user.get_full_name|default:request.user.username }}</h4>
+                            <p class="text-muted small mb-3">{{ request.user.email }}</p>
+                            
+                            {% if request.user.student %}
+                                <span class="as-role-badge role-student">Student</span>
+                            {% elif request.user.teacher %}
+                                <span class="as-role-badge role-teacher">Teacher</span>
+                            {% elif request.user.parent %}
+                                <span class="as-role-badge role-parent">Parent</span>
+                            {% else %}
+                                <span class="as-role-badge role-admin">Administrator</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="as-nav mt-3">
+                            <button class="as-nav-item active" onclick="switchTab('basic', this)">
+                                <i class="fas fa-user-circle"></i> Personal Info
+                            </button>
+                            <button class="as-nav-item" onclick="switchTab('contact', this)">
+                                <i class="fas fa-id-card"></i> Contact Details
+                            </button>
+                            <button class="as-nav-item" onclick="switchTab('security', this)">
+                                <i class="fas fa-shield-alt"></i> Security
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Content -->
+                <div class="col-xl-9 col-lg-8">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <!-- Basic Info Tab -->
+                            <div id="basic-tab" class="as-tab-pane active">
+                                <div class="heading-layout1">
+                                    <div class="item-title">
+                                        <h3>Personal Information</h3>
+                                        <p>Update your name and primary email address.</p>
+                                    </div>
+                                </div>
+                                <form action="{% url 'account_settings' %}" method="POST" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    <input type="file" name="photo" id="photoInput" hidden accept="image/*">
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>First Name</label>
+                                            <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Last Name</label>
+                                            <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name }}">
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Username</label>
+                                            <input type="text" class="form-control" value="{{ request.user.username }}" disabled>
+                                            <small class="text-muted">Username cannot be changed.</small>
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Email Address</label>
+                                            <input type="email" name="email" class="form-control" value="{{ request.user.email }}">
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn-save">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Contact Details Tab -->
+                            <div id="contact-tab" class="as-tab-pane">
+                                <div class="heading-layout1">
+                                    <div class="item-title">
+                                        <h3>Contact Details</h3>
+                                        <p>Keep your contact information up to date.</p>
+                                    </div>
+                                </div>
+                                <form action="{% url 'account_settings' %}" method="POST">
+                                    {% csrf_token %}
+                                    <div class="row">
+                                        <div class="col-md-6 form-group">
+                                            <label>Phone Number</label>
+                                            <input type="text" name="phone" class="form-control" 
+                                                value="{% if request.user.student.phone %}{{ request.user.student.phone }}{% elif request.user.teacher.phone %}{{ request.user.teacher.phone }}{% elif request.user.parent.phone %}{{ request.user.parent.phone }}{% endif %}">
+                                        </div>
+                                        {% if request.user.student %}
+                                        <div class="col-md-6 form-group">
+                                            <label>Guardian Email</label>
+                                            <input type="email" name="alt_email" class="form-control" value="{{ request.user.student.guardian_email }}">
+                                        </div>
+                                        {% endif %}
+                                        <div class="col-12 form-group">
+                                            <label>Resident Address</label>
+                                            <textarea name="address" class="form-control" rows="4">{% if request.user.student.address %}{{ request.user.student.address }}{% elif request.user.teacher.address %}{{ request.user.teacher.address }}{% elif request.user.parent.address %}{{ request.user.parent.address }}{% endif %}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn-save">Update Contact Info</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Security Tab -->
+                            <div id="security-tab" class="as-tab-pane">
+                                <div class="heading-layout1">
+                                    <div class="item-title">
+                                        <h3>Security Settings</h3>
+                                        <p>Manage your password and account security.</p>
+                                    </div>
+                                </div>
+                                <div class="as-info-box">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-info-circle fa-2x text-primary mr-3"></i>
+                                        <p class="mb-0">Choose a strong password with at least 8 characters, including a mix of letters, numbers, and symbols.</p>
+                                    </div>
+                                </div>
+                                <form action="{% url 'account_settings' %}" method="POST" id="passwordForm">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="change_password">
+                                    <div class="row">
+                                        <div class="col-12 form-group">
+                                            <label>Current Password</label>
+                                            <input type="password" name="current_password" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>New Password</label>
+                                            <input type="password" name="new_password" id="new_password" class="form-control" required minlength="8">
+                                            <div class="as-strength-bar"><div class="as-strength-fill" id="strength_fill"></div></div>
+                                            <small id="strength_text" class="text-muted"></small>
+                                        </div>
+                                        <div class="col-md-6 form-group">
+                                            <label>Confirm New Password</label>
+                                            <input type="password" name="confirm_password" id="confirm_password" class="form-control" required minlength="8">
+                                            <small id="match_text" class="text-muted"></small>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn-save">Update Password</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.</div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchTab(tabName, btn) {
+        // Update nav buttons
+        document.querySelectorAll('.as-nav-item').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update panes
+        document.querySelectorAll('.as-tab-pane').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabName + '-tab').classList.add('active');
+    }
+
+    // Photo Preview
+    document.getElementById('photoInput').addEventListener('change', function(e) {
+        if (e.target.files && e.target.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                document.getElementById('photoPreview').src = ev.target.result;
+            }
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    });
+
+    // Password Strength
+    const newPwd = document.getElementById('new_password');
+    const fill = document.getElementById('strength_fill');
+    const text = document.getElementById('strength_text');
+
+    newPwd.addEventListener('input', function() {
+        const val = this.value;
+        let score = 0;
+        if (val.length >= 8) score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        const colors = ['#ef4444', '#f59e0b', '#10b981', '#059669'];
+        const width = (score / 4) * 100;
+        fill.style.width = width + '%';
+        fill.style.backgroundColor = colors[score-1] || '#e2e8f0';
+        
+        const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+        text.textContent = labels[score-1] || '';
+        text.style.color = colors[score-1] || '#e2e8f0';
+    });
+
+    // Password Match
+    const confirmPwd = document.getElementById('confirm_password');
+    const matchText = document.getElementById('match_text');
+
+    confirmPwd.addEventListener('input', function() {
+        if (this.value === newPwd.value) {
+            matchText.textContent = 'Passwords match';
+            matchText.style.color = '#10b981';
+        } else {
+            matchText.textContent = 'Passwords do not match';
+            matchText.style.color = '#ef4444';
+        }
+    });
+
+    // Handle auto-tab on password error
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'password' in message.message|lower %}
+                switchTab('security', document.querySelector('.as-nav-item:last-child'));
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+</script>
+{% endblock %}

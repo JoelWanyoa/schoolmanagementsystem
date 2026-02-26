@@ -1,409 +1,675 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Student Promotion - Petra Education Centre{% endblock %}
+{% block title %}Student Promotion | Executive Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+        --secondary-gradient: linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%);
+        --accent-gradient: linear-gradient(135deg, #ff9f1c 0%, #ffbf69 100%);
+        --glass-bg: rgba(255, 255, 255, 0.9);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+    }
+
+    .dashboard-content-one {
+        background: #f8faff;
+        padding: 30px;
+    }
+
+    .stat-card-premium {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--card-shadow);
+        transition: transform 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card-premium:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-card-premium::before {
+        content: '';
+        position: absolute;
+        top: -10%;
+        right: -10%;
+        width: 100px;
+        height: 100px;
+        background: var(--primary-gradient);
+        opacity: 0.05;
+        border-radius: 50%;
+    }
+
+    .stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .bg-light-blue {
+        background: #e6f0ff;
+    }
+
+    .bg-light-green {
+        background: #e1f7e3;
+    }
+
+    .bg-light-yellow {
+        background: #fff3d6;
+    }
+
+    .bg-light-red {
+        background: #ffe6e6;
+    }
+
+    .text-blue {
+        color: #4361ee;
+    }
+
+    .text-orange {
+        color: #ff9f1c;
+    }
+
+    .directory-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .modern-table thead th {
+        background: #f1f5f9;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        border: none;
+        padding: 16px;
+    }
+
+    .student-row {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .student-row:hover {
+        background-color: #f1f5f9 !important;
+    }
+
+    .student-row.selected {
+        background-color: #eef2ff !important;
+        border-left: 3px solid #4361ee;
+    }
+
+    .student-row.selected .custom-cb {
+        background: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .student-row.selected .custom-cb::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        color: white;
+        font-size: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .command-center {
+        position: sticky;
+        top: 20px;
+    }
+
+    .method-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .method-card.active {
+        border-color: #4361ee;
+        background: #f0f4ff;
+    }
+
+    .method-card i {
+        font-size: 24px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .preview-card-luxe {
+        background: #1e293b;
+        color: white;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .step-line {
+        flex-grow: 1;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        position: relative;
+    }
+
+    .step-line::after {
+        content: '\f105';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 0;
+        top: -8px;
+        color: rgba(255, 255, 255, 0.3);
+    }
+
+    .custom-cb {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid #cbd5e1;
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .selected .custom-cb,
+    .custom-cb.selected {
+        background: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .selected .custom-cb::after,
+    .custom-cb.selected::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        color: white;
+        font-size: 10px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-up {
+        animation: slideUp 0.5s ease forwards;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay.show {
+        display: flex;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .gap-3 {
+        gap: 1rem;
+    }
+
+    .opacity-50 {
+        opacity: 0.5;
+    }
+
+    .opacity-75 {
+        opacity: 0.75;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div id="wrapper" class="wrapper bg-ash">
     {% include 'includes/header.html' %}
-    
+
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
-        
+
         <div class="dashboard-content-one">
-            <div class="breadcrumbs-area">
-                <h3>Student Promotion</h3>
-                <ul>
-                    <li><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li><a href="{% url 'all_students' %}">Students</a></li>
-                    <li>Student Promotion</li>
-                </ul>
+            <!-- Header Section -->
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="font-weight-bold text-dark mb-1">Student Promotion</h2>
+                    <p class="text-muted mb-0">Manage academic transitions and grade progression</p>
+                </div>
+                <div class="breadcrumb-luxe">
+                    <span class="text-muted">Students</span> /
+                    <span class="text-dark font-weight-bold">Promotion</span>
+                </div>
             </div>
 
-            <!-- Display Messages -->
-            {% if messages %}
+            <!-- Stats Bar -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-wrapper bg-light-blue text-blue">
+                            <i class="flaticon-classmates"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ total_students_count }}</h3>
+                        <p class="text-muted small mb-0">Total Active Students</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-wrapper bg-light-green text-success">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ promoted_this_year }}</h3>
+                        <p class="text-muted small mb-0">Promoted (FY {{ academic_years.0.name|default:"2026" }})</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-wrapper bg-light-yellow text-orange">
+                            <i class="fas fa-school"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0">{{ classes_count }}</h3>
+                        <p class="text-muted small mb-0">Total Campus Grades</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card-premium">
+                        <div class="stat-icon-wrapper bg-light-red text-danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h3 class="font-weight-bold mb-0" id="selectedCounter">0</h3>
+                        <p class="text-muted small mb-0">Selected for Promotion</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
-                <div class="col-12">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <strong>
-                            {% if message.tags == 'error' %}
-                                <i class="fas fa-exclamation-circle"></i> Error!
-                            {% elif message.tags == 'success' %}
-                                <i class="fas fa-check-circle"></i> Success!
-                            {% elif message.tags == 'warning' %}
-                                <i class="fas fa-exclamation-triangle"></i> Warning!
-                            {% elif message.tags == 'info' %}
-                                <i class="fas fa-info-circle"></i> Info!
-                            {% endif %}
-                        </strong>
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
+                <!-- Directory Column -->
+                <div class="col-lg-8 animate-up">
+                    <div class="directory-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="font-weight-bold mb-0">Student Registry</h4>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-light rounded-pill px-4" id="btnSelectAll">
+                                    <i class="fas fa-check-double mr-1"></i> Select Page
+                                </button>
+                                <button type="button" class="btn btn-light rounded-pill px-4" id="btnDeselectAll">
+                                    <i class="fas fa-times mr-1"></i> Clear All
+                                </button>
+                                <button type="button" class="btn btn-outline-primary rounded-pill px-4" id="btnExport">
+                                    <i class="fas fa-download mr-1"></i> Export
+                                </button>
+                            </div>
+                        </div>
 
-            <div class="row gutters-20">
-                <!-- Student Selection -->
-                <div class="col-lg-8">
-                    <div class="card height-auto">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Select Students for Promotion</h3>
-                                </div>
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="#" id="selectAllStudents">
-                                            <i class="fas fa-check-square text-success"></i> Select All
-                                        </a>
-                                        <a class="dropdown-item" href="#" id="deselectAllStudents">
-                                            <i class="fas fa-times-circle text-danger"></i> Deselect All
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#" id="filterByClass">
-                                            <i class="fas fa-filter text-info"></i> Filter by Class
-                                        </a>
-                                    </div>
+                        <!-- Filters -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="input-group bg-white rounded-pill px-3 py-1 shadow-sm border">
+                                    <span class="input-group-text bg-transparent border-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" id="smartSearch" class="form-control border-0"
+                                        placeholder="Search by name, ID or grade...">
                                 </div>
                             </div>
-                            
-                            <!-- Search and Filter -->
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <div class="search-box">
-                                        <i class="fas fa-search"></i>
-                                        <input type="text" class="form-control" id="studentSearch" placeholder="Search students...">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <select class="form-control" id="classFilter">
-                                        <option value="">All Classes</option>
-                                        {% for class in classes %}
-                                        <option value="{{ class.id }}">{{ class.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                            <div class="col-md-4">
+                                <select id="gradeFilter" class="form-control rounded-pill border shadow-sm">
+                                    <option value="">All Active Grades</option>
+                                    {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
+                            <div class="col-md-2">
+                                <span class="badge badge-info p-2" id="visibleCount">
+                                    Showing {{ students|length }} students
+                                </span>
+                            </div>
+                        </div>
 
-                            <div class="students-list-wrap" id="studentsContainer">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-striped">
-                                        <thead>
-                                            <tr>
-                                                <th width="5%">
-                                                    <input type="checkbox" id="selectAll">
-                                                </th>
-                                                <th width="15%">Student ID</th>
-                                                <th width="25%">Student Name</th>
-                                                <th width="15%">Current Class</th>
-                                                <th width="15%">Section</th>
-                                                <th width="15%">Academic Year</th>
-                                                <th width="10%">Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for student in students %}
-                                            <tr class="student-row" data-class="{{ student.current_class.id }}" data-student-id="{{ student.id }}">
-                                                <td>
-                                                    <input type="checkbox" name="students" value="{{ student.id }}" class="student-checkbox">
-                                                </td>
-                                                <td>
-                                                    <strong>{{ student.student_id }}</strong>
-                                                </td>
-                                                <td>
-                                                    <div class="student-info">
-                                                        <div class="student-avatar">
-                                                            {% if student.photo %}
-                                                            <img src="{{ student.photo.url }}" alt="{{ student.get_full_name }}">
-                                                            {% else %}
-                                                            <div class="avatar-placeholder">
-                                                                <i class="fas fa-user-graduate"></i>
-                                                            </div>
-                                                            {% endif %}
-                                                        </div>
-                                                        <div class="student-details">
-                                                            <h6 class="student-name">{{ student.first_name }} {{ student.last_name }}</h6>
-                                                            <span class="student-email">{{ student.email|default:"No email" }}</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-class">{{ student.current_class.name }}</span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-section">{{ student.current_section.name|default:"No section" }}</span>
-                                                </td>
-                                                <td>
-                                                    {% if student.academic_year %}
-                                                    <span class="badge badge-year">{{ student.academic_year.name }}</span>
+                        <!-- Table -->
+                        <div class="table-responsive custom-scrollbar" style="max-height: 600px;">
+                            <table class="table modern-table">
+                                <thead>
+                                    <tr>
+                                        <th width="40">
+                                            <div class="custom-cb" id="masterCheckbox" title="Select All Visible"
+                                                style="cursor:pointer;" data-toggle="tooltip"></div>
+                                        </th>
+                                        <th>Student</th>
+                                        <th>ID & Section</th>
+                                        <th>Current Grade</th>
+                                        <th>Next Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentRegistryBody">
+                                    {% for student in students %}
+                                    <tr class="student-row" data-id="{{ student.id }}"
+                                        data-class-id="{{ student.current_class.id }}"
+                                        data-class-name="{{ student.current_class.name }}">
+                                        <td class="align-middle">
+                                            <div class="custom-cb"></div>
+                                            <input type="checkbox" name="students" value="{{ student.id }}"
+                                                class="d-none student-check">
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm mr-3">
+                                                    {% if student.photo %}
+                                                    <img src="{{ student.photo.url }}" class="rounded-circle shadow-sm"
+                                                        width="40" height="40">
                                                     {% else %}
-                                                    <span class="badge badge-secondary">Not Set</span>
-                                                    {% endif %}
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-{% if student.is_active %}success{% else %}secondary{% endif %}">
-                                                        {{ student.is_active|yesno:"Active,Inactive" }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            {% empty %}
-                                            <tr>
-                                                <td colspan="7" class="text-center py-5">
-                                                    <div class="empty-state">
-                                                        <div class="empty-icon">
-                                                            <i class="fas fa-user-graduate"></i>
-                                                        </div>
-                                                        <h4>No Students Found</h4>
-                                                        <p>There are no active students to display.</p>
+                                                    <div class="rounded-circle bg-soft-primary d-flex align-items-center justify-content-center text-primary font-weight-bold"
+                                                        style="width: 40px; height: 40px; border: 2px solid #fff;">
+                                                        {{ student.first_name|first }}{{ student.last_name|first }}
                                                     </div>
-                                                </td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div>
+                                                    <div class="font-weight-bold text-dark">{{ student.get_full_name }}
+                                                    </div>
+                                                    <!-- <div class="text-muted small">{{ student.current_class.name }}</div> -->
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="font-weight-bold text-muted small">{{ student.student_id }}
+                                            </div>
+                                            <div class="badge badge-light px-2" style="font-size: 10px;">
+                                                {{ student.current_section.name|default:"NO SECTION" }}
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="badge badge-pill badge-soft-primary px-3">
+                                                {{ student.current_class.name }}
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            {% with next=class_progression|get_item:student.current_class.name %}
+                                            {% if next and next.next %}
+                                            <span class="badge badge-pill badge-soft-success px-3">
+                                                {{ next.next }}
+                                            </span>
+                                            {% else %}
+                                            <span class="badge badge-pill badge-soft-secondary px-3">
+                                                Final Grade
+                                            </span>
+                                            {% endif %}
+                                            {% endwith %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
 
-                    <!-- Selected Students Panel -->
-                    <div class="card height-auto mt-4" id="selectedStudentsPanel" style="display: none;">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Selected Students <span class="badge badge-primary" id="selectedCountBadge">0</span></h3>
-                                </div>
+                        <!-- Bulk Actions Bar -->
+                        <div class="mt-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted mr-3" id="selectionInfo">No students selected</span>
+                                <button type="button" class="btn btn-sm btn-soft-primary" id="btnSelectAllVisible">
+                                    <i class="fas fa-check-double mr-1"></i> Select All Visible
+                                </button>
                             </div>
-                            <div class="selected-students-list" id="selectedStudentsList">
-                                <!-- Selected students will be dynamically added here -->
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="btnClearSelection">
+                                    <i class="fas fa-times"></i> Clear Selection
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Promotion Form -->
-                <div class="col-lg-4">
-                    <div class="card height-auto">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Promotion Details</h3>
-                                </div>
-                            </div>
-                            
-                            <!-- MAIN FORM - This will actually submit -->
-                            <form method="POST" id="promotionForm" action="{% url 'student_promotion' %}">
+                <!-- Command Center Column -->
+                <div class="col-lg-4 animate-up" style="animation-delay: 0.1s;">
+                    <div class="command-center">
+                        <!-- Promotion Form Card -->
+                        <div class="directory-card p-4 mb-4">
+                            <h4 class="font-weight-bold mb-4">Promotion Hub</h4>
+
+                            <form id="promotionForm" method="POST" action="{% url 'student_promotion' %}">
                                 {% csrf_token %}
-                                
-                                <!-- Hidden container for selected students -->
-                                <div id="selectedStudentsHidden" style="display: none;"></div>
-                                
-                                <div class="selected-students-summary mb-4">
-                                    <div class="summary-card">
-                                        <div class="summary-icon">
-                                            <i class="fas fa-users"></i>
+                                <div id="hiddenStudentsContainer"></div>
+                                <input type="hidden" name="promotion_type" id="promotionTypeInput" value="manual">
+
+                                <!-- Method Toggle -->
+                                <div class="row no-gutters mb-4">
+                                    <div class="col-6 pr-2">
+                                        <div class="method-card active" data-type="manual" id="methodManual">
+                                            <i class="fas fa-sliders-h"></i>
+                                            <span class="font-weight-bold">Manual</span>
                                         </div>
-                                        <div class="summary-content">
-                                            <h4 id="selectedCount">0</h4>
-                                            <p>Students Selected</p>
+                                    </div>
+                                    <div class="col-6 pl-2">
+                                        <div class="method-card" data-type="auto" id="methodAuto">
+                                            <i class="fas fa-magic"></i>
+                                            <span class="font-weight-bold">Smart Auto</span>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label>New Class *</label>
-                                    <select name="new_class" class="form-control" required id="newClass">
-                                        <option value="">Select New Class</option>
-                                        {% for class in classes %}
-                                        <option value="{{ class.id }}">{{ class.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>New Section *</label>
-                                    <select name="new_section" class="form-control" required id="newSection">
-                                        <option value="">Select New Section</option>
-                                        {% for section in sections %}
-                                        <option value="{{ section.id }}">{{ section.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Academic Year *</label>
-                                    <select name="academic_year" class="form-control" required id="academicYear">
-                                        <option value="">Select Academic Year</option>
-                                        {% for year in academic_years %}
-                                        <option value="{{ year.id }}">{{ year.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                
-                                <div class="promotion-preview mb-4" id="promotionPreview" style="display: none;">
-                                    <h6 class="preview-title">Promotion Preview</h6>
-                                    <div class="preview-content">
-                                        <div class="preview-item">
-                                            <span class="preview-label">From:</span>
-                                            <span class="preview-value" id="previewCurrent"></span>
+
+                                <!-- Configuration -->
+                                <div class="config-section">
+                                    <div id="manualConfig">
+                                        <div class="form-group mb-3">
+                                            <label class="text-muted small font-weight-bold">TARGET GRADE</label>
+                                            <select name="new_class" id="targetGrade" class="form-control rounded-lg"
+                                                required>
+                                                <option value="">Select New Grade</option>
+                                                {% for class in classes %}
+                                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">To:</span>
-                                            <span class="preview-value" id="previewNew"></span>
-                                        </div>
-                                        <div class="preview-item">
-                                            <span class="preview-label">Academic Year:</span>
-                                            <span class="preview-value" id="previewYear"></span>
+                                        <div class="form-group mb-4">
+                                            <label class="text-muted small font-weight-bold">TARGET SECTION</label>
+                                            <select name="new_section" id="targetSection"
+                                                class="form-control rounded-lg">
+                                                <option value="">Maintain Current</option>
+                                                {% for section in sections %}
+                                                <option value="{{ section.id }}">{{ section.name }}</option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
                                     </div>
+
+                                    <div id="autoInfo" class="mb-4" style="display: none;">
+                                        <div class="p-3 bg-light rounded-lg border-left border-primary">
+                                            <p class="small text-dark mb-0">
+                                                <strong>Smart Routing Enabled:</strong> Students will automatically move
+                                                to the next logical grade based on the campus curriculum path.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-5">
+                                        <label class="text-muted small font-weight-bold">ACADEMIC YEAR</label>
+                                        <select name="academic_year" class="form-control rounded-lg border-primary"
+                                            required>
+                                            <option value="">Select Target Year</option>
+                                            {% for year in academic_years %}
+                                            <option value="{{ year.id }}">{{ year.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
-                                
-                                <div class="form-group mt-5">
-                                    <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="promoteBtn" disabled>
-                                        <i class="fas fa-graduation-cap"></i> Promote Students
-                                    </button>
-                                    <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" id="resetBtn">
-                                        <i class="fas fa-redo"></i> Reset Form
+
+                                <!-- Execution Card -->
+                                <div class="preview-card-luxe mb-4">
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div class="small opacity-75">PREVIEW SUMMARY</div>
+                                        <div class="badge badge-primary px-3">Live</div>
+                                    </div>
+
+                                    <div class="preview-step">
+                                        <div class="text-center">
+                                            <div class="h4 mb-0" id="previewCount">0</div>
+                                            <div class="extra-small opacity-50">STUDENTS</div>
+                                        </div>
+                                        <div class="step-line"></div>
+                                        <div class="text-center">
+                                            <div class="h4 mb-0" id="previewTarget">—</div>
+                                            <div class="extra-small opacity-50">CLASS</div>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" id="btnExecute"
+                                        class="btn btn-primary btn-block rounded-pill py-3 font-weight-bold shadow-lg"
+                                        disabled>
+                                        PROCEED WITH PROMOTION
                                     </button>
                                 </div>
+                                <button type="button" id="btnReset" class="btn btn-link btn-block text-muted small">
+                                    <i class="fas fa-undo mr-1"></i> Reset Configuration
+                                </button>
                             </form>
                         </div>
-                    </div>
 
-                    <!-- Quick Stats -->
-                    <div class="card height-auto mt-4">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <h3>Promotion Statistics</h3>
-                            </div>
-                            <div class="stats-grid">
-                                <div class="stat-card stat-total">
-                                    <div class="stat-icon">
-                                        <i class="fas fa-user-graduate"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>{{ students.count }}</h4>
-                                        <p>Total Students</p>
-                                    </div>
-                                </div>
-                                <div class="stat-card stat-active">
-                                    <div class="stat-icon">
-                                        <i class="fas fa-check-circle"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>{{ students.count }}</h4>
-                                        <p>Active Students</p>
-                                    </div>
-                                </div>
-                                <div class="stat-card stat-classes">
-                                    <div class="stat-icon">
-                                        <i class="fas fa-chalkboard"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>{{ classes.count }}</h4>
-                                        <p>Available Classes</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <!-- Quick Tips Card -->
+                        <div class="directory-card p-4">
+                            <h5 class="font-weight-bold mb-3">
+                                <i class="fas fa-lightbulb text-warning mr-2"></i> Quick Tips
+                            </h5>
+                            <ul class="list-unstyled small">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                    Select multiple students using checkboxes
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                    Smart Auto follows curriculum progression
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success mr-2"></i>
+                                    Max 100 promotions per day for security
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Promotion History Table -->
-            <div class="row mt-4">
-                <div class="col-12">
-                    <div class="card height-auto">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Recent Promotions</h3>
-                                </div>
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="{% url 'promotion_history' %}">
-                                            <i class="fas fa-history"></i> View Full History
-                                        </a>
-                                    </div>
-                                </div>
+            <!-- Promotion History Feed -->
+            <div class="row mt-5">
+                <div class="col-12 animate-up" style="animation-delay: 0.2s;">
+                    <div class="directory-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="font-weight-bold mb-0">Recent Activity</h4>
+                            <div>
+                                <a href="{% url 'export_promotion_summary' %}"
+                                    class="btn btn-soft-primary px-4 rounded-pill mr-2">
+                                    <i class="fas fa-download mr-1"></i> Export
+                                </a>
+                                <a href="{% url 'promotion_history' %}" class="btn btn-soft-primary px-4 rounded-pill">
+                                    View All Logs
+                                </a>
                             </div>
-                            <div class="table-responsive">
-                                <table class="table display data-table text-nowrap">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Student</th>
-                                            <th>From</th>
-                                            <th>To</th>
-                                            <th>Academic Year</th>
-                                            <th>Promoted By</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for promotion in recent_promotions %}
-                                        <tr>
-                                            <td>{{ promotion.promotion_date|date:"M d, Y" }}</td>
-                                            <td>
-                                                <div class="student-info">
-                                                    <div class="student-avatar">
-                                                        {% if promotion.student.photo %}
-                                                        <img src="{{ promotion.student.photo.url }}" alt="{{ promotion.student.get_full_name }}">
-                                                        {% else %}
-                                                        <div class="avatar-placeholder">
-                                                            <i class="fas fa-user-graduate"></i>
-                                                        </div>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="student-details">
-                                                        <h6 class="student-name">{{ promotion.student.first_name }} {{ promotion.student.last_name }}</h6>
-                                                        <span class="student-email">{{ promotion.student.student_id }}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-class">{{ promotion.from_class.name }}</span>
-                                                {% if promotion.from_section %}
-                                                <span class="badge badge-section">{{ promotion.from_section.name }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-success">{{ promotion.to_class.name }}</span>
-                                                {% if promotion.to_section %}
-                                                <span class="badge badge-section">{{ promotion.to_section.name }}</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-year">{{ promotion.academic_year.name }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="text-muted">{{ promotion.promoted_by.get_full_name|default:promotion.promoted_by.username }}</span>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="6" class="text-center py-4">
-                                                <div class="empty-state">
-                                                    <div class="empty-icon">
-                                                        <i class="fas fa-history"></i>
-                                                    </div>
-                                                    <h4>No Promotion History</h4>
-                                                    <p>No promotions have been recorded yet.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table mb-0">
+                                <thead>
+                                    <tr class="text-muted small">
+                                        <th>DATE</th>
+                                        <th>STUDENT</th>
+                                        <th>TRANSITION</th>
+                                        <th>BY USER</th>
+                                        <th>TYPE</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for promotion in recent_promotions %}
+                                    <tr class="small">
+                                        <td class="align-middle">{{ promotion.promotion_date|date:"M d, Y H:i" }}</td>
+                                        <td class="align-middle">
+                                            <strong>{{ promotion.student.get_full_name }}</strong>
+                                            <div class="text-muted">{{ promotion.student.student_id }}</div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span class="text-muted">{{ promotion.from_class.name }}</span>
+                                            <i class="fas fa-long-arrow-alt-right mx-2 text-primary"></i>
+                                            <span class="text-dark font-weight-bold">
+                                                <span>{{ promotion.to_class.name }}</span>
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span>{{ promotion.promoted_by.username }}</span>
+                                        </td>
+                                        <td class="align-middle">
+                                            <span
+                                                class="badge badge-pill badge-soft-{% if promotion.promotion_type == 'manual' %}info{% elif promotion.promotion_type == 'reversion' %}warning{% else %}success{% endif %}">
+                                                {{ promotion.get_promotion_type_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No recent promotion history found.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -412,35 +678,79 @@
     </div>
 </div>
 
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="sr-only">Loading...</span>
+        </div>
+        <p class="text-dark font-weight-bold">Processing promotion...</p>
+    </div>
+</div>
+
 <!-- Confirmation Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Promotion</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="confirmation-icon">
-                    <i class="fas fa-graduation-cap"></i>
+<div class="modal fade" id="promotionConfirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="bg-light-blue text-primary rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
+                        style="width: 80px; height: 80px; font-size: 32px;">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
                 </div>
-                <p>Are you sure you want to promote <strong id="confirmCount">0</strong> students?</p>
-                <div class="confirmation-details">
-                    <p><strong>From:</strong> <span id="confirmCurrent">Current classes</span></p>
-                    <p><strong>To:</strong> <span id="confirmNew">New class and section</span></p>
-                    <p><strong>Academic Year:</strong> <span id="confirmYear">Selected academic year</span></p>
+                <h3 class="font-weight-bold text-dark mb-2">Confirm Promotion?</h3>
+                <p class="text-muted mb-4">
+                    You are about to promote <strong id="modalCount">0</strong> students.
+                    This action will update student registries and academic records.
+                </p>
+
+                <div class="bg-light p-3 rounded-lg text-left mb-4">
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Promotion Type:</span>
+                        <strong class="text-dark" id="modalType">Manual</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
+                        <span class="text-muted">Target Grade:</span>
+                        <strong class="text-dark" id="modalGrade">—</strong>
+                    </div>
+                    <div class="d-flex justify-content-between small">
+                        <span class="text-muted">Academic Year:</span>
+                        <strong class="text-dark" id="modalYear">—</strong>
+                    </div>
                 </div>
-                <div id="selectedStudentsConfirmation"></div>
-                <p class="text-warning mt-3"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+
+                <div class="alert alert-warning small" id="modalWarning" style="display: none;">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <span id="modalWarningText"></span>
+                </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <button type="button" class="btn btn-light btn-block rounded-pill py-3"
+                        data-dismiss="modal">Cancel</button>
+                    <button type="button" id="finalSubmit"
+                        class="btn btn-primary btn-block rounded-pill py-3 shadow">Confirm Execution</button>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-fill-lg bg-blue-dark btn-hover-yellow" data-dismiss="modal">
-                    <i class="fas fa-times"></i> Cancel
-                </button>
-                <button type="button" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark" id="confirmPromotion">
-                    <i class="fas fa-check"></i> Confirm Promotion
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px;">
+            <div class="modal-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="bg-light-green text-success rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
+                        style="width: 80px; height: 80px; font-size: 32px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <h3 class="font-weight-bold text-dark mb-2" id="successTitle">Success!</h3>
+                <p class="text-muted mb-4" id="successMessage">Students promoted successfully.</p>
+                <button type="button" class="btn btn-primary rounded-pill px-5 py-2" data-dismiss="modal">
+                    Continue
                 </button>
             </div>
         </div>
@@ -450,843 +760,452 @@
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Store student data for quick access
-    const studentData = {};
-    {% for student in students %}
-    studentData[{{ student.id }}] = {
-        name: "{{ student.first_name }} {{ student.last_name }}",
-        studentId: "{{ student.student_id }}",
-        currentClass: "{{ student.current_class.name }}",
-        currentSection: "{{ student.current_section.name|default:'No section' }}",
-        photo: "{% if student.photo %}{{ student.photo.url }}{% else %}none{% endif %}"
-    };
-    {% endfor %}
+    $(document).ready(function () {
+        console.log('Document ready - Starting fresh...');
 
-    // Student selection functionality
-    $('#selectAll').on('change', function() {
-        $('.student-checkbox').prop('checked', this.checked);
-        updateSelectedCount();
-        updateSelectedStudentsList();
-        updatePromotionPreview();
-    });
+        // Simple array to store selected student IDs
+        let selectedIds = [];
 
-    $('.student-checkbox').on('change', function() {
-        if (!this.checked) {
-            $('#selectAll').prop('checked', false);
-        } else {
-            const allChecked = $('.student-checkbox:checked').length === $('.student-checkbox').length;
-            $('#selectAll').prop('checked', allChecked);
-        }
-        updateSelectedCount();
-        updateSelectedStudentsList();
-        updatePromotionPreview();
-    });
+        // ===========================================
+        // SELECT ALL FUNCTIONALITY - GUARANTEED TO WORK
+        // ===========================================
 
-    // Select all students
-    $('#selectAllStudents').on('click', function(e) {
-        e.preventDefault();
-        $('.student-checkbox').prop('checked', true);
-        $('#selectAll').prop('checked', true);
-        updateSelectedCount();
-        updateSelectedStudentsList();
-        updatePromotionPreview();
-    });
+        // Method 1: Direct click handler for Select All button
+        $('#btnSelectAll, #btnSelectAllVisible').on('click', function () {
+            console.log('Select All button clicked');
 
-    // Deselect all students
-    $('#deselectAllStudents').on('click', function(e) {
-        e.preventDefault();
-        $('.student-checkbox').prop('checked', false);
-        $('#selectAll').prop('checked', false);
-        updateSelectedCount();
-        updateSelectedStudentsList();
-        updatePromotionPreview();
-    });
+            // Get all visible rows
+            const visibleRows = $('.student-row:visible');
+            console.log('Found', visibleRows.length, 'visible rows');
 
-    // Update selected count
-    function updateSelectedCount() {
-        const selectedCount = $('.student-checkbox:checked').length;
-        $('#selectedCount').text(selectedCount);
-        $('#selectedCountBadge').text(selectedCount);
-        
-        if (selectedCount > 0) {
-            $('#promoteBtn').prop('disabled', false);
-            $('#selectedStudentsPanel').show();
-        } else {
-            $('#promoteBtn').prop('disabled', true);
-            $('#selectedStudentsPanel').hide();
-        }
-    }
+            // Clear current selection first (optional - remove this line if you want to add to existing)
+            selectedIds = [];
 
-    // Update selected students list
-    function updateSelectedStudentsList() {
-        const selectedStudentsList = $('#selectedStudentsList');
-        selectedStudentsList.empty();
-        
-        $('.student-checkbox:checked').each(function() {
-            const studentId = $(this).val();
-            const student = studentData[studentId];
-            
-            if (student) {
-                const studentElement = `
-                    <div class="selected-student-item" data-student-id="${studentId}">
-                        <div class="student-info">
-                            <div class="student-avatar">
-                                ${student.photo !== 'none' ? 
-                                    `<img src="${student.photo}" alt="${student.name}">` :
-                                    `<div class="avatar-placeholder">
-                                        <i class="fas fa-user-graduate"></i>
-                                    </div>`
-                                }
-                            </div>
-                            <div class="student-details">
-                                <h6 class="student-name">${student.name}</h6>
-                                <span class="student-info-text">${student.studentId} • ${student.currentClass}</span>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger deselect-student" data-student-id="${studentId}">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                selectedStudentsList.append(studentElement);
-            }
+            // Select each visible row
+            visibleRows.each(function () {
+                const row = $(this);
+                const studentId = row.attr('data-id');
+
+                console.log('Selecting student:', studentId);
+
+                // Add visual selection
+                row.addClass('selected');
+
+                // Check the checkbox
+                row.find('.student-check').prop('checked', true);
+
+                // Add to array if not already there
+                if (studentId && !selectedIds.includes(studentId)) {
+                    selectedIds.push(studentId);
+                }
+            });
+
+            // Update the UI
+            updateCounter();
+            console.log('Selected IDs:', selectedIds);
         });
 
-        // Add deselect functionality
-        $('.deselect-student').on('click', function() {
-            const studentId = $(this).data('student-id');
-            $(`.student-checkbox[value="${studentId}"]`).prop('checked', false);
-            updateSelectedCount();
-            updateSelectedStudentsList();
-            updatePromotionPreview();
+        // ===========================================
+        // DESELECT ALL
+        // ===========================================
+
+        $('#btnDeselectAll, #btnClearSelection').on('click', function () {
+            console.log('Deselect All button clicked');
+
+            // Remove selection from all rows
+            $('.student-row').removeClass('selected');
+            $('.student-check').prop('checked', false);
+
+            // Clear the array
+            selectedIds = [];
+
+            // Update UI
+            updateCounter();
         });
-    }
 
-    // Search functionality
-    $('#studentSearch').on('keyup', function() {
-        const searchText = $(this).val().toLowerCase();
-        filterStudents();
-    });
+        // ===========================================
+        // INDIVIDUAL ROW SELECTION
+        // ===========================================
 
-    // Class filter
-    $('#classFilter').on('change', function() {
-        filterStudents();
-    });
+        // Handle row click
+        $('.student-row').on('click', function () {
+            toggleRow($(this));
+        });
 
-    function filterStudents() {
-        const searchText = $('#studentSearch').val().toLowerCase();
-        const classFilter = $('#classFilter').val();
-        
-        $('.student-row').each(function() {
-            const studentName = $(this).find('.student-name').text().toLowerCase();
-            const studentId = $(this).find('td:nth-child(2) strong').text().toLowerCase();
-            const studentClass = $(this).data('class');
-            
-            const matchesSearch = studentName.includes(searchText) || studentId.includes(searchText);
-            const matchesClass = !classFilter || studentClass == classFilter;
-            
-            if (matchesSearch && matchesClass) {
-                $(this).show();
+        // Handle checkbox click (stop propagation to avoid double-triggering)
+        $('.custom-cb').on('click', function (e) {
+            e.stopPropagation();
+            const row = $(this).closest('.student-row');
+            toggleRow(row);
+        });
+
+        function toggleRow(row) {
+            const studentId = row.attr('data-id');
+
+            if (row.hasClass('selected')) {
+                // Deselect
+                row.removeClass('selected');
+                row.find('.student-check').prop('checked', false);
+
+                // Remove from array
+                const index = selectedIds.indexOf(studentId);
+                if (index > -1) {
+                    selectedIds.splice(index, 1);
+                }
             } else {
-                $(this).hide();
+                // Select
+                row.addClass('selected');
+                row.find('.student-check').prop('checked', true);
+
+                // Add to array if not already there
+                if (studentId && !selectedIds.includes(studentId)) {
+                    selectedIds.push(studentId);
+                }
             }
-        });
-    }
 
-    // Promotion preview
-    $('#newClass, #newSection, #academicYear').on('change', function() {
-        updatePromotionPreview();
-    });
+            updateCounter();
+        }
 
-    function updatePromotionPreview() {
-        const newClass = $('#newClass option:selected').text();
-        const newSection = $('#newSection option:selected').text();
-        const academicYear = $('#academicYear option:selected').text();
-        
-        if (newClass && newSection && academicYear) {
-            const selectedStudents = $('.student-checkbox:checked');
-            if (selectedStudents.length > 0) {
-                const currentClasses = [];
-                selectedStudents.each(function() {
-                    const className = $(this).closest('tr').find('.badge-class').text();
-                    if (!currentClasses.includes(className)) {
-                        currentClasses.push(className);
+        // ===========================================
+        // MASTER CHECKBOX
+        // ===========================================
+
+        $('#masterCheckbox').on('click', function () {
+            const visibleRows = $('.student-row:visible');
+            const selectedVisible = $('.student-row:visible.selected');
+
+            if (selectedVisible.length === visibleRows.length && visibleRows.length > 0) {
+                // Deselect all visible
+                visibleRows.each(function () {
+                    const row = $(this);
+                    const studentId = row.attr('data-id');
+
+                    row.removeClass('selected');
+                    row.find('.student-check').prop('checked', false);
+
+                    const index = selectedIds.indexOf(studentId);
+                    if (index > -1) {
+                        selectedIds.splice(index, 1);
                     }
                 });
-                
-                $('#previewCurrent').text(currentClasses.join(', '));
-                $('#previewNew').text(`${newClass} - ${newSection}`);
-                $('#previewYear').text(academicYear);
-                $('#promotionPreview').show();
             } else {
-                $('#promotionPreview').hide();
+                // Select all visible
+                visibleRows.each(function () {
+                    const row = $(this);
+                    const studentId = row.attr('data-id');
+
+                    row.addClass('selected');
+                    row.find('.student-check').prop('checked', true);
+
+                    if (studentId && !selectedIds.includes(studentId)) {
+                        selectedIds.push(studentId);
+                    }
+                });
             }
-        } else {
-            $('#promotionPreview').hide();
-        }
-    }
 
-    // Promote button click - Show confirmation modal
-    $('#promoteBtn').on('click', function() {
-        const selectedCount = $('.student-checkbox:checked').length;
-        const newClass = $('#newClass').val();
-        const newSection = $('#newSection').val();
-        const academicYear = $('#academicYear').val();
-        
-        console.log('Validation check:', {
-            selectedCount: selectedCount,
-            newClass: newClass,
-            newSection: newSection,
-            academicYear: academicYear
+            updateCounter();
         });
-        
-        if (selectedCount === 0) {
-            showAlert('Please select at least one student to promote.', 'warning');
-            return;
+
+        // ===========================================
+        // FILTER FUNCTIONALITY
+        // ===========================================
+
+        $('#smartSearch').on('keyup', function () {
+            filterRows();
+        });
+
+        $('#gradeFilter').on('change', function () {
+            filterRows();
+        });
+
+        function filterRows() {
+            const searchTerm = $('#smartSearch').val().toLowerCase();
+            const gradeId = $('#gradeFilter').val();
+            let visibleCount = 0;
+
+            $('.student-row').each(function () {
+                const row = $(this);
+                const rowText = row.text().toLowerCase();
+                const rowGradeId = row.attr('data-class-id');
+
+                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
+                const matchesGrade = gradeId === '' || rowGradeId === gradeId;
+
+                if (matchesSearch && matchesGrade) {
+                    row.show();
+                    visibleCount++;
+                } else {
+                    row.hide();
+                }
+            });
+
+            $('#visibleCount').text('Showing ' + visibleCount + ' students');
+            updateMasterCheckbox();
         }
-        
-        if (!newClass) {
-            showAlert('Please select a new class.', 'warning');
-            return;
-        }
-        
-        if (!newSection) {
-            showAlert('Please select a new section.', 'warning');
-            return;
-        }
-        
-        if (!academicYear) {
-            showAlert('Please select an academic year.', 'warning');
-            return;
-        }
-        
-        // Get current classes and student names for confirmation
-        const currentClasses = [];
-        const selectedStudentNames = [];
-        $('.student-checkbox:checked').each(function() {
-            const studentId = $(this).val();
-            const student = studentData[studentId];
-            const className = $(this).closest('tr').find('.badge-class').text();
-            
-            if (student && !currentClasses.includes(className)) {
-                currentClasses.push(className);
+
+        // ===========================================
+        // UI UPDATE FUNCTIONS
+        // ===========================================
+
+        function updateCounter() {
+            const count = selectedIds.length;
+            console.log('Updating counter:', count);
+
+            // Update all counters
+            $('#selectedCounter').text(count);
+            $('#previewCount').text(count);
+            $('#modalCount').text(count);
+
+            // Update selection info text
+            if (count === 0) {
+                $('#selectionInfo').text('No students selected');
+            } else if (count === 1) {
+                $('#selectionInfo').text('1 student selected');
+            } else {
+                $('#selectionInfo').text(count + ' students selected');
             }
-            if (student) {
-                selectedStudentNames.push(student.name);
+
+            // Enable/disable execute button
+            $('#btnExecute').prop('disabled', count === 0);
+
+            updateMasterCheckbox();
+        }
+
+        function updateMasterCheckbox() {
+            const visibleRows = $('.student-row:visible');
+            const selectedVisible = $('.student-row:visible.selected');
+
+            if (visibleRows.length > 0 && selectedVisible.length === visibleRows.length) {
+                $('#masterCheckbox').addClass('selected');
+            } else {
+                $('#masterCheckbox').removeClass('selected');
+            }
+        }
+
+        // ===========================================
+        // METHOD TOGGLE (MANUAL/AUTO)
+        // ===========================================
+
+        $('.method-card').on('click', function () {
+            console.log('Method toggled:', $(this).data('type'));
+
+            $('.method-card').removeClass('active');
+            $(this).addClass('active');
+
+            const type = $(this).data('type');
+            $('#promotionTypeInput').val(type);
+
+            if (type === 'auto') {
+                $('#manualConfig').hide();
+                $('#autoInfo').show();
+                $('#targetGrade').prop('required', false);
+            } else {
+                $('#manualConfig').show();
+                $('#autoInfo').hide();
+                $('#targetGrade').prop('required', true);
+            }
+
+            updatePreview();
+        });
+
+        // ===========================================
+        // PREVIEW UPDATE
+        // ===========================================
+
+        $('#targetGrade, select[name="academic_year"]').on('change', function () {
+            updatePreview();
+        });
+
+        function updatePreview() {
+            const type = $('#promotionTypeInput').val();
+
+            if (type === 'auto') {
+                $('#previewTarget').text('Auto (Smart)');
+                $('#modalGrade').text('Auto (Smart)');
+            } else {
+                const target = $('#targetGrade option:selected').text();
+                $('#previewTarget').text(target === 'Select New Grade' ? '—' : target);
+                $('#modalGrade').text(target === 'Select New Grade' ? '—' : target);
+            }
+
+            const year = $('select[name="academic_year"] option:selected').text();
+            $('#modalYear').text(year === 'Select Target Year' ? '—' : year);
+            $('#modalType').text(type === 'auto' ? 'Smart Auto' : 'Manual');
+        }
+
+        // ===========================================
+        // EXECUTE BUTTON
+        // ===========================================
+
+        $('#btnExecute').on('click', function () {
+            if (selectedIds.length === 0) {
+                alert('Please select students to promote');
+                return;
+            }
+
+            if ($('#promotionTypeInput').val() === 'manual' && !$('#targetGrade').val()) {
+                alert('Please select a target grade');
+                return;
+            }
+
+            if (!$('select[name="academic_year"]').val()) {
+                alert('Please select an academic year');
+                return;
+            }
+
+            $('#promotionConfirmModal').modal('show');
+        });
+
+        // ===========================================
+        // FINAL SUBMIT
+        // ===========================================
+
+        // Replace your final submit function with this debug version
+        $('#finalSubmit').on('click', function () {
+            const $btn = $(this);
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Processing...');
+
+            // DEBUG: Log what we're sending
+            console.log('=== PROMOTION DEBUG INFO ===');
+            console.log('Selected student IDs:', selectedIds);
+            console.log('Promotion type:', $('#promotionTypeInput').val());
+            console.log('Target grade:', $('#targetGrade').val());
+            console.log('Target section:', $('#targetSection').val());
+            console.log('Academic year:', $('select[name="academic_year"]').val());
+
+            // Filter out any invalid IDs
+            const validIds = selectedIds.filter(id => {
+                return id && id !== 'undefined' && id !== 'null' && !isNaN(parseInt(id));
+            });
+
+            console.log('Valid IDs after filtering:', validIds);
+
+            if (validIds.length === 0) {
+                alert('No valid student IDs selected');
+                $btn.prop('disabled', false).html('Confirm Execution');
+                return;
+            }
+
+            // Add hidden inputs
+            $('#hiddenStudentsContainer').empty();
+            validIds.forEach(function (id) {
+                $('#hiddenStudentsContainer').append('<input type="hidden" name="students" value="' + id + '">');
+            });
+
+            // DEBUG: Log the form data
+            const formData = $('#promotionForm').serialize();
+            console.log('Form data being sent:', formData);
+
+            $('#loadingOverlay').addClass('show');
+            $('#promotionConfirmModal').modal('hide');
+
+            // Submit form
+            $.ajax({
+                url: $('#promotionForm').attr('action'),
+                method: 'POST',
+                data: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function (response) {
+                    $('#loadingOverlay').removeClass('show');
+                    console.log('Success response:', response);
+
+                    if (response.success) {
+                        let message = response.promoted_count + ' student(s) promoted successfully';
+                        if (response.skipped_count > 0) {
+                            message += ' (' + response.skipped_count + ' skipped)';
+                        }
+                        $('#successMessage').text(message);
+                        $('#successModal').modal('show');
+                        setTimeout(function () {
+                            window.location.href = response.redirect_url || '{% url "promotion_history" %}';
+                        }, 2000);
+                    } else {
+                        alert('Promotion failed: ' + (response.error || 'Unknown error'));
+                    }
+                    $btn.prop('disabled', false).html('Confirm Execution');
+                },
+                error: function (xhr, status, error) {
+                    $('#loadingOverlay').removeClass('show');
+                    console.log('ERROR - Full response:', xhr);
+                    console.log('ERROR - Status:', status);
+                    console.log('ERROR - Error:', error);
+                    console.log('ERROR - Response text:', xhr.responseText);
+
+                    let errorMsg = 'Server error occurred';
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        errorMsg = response.error || errorMsg;
+                        console.log('Parsed error response:', response);
+                    } catch (e) {
+                        errorMsg = xhr.responseText || errorMsg;
+                    }
+
+                    alert('Error: ' + errorMsg);
+                    $btn.prop('disabled', false).html('Confirm Execution');
+                }
+            });
+        });
+        // ===========================================
+        // RESET BUTTON
+        // ===========================================
+
+        $('#btnReset').on('click', function (e) {
+            e.preventDefault();
+
+            // Clear selections
+            $('.student-row').removeClass('selected');
+            $('.student-check').prop('checked', false);
+            selectedIds = [];
+
+            // Reset form
+            $('#promotionForm')[0].reset();
+
+            // Reset to manual mode
+            $('.method-card').removeClass('active');
+            $('.method-card[data-type="manual"]').addClass('active');
+            $('#manualConfig').show();
+            $('#autoInfo').hide();
+            $('#promotionTypeInput').val('manual');
+
+            updateCounter();
+            updatePreview();
+        });
+
+        // ===========================================
+        // EXPORT BUTTON
+        // ===========================================
+
+        $('#btnExport').on('click', function (e) {
+            e.preventDefault();
+            if (selectedIds.length > 0) {
+                window.location.href = '{% url "export_promotion_summary" %}?students=' + selectedIds.join(',');
+            } else {
+                alert('No students selected');
             }
         });
-        
-        const newClassName = $('#newClass option:selected').text();
-        const newSectionName = $('#newSection option:selected').text();
-        const academicYearName = $('#academicYear option:selected').text();
-        
-        $('#confirmCount').text(selectedCount);
-        $('#confirmCurrent').text(currentClasses.join(', '));
-        $('#confirmNew').text(`${newClassName} - ${newSectionName}`);
-        $('#confirmYear').text(academicYearName);
-        
-        // Show selected students in confirmation
-        let studentsList = '<div class="selected-students-confirmation mt-3"><strong>Selected Students:</strong><div class="confirmation-students-list">';
-        selectedStudentNames.slice(0, 5).forEach(name => {
-            studentsList += `<div class="confirmation-student"><i class="fas fa-user-graduate"></i> ${name}</div>`;
-        });
-        if (selectedStudentNames.length > 5) {
-            studentsList += `<div class="confirmation-student text-muted">... and ${selectedStudentNames.length - 5} more students</div>`;
-        }
-        studentsList += '</div></div>';
-        
-        $('#selectedStudentsConfirmation').html(studentsList);
-        
-        $('#confirmationModal').modal('show');
+
+        // ===========================================
+        // INITIALIZATION
+        // ===========================================
+
+        // Set manual mode as default
+        $('.method-card[data-type="manual"]').addClass('active');
+        $('#manualConfig').show();
+        $('#autoInfo').hide();
+        $('#promotionTypeInput').val('manual');
+
+        // Initialize counters
+        updateCounter();
+        filterRows();
+
+        console.log('Initialization complete. Select All should work now.');
+
+        // Test: Check if buttons exist
+        console.log('Select All button exists:', $('#btnSelectAll').length > 0);
+        console.log('Student rows exist:', $('.student-row').length > 0);
     });
-
-    // Confirm promotion - This actually submits the form
-    $('#confirmPromotion').on('click', function() {
-        const promoteBtn = $(this);
-        const originalText = promoteBtn.html();
-        
-        // Show loading state
-        promoteBtn.prop('disabled', true);
-        promoteBtn.html('<i class="fas fa-spinner fa-spin"></i> Promoting...');
-        
-        // Create hidden inputs for selected students
-        const hiddenContainer = $('#selectedStudentsHidden');
-        hiddenContainer.empty();
-        
-        $('.student-checkbox:checked').each(function() {
-            const studentId = $(this).val();
-            hiddenContainer.append(`<input type="hidden" name="students" value="${studentId}">`);
-        });
-        
-        console.log('Submitting form with students:', $('.student-checkbox:checked').length);
-        
-        // Submit the form
-        $('#promotionForm').submit();
-    });
-
-    // Reset form
-    $('#resetBtn').on('click', function() {
-        $('.student-checkbox').prop('checked', false);
-        $('#selectAll').prop('checked', false);
-        updateSelectedCount();
-        updateSelectedStudentsList();
-        $('#promotionPreview').hide();
-        $('#newClass').val('');
-        $('#newSection').val('');
-        $('#academicYear').val('');
-    });
-
-    // Clear confirmation modal when hidden
-    $('#confirmationModal').on('hidden.bs.modal', function() {
-        $('#selectedStudentsConfirmation').empty();
-        $('#confirmPromotion').prop('disabled', false).html('<i class="fas fa-check"></i> Confirm Promotion');
-    });
-
-    // Alert function
-    function showAlert(message, type = 'info') {
-        // Remove existing alerts
-        $('.alert-dismissible').alert('close');
-        
-        const alertClass = type === 'warning' ? 'alert-warning' : 
-                          type === 'error' ? 'alert-danger' : 
-                          type === 'success' ? 'alert-success' : 'alert-info';
-        
-        const alertHtml = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <strong>
-                    <i class="fas fa-${type === 'warning' ? 'exclamation-triangle' : 
-                                     type === 'error' ? 'exclamation-circle' : 
-                                     type === 'success' ? 'check-circle' : 'info-circle'}"></i>
-                    ${type.charAt(0).toUpperCase() + type.slice(1)}!
-                </strong>
-                ${message}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        `;
-        
-        // Prepend to messages container
-        $('.row:first').prepend(alertHtml);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            $('.alert').alert('close');
-        }, 5000);
-    }
-
-    // Initialize
-    updateSelectedCount();
-});
 </script>
-
-<style>
-/* Selected Students Panel Styles */
-.selected-student-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.selected-student-item:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transform: translateY(-1px);
-}
-
-.selected-student-item .student-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-}
-
-.selected-student-item .student-details h6 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.selected-student-item .student-info-text {
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.deselect-student {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-/* Confirmation modal styles */
-.confirmation-students-list {
-    max-height: 150px;
-    overflow-y: auto;
-    margin-top: 10px;
-}
-
-.confirmation-student {
-    padding: 5px 0;
-    border-bottom: 1px solid #f8f9fa;
-    font-size: 14px;
-}
-
-.confirmation-student:last-child {
-    border-bottom: none;
-}
-
-/* Selected Students Panel Styles */
-.selected-student-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    margin-bottom: 8px;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.selected-student-item:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transform: translateY(-1px);
-}
-
-.selected-student-item .student-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-}
-
-.selected-student-item .student-details h6 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.selected-student-item .student-info-text {
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.deselect-student {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-/* Promotion History Table */
-.badge-success {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-    border: 1px solid #28a745;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .selected-student-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .selected-student-item .student-info {
-        width: 100%;
-    }
-    
-    .deselect-student {
-        align-self: flex-end;
-    }
-}
-
-:root {
-    --primary: #4361ee;
-    --secondary: #6c757d;
-    --success: #28a745;
-    --danger: #e74c3c;
-    --warning: #f39c12;
-    --info: #3498db;
-    --light: #f8f9fa;
-    --dark: #2c3e50;
-    --border-radius: 10px;
-    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-}
-
-
-/* Student Info Styles */
-.student-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.student-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.student-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    background: var(--light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--secondary);
-    font-size: 18px;
-}
-
-.student-details h6 {
-    margin: 0;
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.student-email {
-    font-size: 12px;
-    color: var(--secondary);
-}
-
-/* Badge Styles */
-.badge {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.badge-class {
-    background-color: rgba(67, 97, 238, 0.1);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-}
-
-.badge-section {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: var(--success);
-    border: 1px solid var(--success);
-}
-
-.badge-year {
-    background-color: rgba(243, 156, 18, 0.1);
-    color: var(--warning);
-    border: 1px solid var(--warning);
-}
-
-.badge-secondary {
-    background-color: rgba(108, 117, 125, 0.1);
-    color: var(--secondary);
-    border: 1px solid var(--secondary);
-}
-
-/* Selected Students Summary */
-.selected-students-summary {
-    background: var(--light);
-    border-radius: var(--border-radius);
-    padding: 20px;
-}
-
-.summary-card {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.summary-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
-}
-
-.summary-content h4 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--dark);
-}
-
-.summary-content p {
-    margin: 0;
-    color: var(--secondary);
-    font-size: 14px;
-}
-
-/* Promotion Preview */
-.promotion-preview {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    color: white;
-}
-
-.preview-title {
-    margin: 0 0 15px 0;
-    font-weight: 600;
-    font-size: 16px;
-}
-
-.preview-content {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.preview-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.preview-label {
-    font-weight: 500;
-    opacity: 0.9;
-}
-
-.preview-value {
-    font-weight: 600;
-}
-
-/* Table Styles */
-.table {
-    margin-bottom: 0;
-}
-
-.table th {
-    border-top: none;
-    font-weight: 600;
-    color: var(--dark);
-    background: var(--light);
-}
-
-.table-hover tbody tr:hover {
-    background-color: rgba(67, 97, 238, 0.05);
-}
-
-/* Checkbox Styles */
-input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-/* Search Box */
-.search-box {
-    position: relative;
-}
-
-.search-box i {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--secondary);
-}
-
-.search-box input {
-    padding-left: 45px;
-    font-size: 16px;
-    height: 50px;
-}
-
-/* Form Styles */
-.form-control {
-    border-radius: var(--border-radius);
-    border: 1px solid #e9ecef;
-    transition: var(--transition);
-    font-size: 16px;
-    padding: 12px 15px;
-    height: auto;
-}
-
-.form-control:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
-}
-
-/* Stats Grid */
-.stats-grid {
-    display: grid;
-    gap: 15px;
-}
-
-.stat-card {
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-}
-
-.stat-card:hover {
-    transform: translateY(-3px);
-}
-
-.stat-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    font-size: 20px;
-    color: white;
-}
-
-.stat-total .stat-icon { background: var(--primary); }
-.stat-active .stat-icon { background: var(--success); }
-.stat-classes .stat-icon { background: var(--warning); }
-
-.stat-content h4 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--dark);
-}
-
-.stat-content p {
-    margin: 0;
-    color: var(--secondary);
-    font-size: 14px;
-}
-
-/* Modal Styles */
-.confirmation-icon {
-    text-align: center;
-    font-size: 60px;
-    color: var(--warning);
-    margin-bottom: 20px;
-}
-
-.confirmation-details {
-    background: var(--light);
-    border-radius: var(--border-radius);
-    padding: 15px;
-    margin: 15px 0;
-}
-
-.confirmation-details p {
-    margin: 5px 0;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-}
-
-.empty-icon {
-    font-size: 60px;
-    color: #bdc3c7;
-    margin-bottom: 20px;
-}
-
-.empty-state h4 {
-    color: var(--dark);
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.empty-state p {
-    color: var(--secondary);
-    margin-bottom: 0;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .student-info {
-        flex-direction: column;
-        text-align: center;
-        gap: 8px;
-    }
-    
-    .summary-card {
-        flex-direction: column;
-        text-align: center;
-    }
-    
-    .table-responsive {
-        font-size: 14px;
-    }
-    
-    .preview-content {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .preview-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-}
-
-/* Button Styles */
-.btn-fill-lg {
-    padding: 15px 30px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-}
-
-.btn-gradient-yellow {
-    background: linear-gradient(135deg, #ffd400, #ff9500);
-    color: #2c3e50;
-}
-
-.btn-gradient-yellow:hover {
-    background: linear-gradient(135deg, #ff9500, #ffd400);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 149, 0, 0.3);
-}
-
-.bg-blue-dark {
-    background-color: #2c3e50;
-    color: white;
-}
-
-.bg-blue-dark:hover {
-    background-color: #34495e;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(44, 62, 80, 0.3);
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none !important;
-}
-</style>
 {% endblock %}

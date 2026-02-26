@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | {{ title }}{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_books' %}">Books</a>
+                    </li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>{{ title }}</h3>
+                        </div>
+                    </div>
+
+                    <form class="new-added-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Book Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Author *</label>
+                                {{ form.author }}
+                                {% if form.author.errors %}
+                                <div class="text-danger small">{{ form.author.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>ISBN *</label>
+                                {{ form.isbn }}
+                                {% if form.isbn.errors %}
+                                <div class="text-danger small">{{ form.isbn.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Category *</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Publisher</label>
+                                {{ form.publisher }}
+                                {% if form.publisher.errors %}
+                                <div class="text-danger small">{{ form.publisher.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Published Date</label>
+                                {{ form.published_date }}
+                                {% if form.published_date.errors %}
+                                <div class="text-danger small">{{ form.published_date.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Total Copies *</label>
+                                {{ form.total_copies }}
+                                {% if form.total_copies.errors %}
+                                <div class="text-danger small">{{ form.total_copies.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-xl-3 col-lg-6 col-12 form-group">
+                                <label>Available Copies *</label>
+                                {{ form.available_copies }}
+                                {% if form.available_copies.errors %}
+                                <div class="text-danger small">{{ form.available_copies.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit"
+                                    class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Save</button>
+                                <a href="{% url 'all_books' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

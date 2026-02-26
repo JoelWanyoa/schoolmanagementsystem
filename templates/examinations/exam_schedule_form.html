@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-content-one {
+        padding-bottom: 50px;
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        padding-top: 15px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #111;
+        margin-bottom: 8px;
+    }
+
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Examinations</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'exam_schedule' %}">Exam Schedule</a>
+                    </li>
+                    <li>{{ title }}</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Add Exam Area Start Here -->
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>{{ title }}</h3>
+                        </div>
+                    </div>
+
+                    <form class="new-added-form" method="POST" id="examForm">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.name.id_for_label }}">Examination Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="{{ form.exam_type.id_for_label }}">Exam Category *</label>
+                                {{ form.exam_type }}
+                                {% if form.exam_type.errors %}
+                                <div class="text-danger small mt-1">{{ form.exam_type.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="id_class_level">Target Class *</label>
+                                {{ form.class_level }}
+                                {% if form.class_level.errors %}
+                                <div class="text-danger small mt-1">{{ form.class_level.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12-xxxl col-lg-6 col-12 form-group">
+                                <label for="id_subject">Subject *</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                <div class="text-danger small mt-1">{{ form.subject.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.exam_date.id_for_label }}">Examination Date *</label>
+                                {{ form.exam_date }}
+                                <i class="far fa-calendar-alt"
+                                    style="position: absolute; right: 25px; top: 45px; color: #64748b;"></i>
+                                {% if form.exam_date.errors %}
+                                <div class="text-danger small mt-1">{{ form.exam_date.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.start_time.id_for_label }}">Start Time *</label>
+                                {{ form.start_time }}
+                                {% if form.start_time.errors %}
+                                <div class="text-danger small mt-1">{{ form.start_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.end_time.id_for_label }}">End Time *</label>
+                                {{ form.end_time }}
+                                {% if form.end_time.errors %}
+                                <div class="text-danger small mt-1">{{ form.end_time.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.duration.id_for_label }}">Duration (Mins)</label>
+                                {{ form.duration }}
+                                {% if form.duration.errors %}
+                                <div class="text-danger small mt-1">{{ form.duration.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.total_marks.id_for_label }}">Total Marks</label>
+                                {{ form.total_marks }}
+                                {% if form.total_marks.errors %}
+                                <div class="text-danger small mt-1">{{ form.total_marks.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4 col-12 form-group">
+                                <label for="{{ form.passing_marks.id_for_label }}">Passing Marks</label>
+                                {{ form.passing_marks }}
+                                {% if form.passing_marks.errors %}
+                                <div class="text-danger small mt-1">{{ form.passing_marks.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-6 col-12 form-group">
+                                <label for="{{ form.room.id_for_label }}">Venue / Room</label>
+                                {{ form.room }}
+                                <i class="fas fa-map-marker-alt"
+                                    style="position: absolute; right: 25px; top: 45px; color: #64748b;"></i>
+                                {% if form.room.errors %}
+                                <div class="text-danger small mt-1">{{ form.room.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-lg-6 col-12 form-group">
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                <div class="text-danger small mt-1">{{ form.status.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 form-group">
+                                <label for="{{ form.description.id_for_label }}">Additional Instructions</label>
+                                {{ form.description }}
+                            </div>
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">
+                                    {% if 'Edit' in title %}Update Schedule{% else %}Save Schedule{% endif %}
+                                </button>
+                                <button type="reset" class="btn-fill-lg bg-blue-dark btn-hover-yellow"
+                                    onclick="window.history.back()">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Modernize form fields
+        $('input, select, textarea').addClass('form-control-modern');
+
+        // Auto-calculate duration if start/end times change
+        $('#id_start_time, #id_end_time').on('change', function () {
+            var startTime = $('#id_start_time').val();
+            var endTime = $('#id_end_time').val();
+
+            if (startTime && endTime) {
+                var start = moment(startTime, 'HH:mm');
+                var end = moment(endTime, 'HH:mm');
+                var duration = moment.duration(end.diff(start)).asMinutes();
+
+                if (duration > 0) {
+                    $('#id_duration').val(Math.round(duration));
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

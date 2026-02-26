@@ -1,0 +1,6 @@
+<option value="">Select Teacher</option>
+{% for teacher in teachers %}
+<option value="{{ teacher.id }}">{{ teacher.full_name }} ({{ teacher.teacher_id }})</option>
+{% empty %}
+<option value="">No teachers found for this subject</option>
+{% endfor %}

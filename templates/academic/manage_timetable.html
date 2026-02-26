@@ -1,0 +1,2094 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Timetable - Petra Education Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .workload-low { background-color: #d4edda !important; }
+.workload-medium { background-color: #fff3cd !important; }
+.workload-high { background-color: #f8d7da !important; }
+.workload-critical { background-color: #dc3545 !important; color: white !important; }
+
+.workload-bar {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.workload-progress {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.subject-badge {
+    font-size: 0.7rem;
+    margin: 1px;
+}
+    .timetable-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .timetable-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+    }
+
+    .timetable-grid {
+        display: grid;
+        grid-template-columns: 100px repeat(5, 1fr);
+        gap: 1px;
+        background: #e9ecef;
+    }
+
+    .time-slot {
+        background: white;
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .day-header {
+        background: #495057;
+        color: white;
+        padding: 15px 10px;
+        text-align: center;
+        font-weight: 600;
+    }
+
+    .period-slot {
+        background: white;
+        padding: 15px 10px;
+        min-height: 80px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .period-slot:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .subject-name {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+
+    .teacher-name {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .room-number {
+        font-size: 11px;
+        color: #28a745;
+        font-weight: 600;
+    }
+
+    .empty-slot {
+        background: #f8f9fa;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    .break-slot {
+        background: #fff3cd;
+        color: #856404;
+        font-weight: 600;
+    }
+
+    .current-period {
+        background: #d1edff;
+        border: 2px solid #007bff;
+    }
+
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .timetable-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .timetable-grid {
+            grid-template-columns: 80px repeat(5, 1fr);
+            font-size: 12px;
+        }
+        
+        .period-slot {
+            padding: 10px 5px;
+            min-height: 60px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+
+        <div class="dashboard-content-one">
+            <!-- Breadcubs Area Start Here -->
+            <div class="breadcrumbs-area">
+                <h3>Manage Timetable</h3>
+                <ul>
+                    <li><a href="{% url 'dashboard' %}">Home</a></li>
+                    <li><a href="#">Academic</a></li>
+                    <li>Timetable</li>
+                </ul>
+            </div>
+            <!-- Breadcubs Area End Here -->
+
+            <!-- Timetable Overview Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-primary">
+                                    <i class="fas fa-calendar-alt text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Active Classes</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ classes.count }}">{{ classes.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-book text-success"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Subjects</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ subjects.count }}">{{ subjects.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-warning">
+                                    <i class="fas fa-chalkboard-teacher text-warning"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Teachers</div>
+                                    <div class="item-number"><span class="counter" data-num="{{ teachers.count }}">{{ teachers.count }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 col-12">
+                    <div class="dashboard-summery-one">
+                        <div class="row align-items-center">
+                            <div class="col-6">
+                                <div class="item-icon bg-light-info">
+                                    <i class="fas fa-clock text-info"></i>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="item-content">
+                                    <div class="item-title">Periods Today</div>
+                                    <div class="item-number"><span class="counter" data-num="8">8</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter and Control Section -->
+            <div class="filter-section">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="classSelect" class="form-label">Select Class</label>
+                            <select class="form-control" id="classSelect">
+                                <option value="">All Classes</option>
+                                {% for class in classes %}
+                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sectionSelect" class="form-label">Select Section</label>
+                            <select class="form-control" id="sectionSelect">
+                                <option value="">All Sections</option>
+                                {% for section in sections %}
+                                <option value="{{ section.id }}">Section {{ section.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="teacherSelect" class="form-label">Select Teacher</label>
+                            <select class="form-control" id="teacherSelect">
+                                <option value="">All Teachers</option>
+                                {% for teacher in teachers %}
+                                <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="timetable-actions">
+                            <button class="btn btn-primary" data-toggle="modal" data-target="#addPeriodModal">
+                                <i class="fas fa-plus"></i> Add Period
+                            </button>
+                            <button class="btn btn-success" onclick="generateTimetable()">
+                                <i class="fas fa-sync-alt"></i> Generate Timetable
+                            </button>
+                            <button class="btn btn-info" onclick="printTimetable()">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button class="btn btn-warning" onclick="exportTimetable()">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetFilters()">
+                                <i class="fas fa-redo"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timetable Display -->
+<div class="card height-auto">
+    <div class="card-body">
+        <div class="heading-layout1">
+            <div class="item-title">
+                <h3>Class Timetable - <span id="selectedClassName">Select a Class</span></h3>
+            </div>
+            <div class="dropdown">
+                <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                    aria-expanded="false">...</a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="#" data-toggle="modal" data-target="#addPeriodModal">
+                        <i class="fas fa-plus text-success"></i>Add Period
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="printTimetable()">
+                        <i class="fas fa-print text-info"></i>Print
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="exportTimetable()">
+                        <i class="fas fa-download text-primary"></i>Download
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="resetTimetable()">
+                        <i class="fas fa-redo-alt text-orange-peel"></i>Refresh
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Class Selection for Timetable -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="timetableClassSelect" class="form-label">Select Class for Timetable *</label>
+                    <select class="form-control" id="timetableClassSelect" required>
+                        <option value="">Select Class</option>
+                        {% for class in classes %}
+                        <option value="{{ class.id }}" 
+                                data-sections='{{ class.sections.all|length }}'
+                                data-subjects='{{ class.get_subjects_count }}'>
+                            {{ class.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="timetableSectionSelect" class="form-label">Select Section</label>
+                    <select class="form-control" id="timetableSectionSelect">
+                        <option value="">All Sections</option>
+                        <!-- Sections will be loaded via AJAX -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timetable Grid -->
+        <div class="timetable-container mt-4" id="timetableGrid" style="display: none;">
+            <div class="timetable-header text-center">
+                <h4 class="mb-0" id="timetableTitle">Weekly Timetable</h4>
+                <p class="mb-0">Week: {{ current_week }} | Current Period: <span id="currentPeriod">Select a class first</span></p>
+            </div>
+            
+            <div class="timetable-grid" id="timetableContent">
+                <!-- Timetable content will be loaded via AJAX -->
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="text-center py-5" id="emptyTimetableState">
+            <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Timetable Selected</h4>
+            <p class="text-muted">Please select a class to view or manage the timetable</p>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#addPeriodModal">
+                <i class="fas fa-plus"></i> Create First Period
+            </button>
+        </div>
+    </div>
+</div>
+
+            <!-- Quick Stats -->
+            <div class="row mt-4">
+                <div class="col-lg-4 col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Period Distribution</h3>
+                                </div>
+                            </div>
+                            <div class="period-stats">
+                                <canvas id="periodChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-8 col-12">
+                    <!-- Teacher Workload -->
+<div class="card">
+    <div class="card-body">
+        <div class="heading-layout1">
+            <div class="item-title">
+                <h3>Teacher Workload</h3>
+            </div>
+            <div class="dropdown">
+                <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">...</a>
+                <div class="dropdown-menu dropdown-menu-right">
+                    <a class="dropdown-item" href="#" onclick="refreshTeacherWorkload()">
+                        <i class="fas fa-sync-alt text-primary"></i> Refresh
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="exportTeacherWorkload()">
+                        <i class="fas fa-download text-success"></i> Export
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Workload Filters -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="workloadTeacherFilter">Filter by Teacher</label>
+                    <select class="form-control" id="workloadTeacherFilter">
+                        <option value="">All Teachers</option>
+                        {% for teacher in teachers %}
+                        <option value="{{ teacher.id }}">{{ teacher.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="workloadSubjectFilter">Filter by Subject</label>
+                    <select class="form-control" id="workloadSubjectFilter">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="workloadSort">Sort by</label>
+                    <select class="form-control" id="workloadSort">
+                        <option value="name">Name A-Z</option>
+                        <option value="name_desc">Name Z-A</option>
+                        <option value="periods">Periods (Low to High)</option>
+                        <option value="periods_desc">Periods (High to Low)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="teacher-workload">
+            <div class="table-responsive">
+                <table class="table table-hover" id="teacherWorkloadTable">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Teacher</th>
+                            <th>Teacher ID</th>
+                            <th>Subjects</th>
+                            <th>Classes</th>
+                            <th>Periods/Week</th>
+                            <th>Workload %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherWorkloadBody">
+                        <!-- Dynamic content will be loaded here -->
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">
+                                <div class="spinner-border spinner-border-sm mr-2" role="status"></div>
+                                Loading teacher workload...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Workload Summary -->
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="workload-summary card bg-light">
+                        <div class="card-body py-2">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <small class="text-muted">Total Teachers</small>
+                                    <h5 class="mb-0" id="totalTeachers">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Total Periods</small>
+                                    <h5 class="mb-0" id="totalPeriods">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Avg Periods/Teacher</small>
+                                    <h5 class="mb-0" id="avgPeriods">0</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Max Workload</small>
+                                    <h5 class="mb-0" id="maxWorkload">0%</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">
+                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- Add Period Modal -->
+<div class="modal fade" id="addPeriodModal" tabindex="-1" role="dialog" aria-labelledby="addPeriodModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPeriodModalLabel">Add/Edit Period</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="periodForm">
+                    <!-- Class and Section (auto-populated from main selection) -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="classSelectModal">Class *</label>
+                                <select class="form-control" id="classSelectModal" required disabled>
+                                    <option value="">Select Class</option>
+                                    {% for class in classes %}
+                                    <option value="{{ class.id }}">{{ class.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <small class="form-text text-muted">Selected from main timetable view</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="sectionSelectModal">Section *</label>
+                                <select class="form-control" id="sectionSelectModal" required>
+                                    <option value="">Select Section</option>
+                                    <!-- Sections will be auto-populated -->
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Available Subjects for Selected Class -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="subjectSelectModal">Subject *</label>
+                                <select class="form-control" id="subjectSelectModal" required>
+                                    <option value="">Select Subject</option>
+                                    <!-- Subjects will be auto-populated -->
+                                </select>
+                                <small class="form-text text-muted" id="subjectHelp">Available subjects for this class</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="teacherSelectModal">Teacher *</label>
+                                <select class="form-control" id="teacherSelectModal" required>
+                                    <option value="">Select Teacher</option>
+                                    <!-- Teachers will be auto-populated based on subject -->
+                                </select>
+                                <small class="form-text text-muted" id="teacherHelp">Teachers qualified for this subject</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Period Details -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="daySelectModal">Day *</label>
+            <select class="form-control" id="daySelectModal" required>
+                <option value="">Select Day</option>
+                <option value="MONDAY">Monday</option>
+                <option value="TUESDAY">Tuesday</option>
+                <option value="WEDNESDAY">Wednesday</option>
+                <option value="THURSDAY">Thursday</option>
+                <option value="FRIDAY">Friday</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="periodSelectModal">Period Number *</label>
+            <select class="form-control" id="periodSelectModal" required>
+                <option value="">Select Period</option>
+                <option value="1">Period 1</option>
+                <option value="2">Period 2</option>
+                <option value="3">Period 3</option>
+                <option value="4">Period 4</option>
+                <option value="5">Period 5</option>
+                <option value="6">Period 6</option>
+                <option value="7">Period 7</option>
+                <option value="8">Period 8</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="roomNumberModal">Room</label>
+            <input type="text" class="form-control" id="roomNumberModal" placeholder="Room number">
+            <small class="form-text text-muted">Available rooms: <span id="availableRooms">All rooms</span></small>
+        </div>
+    </div>
+</div>
+                    
+                    <!-- Time -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="startTimeModal">Start Time *</label>
+                                <input type="time" class="form-control" id="startTimeModal" value="08:00" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="endTimeModal">End Time *</label>
+                                <input type="time" class="form-control" id="endTimeModal" value="08:40" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Break Option -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="isBreakModal">
+                                    <label class="form-check-label" for="isBreakModal">
+                                        This is a break period
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group" id="breakNameField" style="display: none;">
+                                <label for="breakNameModal">Break Name</label>
+                                <input type="text" class="form-control" id="breakNameModal" placeholder="e.g., Lunch, Short Break">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Existing Periods Warning -->
+                    <div class="alert alert-warning mt-3" id="existingPeriodWarning" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Note:</strong> There's already a period scheduled for this time slot. Saving will overwrite it.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="savePeriod()" id="savePeriodBtn">Save Period</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let currentEditingEntry = null;
+    let currentSelectedClass = null;
+    let currentSelectedSection = null;
+
+    // Period time mapping function
+    function getPeriodTimes(periodNumber) {
+        // Define your school's period schedule with breaks
+        const periodSchedule = {
+            1: { start: '08:00', end: '08:40' },
+            2: { start: '08:40', end: '09:20' },
+            3: { start: '09:20', end: '10:00' },
+            // Tea Break: 10:00 - 10:20 (Period 4 becomes after tea break)
+            4: { start: '10:20', end: '11:00' },
+            5: { start: '11:00', end: '11:40' },
+            // Short Break: 11:40 - 12:20 (Period 6 becomes after short break)
+            6: { start: '12:20', end: '13:00' },
+            // Lunch Break: 13:00 - 14:00 (Period 7 becomes after lunch)
+            7: { start: '14:00', end: '14:40' },
+            8: { start: '14:40', end: '15:20' },
+            9: { start: '15:20', end: '16:00' },
+            // Games: 16:00 - 17:00 (Period 10 would be after games, but let's end at period 9)
+        };
+        
+        return periodSchedule[periodNumber] || { start: '08:00', end: '08:40' };
+    }
+
+    // Break period definitions
+    function getBreakPeriods() {
+        return [
+            { period: 3.5, start: '10:00', end: '10:20', name: 'Tea Break', type: 'tea' },
+            { period: 5.5, start: '11:40', end: '12:20', name: 'Short Break', type: 'short' },
+            { period: 6.5, start: '13:00', end: '14:00', name: 'Lunch Break', type: 'lunch' },
+            { period: 9.5, start: '16:00', end: '17:00', name: 'Games', type: 'games' }
+        ];
+    }
+
+    // Break period color mapping
+    function getBreakColor(breakType, breakName) {
+        const breakColors = {
+            'tea': '#FFEAA7',      // Light yellow for tea break
+            'short': '#FFEAA7',    // Light yellow for short break  
+            'lunch': '#FDBCB4',    // Light red/pink for lunch
+            'games': '#A3E4D7',    // Light teal for games
+            'default': '#FFF3CD'   // Default break color
+        };
+        
+        if (breakType && breakColors[breakType]) {
+            return breakColors[breakType];
+        }
+        
+        // Fallback to name-based matching
+        if (!breakName) return breakColors.default;
+        
+        const lowerBreakName = breakName.toLowerCase();
+        if (lowerBreakName.includes('tea') || lowerBreakName.includes('short')) {
+            return breakColors.tea;
+        } else if (lowerBreakName.includes('lunch')) {
+            return breakColors.lunch;
+        } else if (lowerBreakName.includes('game')) {
+            return breakColors.games;
+        }
+        
+        return breakColors.default;
+    }
+
+    $(document).ready(function () {
+        console.log('Timetable page loaded');
+
+        // Initialize counters
+        initializeCounters();
+
+        // Main class selection handler
+        $('#timetableClassSelect').change(function() {
+            const classId = $(this).val();
+            currentSelectedClass = classId;
+            
+            if (classId) {
+                const className = $(this).find('option:selected').text();
+                $('#selectedClassName').text(className);
+                loadClassTimetable(classId);
+                updateModalWithClassData(classId);
+            } else {
+                hideTimetableGrid();
+            }
+        });
+
+        // Section selection handler
+        $('#timetableSectionSelect').change(function() {
+            const sectionId = $(this).val();
+            currentSelectedSection = sectionId;
+            
+            if (currentSelectedClass && sectionId) {
+                loadSectionTimetable(currentSelectedClass, sectionId);
+            } else if (currentSelectedClass) {
+                loadClassTimetable(currentSelectedClass);
+            }
+        });
+
+        // Modal events
+        $('#addPeriodModal').on('show.bs.modal', function() {
+            initializeModal();
+            ensureDropdownOptions();
+            
+            // Update times when modal opens if period is already selected
+            const currentPeriod = $('#periodSelectModal').val();
+            if (currentPeriod) {
+                const periodTimes = getPeriodTimes(parseInt(currentPeriod));
+                $('#startTimeModal').val(periodTimes.start);
+                $('#endTimeModal').val(periodTimes.end);
+            }
+        });
+
+        // Auto-population handlers for modal
+        $('#classSelectModal').change(function() {
+            const classId = $(this).val();
+            if (classId) {
+                loadSectionsForClass(classId, 'modal');
+                loadSubjectsForClass(classId);
+            }
+        });
+
+        $('#subjectSelectModal').change(function() {
+            const subjectId = $(this).val();
+            if (subjectId) {
+                loadTeachersForSubject(subjectId);
+            }
+        });
+
+        // When period is changed in the modal, update times automatically
+        $('#periodSelectModal').change(function() {
+            const selectedPeriod = $(this).val();
+            if (selectedPeriod) {
+                const periodTimes = getPeriodTimes(parseInt(selectedPeriod));
+                $('#startTimeModal').val(periodTimes.start);
+                $('#endTimeModal').val(periodTimes.end);
+                console.log('Period changed to', selectedPeriod, '- times updated to:', periodTimes);
+            }
+        });
+
+        // Real-time conflict checking
+        $('#daySelectModal, #periodSelectModal, #sectionSelectModal').change(function() {
+            checkForExistingPeriod();
+        });
+
+        // Break field toggle
+        $('#isBreakModal').change(function() {
+            toggleBreakFields();
+        });
+
+        // Update current period
+        updateCurrentPeriod();
+        setInterval(updateCurrentPeriod, 60000);
+
+        // Initialize chart
+        initializeChart();
+
+        // Initialize main class select if we have a selected class from URL
+        initializeFromUrl();
+
+        // Initialize teacher workload
+        setTimeout(() => {
+            calculateTeacherWorkload();
+        }, 1000);
+    });
+
+    function initializeFromUrl() {
+        // Check if we have class/section in URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const classId = urlParams.get('class');
+        const sectionId = urlParams.get('section');
+        
+        if (classId) {
+            $('#timetableClassSelect').val(classId).trigger('change');
+            if (sectionId) {
+                // Wait for sections to load then select the section
+                setTimeout(() => {
+                    $('#timetableSectionSelect').val(sectionId).trigger('change');
+                }, 500);
+            }
+        }
+    }
+
+    function initializeCounters() {
+        $('.counter').each(function () {
+            $(this).prop('Counter', 0).animate({
+                Counter: $(this).text()
+            }, {
+                duration: 2000,
+                easing: 'swing',
+                step: function (now) {
+                    $(this).text(Math.ceil(now));
+                }
+            });
+        });
+    }
+
+    function loadClassTimetable(classId) {
+        console.log('Loading timetable for class:', classId);
+        
+        // Show loading state
+        $('#timetableGrid').hide();
+        $('#emptyTimetableState').html(`
+            <div class="spinner-border text-primary mb-3" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <p>Loading timetable...</p>
+        `);
+
+        // Load sections for this class
+        $.ajax({
+            url: '{% url "load_sections" %}',
+            data: { 'class_id': classId },
+            success: function(sectionsHtml) {
+                $('#timetableSectionSelect').html('<option value="">All Sections</option>' + sectionsHtml);
+                
+                // Load timetable data
+                loadTimetableData(classId);
+            },
+            error: function() {
+                showAlert('Error loading sections', 'error');
+                $('#emptyTimetableState').html(`
+                    <i class="fas fa-exclamation-triangle fa-4x text-danger mb-3"></i>
+                    <h4 class="text-danger">Error Loading Timetable</h4>
+                    <p class="text-muted">Unable to load timetable data. Please try again.</p>
+                `);
+            }
+        });
+    }
+
+    function loadSectionTimetable(classId, sectionId) {
+        console.log('Loading timetable for section:', sectionId);
+        loadTimetableData(classId, sectionId);
+    }
+
+    function loadTimetableData(classId, sectionId = null) {
+        $.ajax({
+            url: '{% url "get_timetable_data" %}',
+            data: { 
+                'class_id': classId,
+                'section_id': sectionId 
+            },
+            success: function(response) {
+                console.log('Timetable data loaded:', response.data);
+                displayTimetable(response.data, classId, sectionId);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading timetable data:', error);
+                showAlert('Error loading timetable data', 'error');
+                hideTimetableGrid();
+            }
+        });
+    }
+
+    function displayTimetable(data, classId, sectionId) {
+        const classObj = $('#timetableClassSelect option:selected');
+        const className = classObj.text();
+        const sectionObj = $('#timetableSectionSelect option:selected');
+        const sectionName = sectionId ? ` - Section ${sectionObj.text()}` : '';
+        
+        // Update titles
+        $('#selectedClassName').text(className + sectionName);
+        $('#timetableTitle').text(`Weekly Timetable - ${className}${sectionName}`);
+        
+        if (data && data.length > 0) {
+            renderTimetableGrid(data);
+            $('#timetableGrid').show();
+            $('#emptyTimetableState').hide();
+        } else {
+            showEmptyTimetableState(className, sectionName);
+        }
+    }
+
+    function renderTimetableGrid(data) {
+        console.log('Rendering timetable with data:', data);
+        
+        // Create a proper structure to organize data by day and period
+        const timetableStructure = {};
+        const days = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+        
+        // Initialize the structure with all days and periods (1-9 for academic periods)
+        days.forEach(day => {
+            timetableStructure[day] = {};
+            for (let i = 1; i <= 9; i++) {
+                timetableStructure[day][i] = null; // Initialize as empty
+            }
+        });
+    
+        // Fill the structure with actual data
+        data.forEach(entry => {
+            console.log('Processing entry:', entry);
+            if (entry.day && entry.period_number) {
+                timetableStructure[entry.day][entry.period_number] = entry;
+            }
+        });
+    
+        console.log('Timetable structure:', timetableStructure);
+    
+        // Build timetable grid HTML
+        let gridHtml = `
+            <div class="time-slot">Time</div>
+            <div class="day-header">Monday</div>
+            <div class="day-header">Tuesday</div>
+            <div class="day-header">Wednesday</div>
+            <div class="day-header">Thursday</div>
+            <div class="day-header">Friday</div>
+        `;
+    
+        // Get break periods
+        const breakPeriods = getBreakPeriods();
+        
+        // Track current period number for display
+        let displayPeriod = 0;
+        
+        // Morning sessions (Periods 1-3)
+        for (let period = 1; period <= 3; period++) {
+            const periodTimes = getPeriodTimes(period);
+            displayPeriod++;
+            
+            // Time column
+            gridHtml += `
+                <div class="time-slot">
+                    ${periodTimes.start}<br>${periodTimes.end}
+                </div>
+            `;
+
+            // Day columns
+            days.forEach(day => {
+                const entry = timetableStructure[day][period];
+                gridHtml += renderPeriodSlot(entry, day.toLowerCase(), displayPeriod);
+            });
+        }
+        
+        // Tea Break (10:00 - 10:20)
+        const teaBreak = breakPeriods.find(bp => bp.type === 'tea');
+        gridHtml += `
+            <div class="time-slot break-slot">
+                ${teaBreak.start}<br>${teaBreak.end}
+            </div>
+        `;
+        days.forEach(day => {
+            gridHtml += renderBreakSlot(teaBreak, day.toLowerCase());
+        });
+        
+        // Post-tea sessions (Period 4)
+        const period4Times = getPeriodTimes(4);
+        displayPeriod++;
+        gridHtml += `
+            <div class="time-slot">
+                ${period4Times.start}<br>${period4Times.end}
+            </div>
+        `;
+        days.forEach(day => {
+            const entry = timetableStructure[day][4];
+            gridHtml += renderPeriodSlot(entry, day.toLowerCase(), displayPeriod);
+        });
+        
+        // Period 5
+        const period5Times = getPeriodTimes(5);
+        displayPeriod++;
+        gridHtml += `
+            <div class="time-slot">
+                ${period5Times.start}<br>${period5Times.end}
+            </div>
+        `;
+        days.forEach(day => {
+            const entry = timetableStructure[day][5];
+            gridHtml += renderPeriodSlot(entry, day.toLowerCase(), displayPeriod);
+        });
+        
+        // Short Break (11:40 - 12:20)
+        const shortBreak = breakPeriods.find(bp => bp.type === 'short');
+        gridHtml += `
+            <div class="time-slot break-slot">
+                ${shortBreak.start}<br>${shortBreak.end}
+            </div>
+        `;
+        days.forEach(day => {
+            gridHtml += renderBreakSlot(shortBreak, day.toLowerCase());
+        });
+        
+        // Post-short break session (Period 6)
+        const period6Times = getPeriodTimes(6);
+        displayPeriod++;
+        gridHtml += `
+            <div class="time-slot">
+                ${period6Times.start}<br>${period6Times.end}
+            </div>
+        `;
+        days.forEach(day => {
+            const entry = timetableStructure[day][6];
+            gridHtml += renderPeriodSlot(entry, day.toLowerCase(), displayPeriod);
+        });
+        
+        // Lunch Break (13:00 - 14:00)
+        const lunchBreak = breakPeriods.find(bp => bp.type === 'lunch');
+        gridHtml += `
+            <div class="time-slot break-slot">
+                ${lunchBreak.start}<br>${lunchBreak.end}
+            </div>
+        `;
+        days.forEach(day => {
+            gridHtml += renderBreakSlot(lunchBreak, day.toLowerCase());
+        });
+        
+        // Post-lunch sessions (Periods 7-9)
+        for (let period = 7; period <= 9; period++) {
+            const periodTimes = getPeriodTimes(period);
+            displayPeriod++;
+            
+            // Time column
+            gridHtml += `
+                <div class="time-slot">
+                    ${periodTimes.start}<br>${periodTimes.end}
+                </div>
+            `;
+
+            // Day columns
+            days.forEach(day => {
+                const entry = timetableStructure[day][period];
+                gridHtml += renderPeriodSlot(entry, day.toLowerCase(), displayPeriod);
+            });
+        }
+        
+        // Games (16:00 - 17:00)
+        const gamesBreak = breakPeriods.find(bp => bp.type === 'games');
+        gridHtml += `
+            <div class="time-slot break-slot">
+                ${gamesBreak.start}<br>${gamesBreak.end}
+            </div>
+        `;
+        days.forEach(day => {
+            gridHtml += renderBreakSlot(gamesBreak, day.toLowerCase());
+        });
+    
+        $('#timetableContent').html(gridHtml);
+        
+        // Re-attach click handlers
+        attachPeriodSlotHandlers();
+    }
+
+    function renderBreakSlot(breakPeriod, day) {
+        const breakColor = getBreakColor(breakPeriod.type, breakPeriod.name);
+        return `
+            <div class="period-slot break-slot" data-day="${day}" data-break="${breakPeriod.type}"
+                 style="background-color: ${breakColor}; border-left: 4px solid #856404;">
+                <div><strong>${breakPeriod.name}</strong></div>
+                <small class="text-muted">${day.charAt(0).toUpperCase() + day.slice(1)}</small>
+            </div>
+        `;
+    }
+
+    function attachPeriodSlotHandlers() {
+        // Use event delegation for dynamically created elements
+        $('#timetableContent').off('click', '.period-slot').on('click', '.period-slot', function() {
+            const day = $(this).data('day');
+            const periodNumber = $(this).data('period');
+            const isBreak = $(this).hasClass('break-slot');
+            const breakType = $(this).data('break');
+            
+            console.log('Period slot clicked - Day:', day, 'Period:', periodNumber, 'IsBreak:', isBreak);
+            
+            if (isBreak) {
+                // Handle break period click
+                const breakName = $(this).find('strong').text();
+                editBreakPeriod(day, breakType, breakName, $(this));
+            } else {
+                editPeriod(day, periodNumber, $(this));
+            }
+        });
+    }
+
+    function renderPeriodSlot(entry, day, periodNumber) {
+        // If no entry exists for this slot
+        if (!entry) {
+            return `
+                <div class="period-slot empty-slot" data-day="${day}" data-period="${periodNumber}">
+                    <div>Free Period</div>
+                    <small class="text-muted">${day.charAt(0).toUpperCase() + day.slice(1)} - Period ${periodNumber}</small>
+                </div>
+            `;
+        }
+    
+        // If it's a break period from database
+        if (entry.is_break) {
+            const breakColor = getBreakColor(entry.break_type, entry.break_name);
+            return `
+                <div class="period-slot break-slot" data-day="${day}" data-period="${periodNumber}" 
+                     style="background-color: ${breakColor}; border-left: 4px solid #856404;">
+                    <div><strong>${entry.break_name || 'BREAK'}</strong></div>
+                    <small class="text-muted">${day.charAt(0).toUpperCase() + day.slice(1)} - Period ${periodNumber}</small>
+                </div>
+            `;
+        }
+    
+        // Regular period with subject and teacher
+        const subjectName = entry.subject ? (entry.subject.name || entry.subject) : 'No Subject';
+        const teacherName = entry.teacher ? (entry.teacher.name || entry.teacher.full_name || entry.teacher) : 'No Teacher';
+        const room = entry.room || 'TBA';
+        const subjectId = entry.subject ? (entry.subject.id || null) : null;
+        const teacherId = entry.teacher ? (entry.teacher.id || null) : null;
+    
+        return `
+            <div class="period-slot" 
+                 data-day="${day}" 
+                 data-period="${periodNumber}"
+                 data-entry-id="${entry.id || ''}"
+                 data-subject-id="${subjectId || ''}"
+                 data-teacher-id="${teacherId || ''}">
+                <div class="subject-name">${subjectName}</div>
+                <div class="teacher-name">${teacherName}</div>
+                <div class="room-number">Room: ${room}</div>
+                <small class="text-muted">${day.charAt(0).toUpperCase() + day.slice(1)} - Period ${periodNumber}</small>
+            </div>
+        `;
+    }
+
+    function editBreakPeriod(day, breakType, breakName, element) {
+        console.log('Editing break period:', breakType, breakName);
+        
+        // Set break-specific values
+        $('#isBreakModal').prop('checked', true);
+        $('#breakNameModal').val(breakName);
+        
+        // Enable break fields
+        toggleBreakFields();
+        
+        // Set day
+        $('#daySelectModal').val(day.toUpperCase());
+        
+        // Set appropriate times based on break type
+        const breakPeriods = getBreakPeriods();
+        const breakInfo = breakPeriods.find(bp => bp.type === breakType);
+        
+        if (breakInfo) {
+            $('#startTimeModal').val(breakInfo.start);
+            $('#endTimeModal').val(breakInfo.end);
+        }
+        
+        // Update UI
+        $('#addPeriodModalLabel').text(`Edit Break - ${breakName}`);
+        $('#addPeriodModal').modal('show');
+        
+        showAlert(`Editing break period: ${breakName}`, 'info');
+    }
+
+    // ... rest of the functions remain the same (initializeModal, loadSubjectsForClass, etc.)
+    // Only showing the modified functions above to avoid duplication
+
+    function showEmptyTimetableState(className, sectionName = '') {
+        $('#timetableGrid').hide();
+        $('#emptyTimetableState').show().html(`
+            <i class="fas fa-calendar-plus fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Timetable Found</h4>
+            <p class="text-muted">No timetable entries found for ${className}${sectionName}.</p>
+            <div class="mt-3">
+                <button class="btn btn-primary mr-2" data-toggle="modal" data-target="#addPeriodModal">
+                    <i class="fas fa-plus"></i> Create First Period
+                </button>
+                <button class="btn btn-success" onclick="generateTimetable()">
+                    <i class="fas fa-sync-alt"></i> Generate Timetable
+                </button>
+            </div>
+        `);
+    }
+
+    function hideTimetableGrid() {
+        $('#timetableGrid').hide();
+        $('#emptyTimetableState').show().html(`
+            <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Timetable Selected</h4>
+            <p class="text-muted">Please select a class to view or manage the timetable</p>
+        `);
+    }
+
+    function initializeModal() {
+        if (currentSelectedClass) {
+            // Auto-populate modal with selected class
+            $('#classSelectModal').val(currentSelectedClass);
+            loadSectionsForClass(currentSelectedClass, 'modal');
+            loadSubjectsForClass(currentSelectedClass);
+            
+            // Auto-select the section if one is selected in main view
+            if (currentSelectedSection) {
+                setTimeout(() => {
+                    $('#sectionSelectModal').val(currentSelectedSection);
+                }, 100);
+            }
+        }
+        
+        resetModalForm();
+    }
+
+    function updateModalWithClassData(classId) {
+        console.log('Updating modal with class data:', classId);
+        // Additional class-specific data can be loaded here
+    }
+
+    function loadSubjectsForClass(classId) {
+        // For now, load all subjects - you can modify this based on your model relationships
+        $('#subjectSelectModal').html('<option value="">Select Subject</option>');
+        {% for subject in subjects %}
+        $('#subjectSelectModal').append('<option value="{{ subject.id }}">{{ subject.name }} ({{ subject.code }})</option>');
+        {% endfor %}
+        
+        $('#subjectHelp').text(`Available subjects: {{ subjects.count }} found`);
+    }
+
+    function loadSectionsForClass(classId, context = 'main') {
+        console.log('Loading sections for class:', classId, 'Context:', context);
+        
+        if (!classId) {
+            if (context === 'modal') {
+                $('#sectionSelectModal').html('<option value="">Select Section</option>');
+            }
+            return;
+        }
+
+        $.ajax({
+            url: '{% url "load_sections" %}',
+            data: { 'class_id': classId },
+            success: function(sectionsHtml) {
+                if (context === 'modal') {
+                    $('#sectionSelectModal').html('<option value="">Select Section</option>' + sectionsHtml);
+                    
+                    // Auto-select if we have a current section
+                    if (currentSelectedSection) {
+                        $('#sectionSelectModal').val(currentSelectedSection);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading sections:', error);
+                if (context === 'modal') {
+                    $('#sectionSelectModal').html('<option value="">Error loading sections</option>');
+                }
+            }
+        });
+    }
+
+    function loadTeachersForSubject(subjectId, selectedTeacherId = null) {
+        console.log('Loading teachers for subject:', subjectId);
+        
+        if (!subjectId) {
+            $('#teacherSelectModal').html('<option value="">Select Teacher</option>');
+            $('#teacherHelp').text('Please select a subject first');
+            return;
+        }
+    
+        // Show loading state
+        $('#teacherSelectModal').html('<option value="">Loading teachers...</option>');
+        
+        $.ajax({
+            url: '{% url "load_teachers" %}',
+            data: {
+                'subject_id': subjectId
+            },
+            success: function(data) {
+                console.log('Teachers loaded successfully:', data);
+                $('#teacherSelectModal').html(data);
+                
+                if (selectedTeacherId) {
+                    $('#teacherSelectModal').val(selectedTeacherId);
+                }
+                
+                const teacherCount = $('#teacherSelectModal option').length - 1;
+                $('#teacherHelp').text(`Available teachers: ${teacherCount} found`);
+                
+                if (teacherCount === 0) {
+                    $('#teacherHelp').addClass('text-warning').text('No teachers found for this subject');
+                } else {
+                    $('#teacherHelp').removeClass('text-warning');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('Error loading teachers:', error);
+                console.error('Response text:', xhr.responseText);
+                
+                // Fallback: Load all teachers
+                loadAllTeachersFallback();
+                $('#teacherHelp').addClass('text-warning').text('Showing all teachers (fallback mode)');
+            }
+        });
+    }
+
+    function loadAllTeachersFallback() {
+        console.log('Loading all teachers as fallback...');
+        let options = '<option value="">Select Teacher</option>';
+        {% for teacher in teachers %}
+        options += '<option value="{{ teacher.id }}">{{ teacher.full_name }}</option>';
+        {% endfor %}
+        $('#teacherSelectModal').html(options);
+    }
+
+    function checkForExistingPeriod() {
+        const classId = $('#classSelectModal').val();
+        const sectionId = $('#sectionSelectModal').val();
+        const day = $('#daySelectModal').val();
+        const period = $('#periodSelectModal').val();
+
+        if (classId && sectionId && day && period) {
+            // Simple client-side check - you can implement server-side check if needed
+            const existingWarning = $('#existingPeriodWarning');
+            const saveButton = $('#savePeriodBtn');
+            
+            // For now, we'll just show a generic warning
+            existingWarning.show();
+            saveButton.html('Save Period (May Overwrite)');
+        }
+    }
+
+    function toggleBreakFields() {
+        const isBreak = $('#isBreakModal').is(':checked');
+        
+        if (isBreak) {
+            $('#breakNameField').show();
+            $('#subjectSelectModal, #teacherSelectModal').prop('disabled', true).val('');
+            $('#subjectSelectModal, #teacherSelectModal').removeAttr('required');
+        } else {
+            $('#breakNameField').hide();
+            $('#subjectSelectModal, #teacherSelectModal').prop('disabled', false);
+            $('#subjectSelectModal, #teacherSelectModal').attr('required', 'required');
+        }
+    }
+
+    function editPeriod(day, periodNumber, element) {
+        console.log('=== EDIT PERIOD START ===');
+        console.log('Raw parameters - Day:', day, 'Period:', periodNumber);
+        console.log('Element:', element);
+        
+        // Check if this is a break period
+        const isBreak = element.hasClass('break-slot');
+        
+        if (isBreak) {
+            alert('This is a break period. To edit breaks, use the "Add Period" modal.');
+            return;
+        }
+    
+        // Store the entry ID for updating
+        currentEditingEntry = element.data('entry-id');
+        
+        // STEP 1: Force set day and period values FIRST
+        const dayUpper = day.toUpperCase();
+        const periodStr = periodNumber.toString();
+        
+        console.log('Setting day to:', dayUpper);
+        console.log('Setting period to:', periodStr);
+        
+        // Force set the values immediately
+        $('#daySelectModal').val(dayUpper);
+        $('#periodSelectModal').val(periodStr);
+        
+        // STEP 2: Verify the values were set
+        setTimeout(() => {
+            console.log('After setting - Day value:', $('#daySelectModal').val());
+            console.log('After setting - Period value:', $('#periodSelectModal').val());
+            
+            // If values didn't set, try alternative approach
+            if ($('#daySelectModal').val() !== dayUpper) {
+                console.log('Day value not set properly, trying alternative method');
+                $('#daySelectModal option').each(function() {
+                    if ($(this).val() === dayUpper) {
+                        $(this).prop('selected', true);
+                    }
+                });
+            }
+            
+            if ($('#periodSelectModal').val() !== periodStr) {
+                console.log('Period value not set properly, trying alternative method');
+                $('#periodSelectModal option').each(function() {
+                    if ($(this).val() === periodStr) {
+                        $(this).prop('selected', true);
+                    }
+                });
+            }
+            
+            console.log('After correction - Day value:', $('#daySelectModal').val());
+            console.log('After correction - Period value:', $('#periodSelectModal').val());
+        }, 10);
+    
+        // STEP 3: Get existing data from the element
+        const subjectElement = element.find('.subject-name');
+        const teacherElement = element.find('.teacher-name');
+        const roomElement = element.find('.room-number');
+        
+        const subjectName = subjectElement.text().trim();
+        const teacherName = teacherElement.text().trim();
+        const room = roomElement.text().replace('Room: ', '').trim();
+        
+        // Get IDs from data attributes
+        const subjectId = element.data('subject-id');
+        const teacherId = element.data('teacher-id');
+        const classId = currentSelectedClass || $('#timetableClassSelect').val();
+        const sectionId = currentSelectedSection || $('#timetableSectionSelect').val();
+    
+        console.log('Data from element:', {
+            subjectId, teacherId, classId, sectionId, currentEditingEntry,
+            subjectName, teacherName, room
+        });
+    
+        // STEP 4: Set class and load related data
+        if (classId) {
+            $('#classSelectModal').val(classId);
+            loadSectionsForClass(classId, 'modal');
+            loadSubjectsForClass(classId);
+        }
+    
+        // STEP 5: Set other fields with delays to ensure dropdowns are ready
+        setTimeout(() => {
+            // Set section
+            if (sectionId) {
+                $('#sectionSelectModal').val(sectionId);
+            }
+            
+            // Set room
+            $('#roomNumberModal').val(room);
+            
+            // Set times (try to get from timetable or use defaults)
+            try {
+                const periodIndex = Array.from($('.time-slot')).findIndex(slot => 
+                    $(slot).text().includes(periodStr)
+                );
+                if (periodIndex !== -1) {
+                    const timeSlot = $('.time-slot').eq(periodIndex);
+                    const timeText = timeSlot.text();
+                    const times = timeText.split('\n');
+                    if (times.length === 2) {
+                        $('#startTimeModal').val(times[0].trim());
+                        $('#endTimeModal').val(times[1].trim());
+                    }
+                }
+            } catch (e) {
+                // Use default times if extraction fails
+                $('#startTimeModal').val('08:00');
+                $('#endTimeModal').val('08:40');
+            }
+        }, 300);
+    
+        // STEP 6: Set subject and teacher with more delay
+        setTimeout(() => {
+            if (subjectId && subjectId !== 'undefined' && subjectId !== undefined) {
+                console.log('Setting subject by ID:', subjectId);
+                $('#subjectSelectModal').val(subjectId);
+                
+                // Load teachers for this subject
+                if (teacherId && teacherId !== 'undefined' && teacherId !== undefined) {
+                    setTimeout(() => {
+                        loadTeachersForSubject(subjectId, teacherId);
+                    }, 200);
+                } else {
+                    loadTeachersForSubject(subjectId);
+                }
+            } else if (subjectName && subjectName !== 'No Subject' && subjectName !== 'Free Period') {
+                console.log('Trying to set subject by name:', subjectName);
+                // Try to find subject by name
+                const subjectOption = $('#subjectSelectModal option').filter(function() {
+                    return $(this).text().toLowerCase().includes(subjectName.toLowerCase());
+                }).first();
+                
+                if (subjectOption.length && subjectOption.val()) {
+                    $('#subjectSelectModal').val(subjectOption.val());
+                    loadTeachersForSubject(subjectOption.val());
+                }
+            }
+        }, 500);
+    
+        // STEP 7: Ensure break fields are reset
+        $('#isBreakModal').prop('checked', false);
+        $('#breakNameModal').val('');
+        $('#breakNameField').hide();
+        $('#subjectSelectModal, #teacherSelectModal').prop('disabled', false);
+    
+        // STEP 8: Update UI and show modal
+        $('#addPeriodModalLabel').text(`Edit Period - ${day.charAt(0).toUpperCase() + day.slice(1)} Period ${periodNumber}`);
+        
+        // Show modal after a brief delay to ensure everything is set
+        setTimeout(() => {
+            $('#addPeriodModal').modal('show');
+            forceSetPeriodValues(dayUpper, periodStr);
+            console.log('Modal shown with values - Day:', $('#daySelectModal').val(), 'Period:', $('#periodSelectModal').val());
+        }, 100);
+    
+        // STEP 9: Show user feedback
+        showAlert(`Editing ${day.charAt(0).toUpperCase() + day.slice(1)} - Period ${periodNumber}`, 'info');
+        
+        console.log('=== EDIT PERIOD END ===');
+    }
+
+    function forceSetPeriodValues(day, period) {
+        console.log('FORCE SETTING: Day:', day, 'Period:', period);
+        
+        // Method 1: Direct value set
+        $('#daySelectModal').val(day);
+        $('#periodSelectModal').val(period);
+        
+        // Method 2: Loop through options
+        $('#daySelectModal option').each(function() {
+            if ($(this).val() === day) {
+                $(this).prop('selected', true);
+            }
+        });
+        
+        $('#periodSelectModal option').each(function() {
+            if ($(this).val() === period) {
+                $(this).prop('selected', true);
+            }
+        });
+        
+        // Method 3: Trigger change events
+        $('#daySelectModal').trigger('change');
+        $('#periodSelectModal').trigger('change');
+        
+        console.log('After force set - Day:', $('#daySelectModal').val(), 'Period:', $('#periodSelectModal').val());
+    }
+
+    function ensureDropdownOptions() {
+        // Ensure day dropdown has all options
+        const dayOptions = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+        const currentDayOptions = $('#daySelectModal option').map(function() { return $(this).val(); }).get();
+        
+        dayOptions.forEach(day => {
+            if (!currentDayOptions.includes(day)) {
+                $('#daySelectModal').append(`<option value="${day}">${day.charAt(0) + day.slice(1).toLowerCase()}</option>`);
+            }
+        });
+        
+        // Ensure period dropdown has all options (1-8)
+        const currentPeriodOptions = $('#periodSelectModal option').map(function() { return $(this).val(); }).get();
+        for (let i = 1; i <= 8; i++) {
+            if (!currentPeriodOptions.includes(i.toString())) {
+                $('#periodSelectModal').append(`<option value="${i}">Period ${i}</option>`);
+            }
+        }
+    }
+
+    function savePeriod() {
+        console.log('Saving period...');
+        
+        // Collect all form data
+        const formData = {
+            class_level: $('#classSelectModal').val(),
+            section: $('#sectionSelectModal').val(),
+            subject: $('#subjectSelectModal').val(),
+            teacher: $('#teacherSelectModal').val(),
+            day: $('#daySelectModal').val(),
+            period_number: $('#periodSelectModal').val(),
+            start_time: $('#startTimeModal').val(),
+            end_time: $('#endTimeModal').val(),
+            room: $('#roomNumberModal').val(),
+            is_break: $('#isBreakModal').is(':checked'),
+            break_name: $('#breakNameModal').val()
+        };
+
+        console.log('Form data:', formData);
+
+        // Add entry ID if editing
+        if (currentEditingEntry) {
+            formData.entry_id = currentEditingEntry;
+        }
+
+        // Validate required fields
+        const requiredFields = ['class_level', 'section', 'day', 'period_number', 'start_time', 'end_time'];
+        const missingFields = [];
+
+        requiredFields.forEach(field => {
+            if (!formData[field]) {
+                missingFields.push(field);
+            }
+        });
+
+        if (missingFields.length > 0) {
+            showAlert(`Please fill all required fields! Missing: ${missingFields.join(', ')}`, 'error');
+            return;
+        }
+
+        // For non-break periods, validate subject and teacher
+        if (!formData.is_break) {
+            if (!formData.subject || !formData.teacher) {
+                showAlert('Subject and teacher are required for non-break periods!', 'error');
+                return;
+            }
+        }
+
+        // Show loading state
+        const saveButton = $('#addPeriodModal').find('.btn-primary');
+        const originalText = saveButton.html();
+        saveButton.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+
+        // AJAX call to save period
+        $.ajax({
+            url: '{% url "save_period_ajax" %}',
+            method: 'POST',
+            data: JSON.stringify(formData),
+            contentType: 'application/json',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            success: function(response) {
+                console.log('Save response:', response);
+                
+                if (response.success) {
+                    showAlert(response.message, 'success');
+                    $('#addPeriodModal').modal('hide');
+                    
+                    // Reload the timetable data instead of full page reload
+                    if (currentSelectedClass) {
+                        if (currentSelectedSection) {
+                            loadSectionTimetable(currentSelectedClass, currentSelectedSection);
+                        } else {
+                            loadClassTimetable(currentSelectedClass);
+                        }
+                    }
+                    
+                    // Update teacher workload
+                    updateTeacherWorkloadAfterSave();
+                } else {
+                    showAlert('Error: ' + response.error, 'error');
+                    console.error('Save error:', response.error);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', xhr.responseText);
+                showAlert('Error saving period. Please check console for details.', 'error');
+                
+                // Try to parse error response
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    if (errorResponse.error) {
+                        showAlert('Error: ' + errorResponse.error, 'error');
+                    }
+                } catch (e) {
+                    showAlert('Network error. Please try again.', 'error');
+                }
+            },
+            complete: function() {
+                saveButton.prop('disabled', false).html(originalText);
+            }
+        });
+    }
+
+    function resetModalForm() {
+        console.log('Resetting modal form');
+        $('#classSelectModal').val(currentSelectedClass || '');
+        $('#sectionSelectModal').html('<option value="">Select Section</option>');
+        $('#subjectSelectModal').val('');
+        $('#teacherSelectModal').html('<option value="">Select Teacher</option>');
+        $('#daySelectModal').val('');
+        $('#periodSelectModal').val('');
+        $('#startTimeModal').val('08:00');
+        $('#endTimeModal').val('08:40');
+        $('#roomNumberModal').val('');
+        $('#isBreakModal').prop('checked', false);
+        $('#breakNameModal').val('');
+        $('#breakNameField').hide();
+        $('#subjectSelectModal, #teacherSelectModal').prop('disabled', false);
+        $('#existingPeriodWarning').hide();
+        $('#addPeriodModalLabel').text('Add/Edit Period'); // Reset modal title
+        currentEditingEntry = null;
+
+        // Reload sections if we have a class selected
+        if (currentSelectedClass) {
+            loadSectionsForClass(currentSelectedClass, 'modal');
+            loadSubjectsForClass(currentSelectedClass);
+        }
+    }
+
+    function showAlert(message, type = 'info') {
+        // Remove existing alerts
+        $('.custom-alert').remove();
+        
+        const alertClass = type === 'error' ? 'alert-danger' : 
+                          type === 'success' ? 'alert-success' : 'alert-info';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show custom-alert" role="alert" style="position: fixed; top: 80px; right: 20px; z-index: 9999; min-width: 300px;">
+                <strong>${type.toUpperCase()}:</strong> ${message}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        `;
+        
+        $('body').append(alertHtml);
+        
+        // Auto-remove success alerts after 5 seconds
+        if (type === 'success') {
+            setTimeout(() => {
+                $('.custom-alert').alert('close');
+            }, 5000);
+        }
+    }
+
+    function generateTimetable() {
+        if (currentSelectedClass) {
+            if (confirm('This will generate a new timetable for the selected class. Existing entries may be replaced. Continue?')) {
+                window.location.href = '{% url "generate_timetable" %}?class=' + currentSelectedClass;
+            }
+        } else {
+            showAlert('Please select a class first to generate timetable.', 'warning');
+        }
+    }
+
+    function printTimetable() {
+        if (currentSelectedClass) {
+            window.print();
+        } else {
+            showAlert('Please select a class first to print timetable.', 'warning');
+        }
+    }
+
+    function exportTimetable() {
+        if (currentSelectedClass) {
+            showAlert('Export feature will be implemented soon for ' + $('#selectedClassName').text(), 'info');
+        } else {
+            showAlert('Please select a class first to export timetable.', 'warning');
+        }
+    }
+
+    function resetFilters() {
+        $('#classSelect, #sectionSelect, #teacherSelect').val('');
+        showAlert('Filters reset!', 'info');
+        location.reload();
+    }
+
+    function filterTimetable() {
+        const classId = $('#classSelect').val();
+        const sectionId = $('#sectionSelect').val();
+        const teacherId = $('#teacherSelect').val();
+        
+        // Build URL with filters
+        let url = '{% url "manage_timetable" %}?';
+        const params = [];
+        
+        if (classId) params.push(`class=${classId}`);
+        if (sectionId) params.push(`section=${sectionId}`);
+        if (teacherId) params.push(`teacher=${teacherId}`);
+        
+        if (params.length > 0) {
+            window.location.href = url + params.join('&');
+        } else {
+            window.location.href = '{% url "manage_timetable" %}';
+        }
+    }
+
+    function updateCurrentPeriod() {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        const periods = [
+            { start: 8, end: 9, name: 'Mathematics' },
+            { start: 9, end: 10, name: 'English' },
+            { start: 10, end: 11, name: 'Science' },
+        ];
+
+        let currentPeriod = 'No Class';
+        periods.forEach(period => {
+            if (currentHour >= period.start && currentHour < period.end) {
+                currentPeriod = period.name;
+            }
+        });
+
+        $('#currentPeriod').text(currentPeriod);
+    }
+
+    // Initialize chart
+    function initializeChart() {
+        const ctx = document.getElementById('periodChart');
+        if (ctx) {
+            const periodChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Mathematics', 'English', 'Science', 'Social Studies', 'Others'],
+                    datasets: [{
+                        data: [12, 10, 8, 6, 4],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    }
+
+    // Teacher Workload Management
+let teacherWorkloadData = [];
+
+function calculateTeacherWorkload() {
+    console.log('Calculating teacher workload...');
+    
+    // Reset workload data
+    teacherWorkloadData = [];
+    
+    // Get all timetable data to calculate workload
+    $.ajax({
+        url: '{% url "get_timetable_data" %}',
+        data: { 'include_all': true },
+        success: function(response) {
+            console.log('Timetable data for workload calculation:', response.data);
+            processWorkloadData(response.data);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading timetable data for workload:', error);
+            // Fallback: Use current class data if available
+            if (currentSelectedClass) {
+                loadTimetableData(currentSelectedClass, currentSelectedSection);
+            }
+        }
+    });
+}
+
+function processWorkloadData(timetableData) {
+    const workloadMap = {};
+    const maxPeriodsPerWeek = 40; // Maximum expected periods per week (8 periods/day × 5 days)
+    
+    // Process each timetable entry
+    timetableData.forEach(entry => {
+        if (entry.teacher && !entry.is_break) {
+            const teacherId = entry.teacher.id;
+            const teacherName = entry.teacher.name || entry.teacher.full_name;
+            
+            if (!workloadMap[teacherId]) {
+                workloadMap[teacherId] = {
+                    id: teacherId,
+                    name: teacherName,
+                    teacher_id: entry.teacher.teacher_id || 'N/A',
+                    periods: 0,
+                    subjects: new Set(),
+                    classes: new Set(),
+                    days: new Set()
+                };
+            }
+            
+            // Count periods
+            workloadMap[teacherId].periods++;
+            
+            // Add subject
+            if (entry.subject) {
+                workloadMap[teacherId].subjects.add(entry.subject.name);
+            }
+            
+            // Add class
+            if (entry.class_level) {
+                workloadMap[teacherId].classes.add(entry.class_level.name);
+            }
+            
+            // Add day
+            workloadMap[teacherId].days.add(entry.day);
+        }
+    });
+    
+    // Convert to array and calculate workload percentage
+    teacherWorkloadData = Object.values(workloadMap).map(teacher => {
+        const workloadPercentage = Math.round((teacher.periods / maxPeriodsPerWeek) * 100);
+        
+        return {
+            ...teacher,
+            subjects: Array.from(teacher.subjects),
+            classes: Array.from(teacher.classes),
+            days: Array.from(teacher.days),
+            workload_percentage: workloadPercentage,
+            status: getWorkloadStatus(workloadPercentage)
+        };
+    });
+    
+    console.log('Processed workload data:', teacherWorkloadData);
+    displayTeacherWorkload();
+}
+
+function getWorkloadStatus(percentage) {
+    if (percentage >= 100) return 'critical';
+    if (percentage >= 80) return 'high';
+    if (percentage >= 60) return 'medium';
+    return 'low';
+}
+
+function displayTeacherWorkload() {
+    const tbody = $('#teacherWorkloadBody');
+    const teacherFilter = $('#workloadTeacherFilter').val();
+    const subjectFilter = $('#workloadSubjectFilter').val();
+    const sortBy = $('#workloadSort').val();
+    
+    // Filter data
+    let filteredData = teacherWorkloadData.filter(teacher => {
+        const teacherMatch = !teacherFilter || teacher.id == teacherFilter;
+        const subjectMatch = !subjectFilter || teacher.subjects.some(subject => 
+            subject.toLowerCase().includes($('#workloadSubjectFilter option:selected').text().toLowerCase())
+        );
+        return teacherMatch && subjectMatch;
+    });
+    
+    // Sort data
+    filteredData.sort((a, b) => {
+        switch (sortBy) {
+            case 'name_desc':
+                return b.name.localeCompare(a.name);
+            case 'periods':
+                return a.periods - b.periods;
+            case 'periods_desc':
+                return b.periods - a.periods;
+            default: // 'name'
+                return a.name.localeCompare(b.name);
+        }
+    });
+    
+    // Update table
+    if (filteredData.length === 0) {
+        tbody.html(`
+            <tr>
+                <td colspan="7" class="text-center text-muted">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    No teacher workload data found for the selected filters.
+                </td>
+            </tr>
+        `);
+    } else {
+        let html = '';
+        filteredData.forEach(teacher => {
+            const workloadClass = `workload-${teacher.status}`;
+            const progressColor = teacher.status === 'critical' ? 'bg-danger' : 
+                                teacher.status === 'high' ? 'bg-warning' :
+                                teacher.status === 'medium' ? 'bg-info' : 'bg-success';
+            
+            html += `
+                <tr class="${workloadClass}">
+                    <td>
+                        <strong>${teacher.name}</strong>
+                        ${teacher.status === 'critical' ? '<i class="fas fa-exclamation-triangle ml-1 text-danger"></i>' : ''}
+                    </td>
+                    <td>${teacher.teacher_id}</td>
+                    <td>
+                        ${teacher.subjects.map(subject => 
+                            `<span class="badge badge-primary subject-badge">${subject}</span>`
+                        ).join('')}
+                        ${teacher.subjects.length === 0 ? '<span class="text-muted">No subjects</span>' : ''}
+                    </td>
+                    <td>
+                        ${teacher.classes.map(className => 
+                            `<span class="badge badge-secondary subject-badge">${className}</span>`
+                        ).join('')}
+                        ${teacher.classes.length === 0 ? '<span class="text-muted">No classes</span>' : ''}
+                    </td>
+                    <td>
+                        <strong>${teacher.periods}</strong> periods
+                        <div class="workload-bar">
+                            <div class="workload-progress ${progressColor}" 
+                                 style="width: ${Math.min(teacher.workload_percentage, 100)}%">
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge ${teacher.status === 'critical' ? 'badge-danger' : 
+                                         teacher.status === 'high' ? 'badge-warning' :
+                                         teacher.status === 'medium' ? 'badge-info' : 'badge-success'}">
+                            ${teacher.workload_percentage}%
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${teacher.status === 'critical' ? 'badge-danger' : 
+                                         teacher.status === 'high' ? 'badge-warning' :
+                                         teacher.status === 'medium' ? 'badge-info' : 'badge-success'}">
+                            ${teacher.status.toUpperCase()}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.html(html);
+    }
+    
+    // Update summary
+    updateWorkloadSummary(filteredData);
+}
+
+function updateWorkloadSummary(data) {
+    const totalTeachers = data.length;
+    const totalPeriods = data.reduce((sum, teacher) => sum + teacher.periods, 0);
+    const avgPeriods = totalTeachers > 0 ? Math.round(totalPeriods / totalTeachers) : 0;
+    const maxWorkload = data.length > 0 ? Math.max(...data.map(teacher => teacher.workload_percentage)) : 0;
+    
+    $('#totalTeachers').text(totalTeachers);
+    $('#totalPeriods').text(totalPeriods);
+    $('#avgPeriods').text(avgPeriods);
+    $('#maxWorkload').text(maxWorkload + '%');
+}
+
+function refreshTeacherWorkload() {
+    showAlert('Refreshing teacher workload data...', 'info');
+    calculateTeacherWorkload();
+}
+
+function exportTeacherWorkload() {
+    showAlert('Export feature will be implemented soon!', 'info');
+    // TODO: Implement CSV/Excel export
+}
+
+function updateTeacherWorkloadAfterSave() {
+    console.log('Updating teacher workload after timetable change...');
+    setTimeout(() => {
+        calculateTeacherWorkload();
+    }, 1000);
+}
+
+// Add event listeners for filters
+$(document).ready(function() {
+    $('#workloadTeacherFilter, #workloadSubjectFilter, #workloadSort').change(function() {
+        displayTeacherWorkload();
+    });
+    
+    // Calculate workload when page loads
+    setTimeout(() => {
+        calculateTeacherWorkload();
+    }, 1000);
+});
+</script>
+{% endblock %}

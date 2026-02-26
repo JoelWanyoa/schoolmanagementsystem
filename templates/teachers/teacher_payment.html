@@ -1,0 +1,794 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Teacher Salary Payment{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<!-- Select2 CSS -->
+<link rel="stylesheet" href="{% static 'css/select2.min.css' %}">
+<style>
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+    }
+
+    .empty-state i {
+        opacity: 0.5;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 5px 10px;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+
+    .stats-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stats-icon.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stats-icon.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+    .stats-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1.2;
+    }
+
+    .stats-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .form-card-header {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f1f3;
+    }
+
+    .form-card-header h3 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+        margin: 0;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #4b5563;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-group label i {
+        color: #667eea;
+        margin-right: 5px;
+    }
+
+    .form-control-modern {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 10px 15px;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-control-modern:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+
+    .btn-modern {
+        padding: 10px 25px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary-modern {
+        background: #f3f4f6;
+        color: #4b5563;
+        border: 2px solid #e5e7eb;
+    }
+
+    .btn-secondary-modern:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-outline-modern {
+        background: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .btn-outline-modern:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .action-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        text-decoration: none;
+        color: #333;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .action-card:hover {
+        border-color: #667eea;
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        text-decoration: none;
+        color: #333;
+    }
+
+    .action-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+
+    .action-content h5 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 3px;
+    }
+
+    .action-content p {
+        margin: 0;
+        color: #6b7280;
+        font-size: 0.8rem;
+    }
+
+    .teacher-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .teacher-avatar-placeholder {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        border: 2px solid #e5e7eb;
+        color: #9ca3af;
+    }
+
+    .teacher-name {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .teacher-id {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .amount-cell {
+        font-weight: 700;
+        color: #10b981;
+        font-size: 1rem;
+    }
+
+    .badge-modern {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .badge-period {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-method {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+        border-bottom: 2px solid #f0f1f3;
+        padding: 20px;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        color: #333;
+    }
+
+    .modal-footer {
+        border-top: 2px solid #f0f1f3;
+        padding: 20px;
+    }
+
+    .confirmation-icon {
+        text-align: center;
+        font-size: 4rem;
+        color: #10b981;
+        margin-bottom: 20px;
+    }
+
+    .confirmation-details {
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 1px solid #e5e7eb;
+    }
+
+    .confirmation-details p {
+        margin: 10px 0;
+        color: #4b5563;
+    }
+
+    .confirmation-details strong {
+        color: #333;
+        width: 100px;
+        display: inline-block;
+    }
+
+    /* Select2 Customization */
+    .select2-container--bootstrap4 .select2-selection {
+        border: 2px solid #e5e7eb !important;
+        border-radius: 8px !important;
+        min-height: 45px !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
+        line-height: 41px !important;
+        padding-left: 15px !important;
+    }
+
+    .select2-container--bootstrap4 .select2-selection--single .select2-selection__arrow {
+        height: 43px !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Teacher Salary Payment</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_teachers' %}">Teachers</a>
+                    </li>
+                    <li>Salary Payment</li>
+                </ul>
+            </div>
+
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-4 col-lg-4 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon primary">
+                            <i class="fas fa-money-bill-wave text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">KSh {{ total_monthly_payments|floatformat:0|default:"0" }}</div>
+                            <div class="stats-label">This Month's Payments</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon success">
+                            <i class="fas fa-users text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ monthly_payment_count|default:"0" }}</div>
+                            <div class="stats-label">Teachers Paid This Month</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-lg-4 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon warning">
+                            <i class="fas fa-chalkboard-teacher text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ teachers.count|default:"0" }}</div>
+                            <div class="stats-label">Active Teachers</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Payment Form -->
+                <div class="col-lg-8 col-12">
+                    <div class="form-card">
+                        <div class="form-card-header">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Process Payment</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" id="paymentForm">
+                            {% csrf_token %}
+                            
+                            <div class="row">
+                                <div class="col-lg-6 col-12 form-group">
+                                    <label><i class="fas fa-user-tie"></i>Select Teacher *</label>
+                                    <select name="teacher" class="form-control select2" required id="teacherSelect">
+                                        <option value="">Select Teacher</option>
+                                        {% for teacher in teachers %}
+                                        <option value="{{ teacher.id }}" data-salary="{{ teacher.salary }}">
+                                            {{ teacher.full_name }} ({{ teacher.teacher_id }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-lg-6 col-12 form-group">
+                                    <label><i class="fas fa-money-bill"></i>Amount (KSh) *</label>
+                                    <input type="number" name="amount" class="form-control" 
+                                           step="0.01" min="0" required placeholder="Enter amount" id="amountInput">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-4 col-12 form-group">
+                                    <label><i class="fas fa-calendar-alt"></i>Payment Date *</label>
+                                    <input type="date" name="payment_date" class="form-control" 
+                                           value="{% now 'Y-m-d' %}" required>
+                                </div>
+                                
+                                <div class="col-lg-4 col-12 form-group">
+                                    <label><i class="fas fa-calendar"></i>Month *</label>
+                                    <select name="month" class="form-control" required>
+                                        {% for month_num, month_name in month_choices %}
+                                        <option value="{{ month_num }}" {% if month_num|stringformat:"s" == current_month|stringformat:"s" %}selected{% endif %}>
+                                            {{ month_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-lg-4 col-12 form-group">
+                                    <label><i class="fas fa-calendar"></i>Year *</label>
+                                    <select name="year" class="form-control" required>
+                                        {% for year_choice in year_choices %}
+                                        <option value="{{ year_choice.0 }}" {% if year_choice.0|stringformat:"s" == current_year|stringformat:"s" %}selected{% endif %}>
+                                            {{ year_choice.1 }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-lg-6 col-12 form-group">
+                                    <label><i class="fas fa-credit-card"></i>Payment Method *</label>
+                                    <select name="payment_method" class="form-control" required id="paymentMethod">
+                                        <option value="">Select Method</option>
+                                        {% for method_code, method_name in payment_methods %}
+                                        <option value="{{ method_code }}">
+                                            {{ method_name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-lg-6 col-12 form-group">
+                                    <label><i class="fas fa-hashtag"></i>Transaction ID</label>
+                                    <input type="text" name="transaction_id" class="form-control" 
+                                           placeholder="Bank reference, MPESA code, etc.">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><i class="fas fa-sticky-note"></i>Remarks (Optional)</label>
+                                <textarea name="remarks" class="form-control" rows="3" 
+                                          placeholder="Any additional notes about this payment..."></textarea>
+                            </div>
+                            
+                            <div class="row mg-t-30">
+                                <div class="col-12 form-group mg-t-8">
+                                    <button type="submit" class="btn-fill-lg btn-gradient-yellow">
+                                        <i class="fas fa-money-check-alt mr-2"></i>Process Payment
+                                    </button>
+                                    <a href="{% url 'teacher_payment_history' %}" class="btn-info p-4 rounded btn-gradient-dark">
+                                        <i class="fas fa-history mr-2"></i>View History
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="col-lg-4 col-12">
+                    <div class="form-card">
+                        <div class="form-card-header">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Quick Actions</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'teacher_payment_history' %}" class="action-card">
+                            <div class="action-icon">
+                                <i class="fas fa-history"></i>
+                            </div>
+                            <div class="action-content">
+                                <h5>Payment History</h5>
+                                <p>View all processed payments</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'payment_summary_report' %}" class="action-card">
+                            <div class="action-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <div class="action-content">
+                                <h5>Monthly Report</h5>
+                                <p>Generate payment summary</p>
+                            </div>
+                        </a>
+                        
+                        <a href="{% url 'all_teachers' %}" class="action-card">
+                            <div class="action-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="action-content">
+                                <h5>View Teachers</h5>
+                                <p>Manage teacher profiles</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Payments Table -->
+            <div class="card height-auto mg-t-30">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Recent Payments</h3>
+                        </div>
+                        <div class="dropdown">
+                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
+                                aria-expanded="false">...</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{% url 'teacher_payment_history' %}">
+                                    <i class="fas fa-history text-info"></i> View All
+                                </a>
+                                <a class="dropdown-item" href="#">
+                                    <i class="fas fa-download text-success"></i> Export
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        {% if recent_payments %}
+                        <table class="table display data-table text-nowrap">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Teacher</th>
+                                    <th>Amount</th>
+                                    <th>Payment Date</th>
+                                    <th>Period</th>
+                                    <th>Method</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in recent_payments %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if payment.teacher.photo %}
+                                            <img src="{{ payment.teacher.photo.url }}" alt="teacher" class="teacher-avatar">
+                                            {% else %}
+                                            <div class="teacher-avatar-placeholder">
+                                                <i class="fas fa-user"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="teacher-name">{{ payment.teacher.full_name }}</div>
+                                                <div class="teacher-id">{{ payment.teacher.teacher_id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="amount-cell">KSh {{ payment.amount|floatformat:2 }}</td>
+                                    <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                                    <td>
+                                        <span class="badge-modern badge-period">
+                                            <i class="fas fa-calendar mr-1"></i>{{ payment.get_month_display }} {{ payment.year }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge-modern badge-method">
+                                            <i class="fas fa-{% if payment.payment_method == 'CASH' %}money-bill{% elif payment.payment_method == 'BANK' %}university{% elif payment.payment_method == 'MPESA' %}mobile-alt{% else %}credit-card{% endif %} mr-1"></i>
+                                            {{ payment.get_payment_method_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check-circle mr-1"></i>Paid
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                                                aria-expanded="false">
+                                                <span class="flaticon-more-button-of-three-dots"></span>
+                                            </a>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-receipt text-info"></i> View Receipt
+                                                </a>
+                                                <a class="dropdown-item" href="#">
+                                                    <i class="fas fa-print text-warning"></i> Print
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-money-check-alt fa-4x text-muted mb-3"></i>
+                            <h4>No Recent Payments</h4>
+                            <p class="text-muted">No payment transactions found for this period.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-check-circle text-success mr-2"></i>Confirm Payment</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="confirmation-icon">
+                    <i class="fas fa-money-check-alt"></i>
+                </div>
+                <p class="text-center mb-4">Please review the payment details below:</p>
+                <div class="confirmation-details">
+                    <p><strong>Teacher:</strong> <span id="confirmTeacher"></span></p>
+                    <p><strong>Amount:</strong> KSh <span id="confirmAmount"></span></p>
+                    <p><strong>Period:</strong> <span id="confirmPeriod"></span></p>
+                    <p><strong>Method:</strong> <span id="confirmMethod"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmPayment">
+                    <i class="fas fa-check mr-2"></i>Confirm Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<!-- Select2 Js -->
+<script src="{% static 'js/select2.min.js' %}"></script>
+<script>
+$(document).ready(function() {
+    // Initialize select2
+    $('.select2').select2({
+        placeholder: 'Select a teacher',
+        allowClear: true,
+        width: '100%'
+    });
+
+    // Initialize DataTable
+    if ($('.data-table').length) {
+        $('.data-table').DataTable({
+            "pageLength": 5,
+            "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+            "responsive": true,
+            "language": {
+                "search": "Search:",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ payments",
+                "infoEmpty": "Showing 0 to 0 of 0 payments",
+                "infoFiltered": "(filtered from _MAX_ total payments)",
+                "zeroRecords": "No matching payments found"
+            },
+            "order": [[3, 'desc']]
+        });
+    }
+    
+    // Auto-populate amount based on selected teacher
+    $('#teacherSelect').on('change', function() {
+        const selectedOption = $(this).find('option:selected');
+        const salary = selectedOption.data('salary');
+        
+        if (salary) {
+            $('#amountInput').val(salary);
+        }
+    });
+    
+    // Form submission with confirmation
+    $('#paymentForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const teacherSelect = $('#teacherSelect option:selected');
+        const teacherName = teacherSelect.text();
+        const amount = $('#amountInput').val();
+        const month = $('select[name="month"] option:selected').text();
+        const year = $('select[name="year"]').val();
+        const method = $('#paymentMethod option:selected').text();
+        
+        if (!teacherSelect.val()) {
+            alert('Please select a teacher.');
+            return;
+        }
+        
+        if (!amount) {
+            alert('Please enter the payment amount.');
+            return;
+        }
+        
+        if (!method || method === 'Select Method') {
+            alert('Please select a payment method.');
+            return;
+        }
+        
+        // Set confirmation modal content
+        $('#confirmTeacher').text(teacherName);
+        $('#confirmAmount').text(parseFloat(amount).toLocaleString('en-KE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }));
+        $('#confirmPeriod').text(`${month} ${year}`);
+        $('#confirmMethod').text(method);
+        
+        // Show confirmation modal
+        $('#paymentModal').modal('show');
+    });
+    
+    // Confirm payment
+    $('#confirmPayment').on('click', function() {
+        // Disable button and show loading
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
+        
+        // Submit the form
+        $('#paymentForm')[0].submit();
+    });
+});
+</script>
+{% endblock %}

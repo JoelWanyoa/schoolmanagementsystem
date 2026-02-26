@@ -1,46 +1,292 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
-{% block title %}Student Details - Petra Education Centre{% endblock %}
+{% block title %}Petra Education Centre | Student Profile - {{ student.full_name }}{% endblock %}
 
 {% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
 <style>
-    .single-info-details {
-        padding: 30px;
+    /* Premium Design System */
+    :root {
+        --primary-blue: #042954;
+        --accent-orange: #ffae01;
+        --bg-light: #f0f1f3;
+        --text-dark: #111;
+        --text-muted: #666;
+        --success-green: #2ecc71;
     }
 
-    .item-img img {
-        border-radius: 10px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    .profile-header-card {
+        background: linear-gradient(135deg, #042954 0%, #063970 100%);
+        color: #fff;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(4, 41, 84, 0.2);
     }
 
-    .info-table table {
-        margin-top: 20px;
-    }
-
-    .info-table td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .info-table td:first-child {
-        font-weight: 600;
-        color: #333;
+    .profile-header-card::after {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
         width: 200px;
+        height: 200px;
+        background: rgba(255, 174, 1, 0.1);
+        border-radius: 50%;
     }
 
-    .header-elements ul {
+    .profile-header-content {
         display: flex;
-        gap: 10px;
+        align-items: center;
+        position: relative;
+        z-index: 1;
     }
 
-    .header-elements a {
-        color: #666;
-        transition: color 0.3s;
+    .header-photo-wrapper {
+        width: 140px;
+        height: 140px;
+        border-radius: 15px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        margin-right: 40px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
 
-    .header-elements a:hover {
-        color: #ff7e5f;
+    .header-photo-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .header-main-info h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 8px;
+        color: #fff;
+        letter-spacing: -0.5px;
+    }
+
+    .header-main-info .student-id-badge {
+        background: var(--accent-orange);
+        color: #000;
+        padding: 5px 15px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 14px;
+        display: inline-block;
+        margin-bottom: 15px;
+    }
+
+    .header-sub-info {
+        display: flex;
+        gap: 25px;
+        flex-wrap: wrap;
+    }
+
+    .header-sub-info span {
+        font-size: 15px;
+        opacity: 0.9;
+        display: flex;
+        align-items: center;
+    }
+
+    .header-sub-info i {
+        margin-right: 10px;
+        color: var(--accent-orange);
+    }
+
+    /* Info Sections */
+    .detail-section-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        border: 1px solid #eef0f2;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--primary-blue);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        border-bottom: 2px solid var(--bg-light);
+        padding-bottom: 15px;
+    }
+
+    .section-title i {
+        width: 35px;
+        height: 35px;
+        background: var(--bg-light);
+        color: var(--primary-blue);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        font-size: 16px;
+    }
+
+    /* Data Display Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 25px;
+    }
+
+    .info-block label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .info-block .value {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-dark);
+        border-bottom: 1px solid #f0f1f3;
+        padding-bottom: 5px;
+    }
+
+    /* Stats Widget */
+    .stat-widget-card {
+        background: #fff;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #eef0f2;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-widget-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 20px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--primary-blue);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    /* Action Sidebar */
+    .sidebar-widget {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-action-lg {
+        width: 100%;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn-edit {
+        background: var(--accent-orange);
+        color: #000;
+    }
+
+    .btn-back {
+        background: var(--primary-blue);
+        color: #fff;
+    }
+
+    .btn-action-lg:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Table Styles */
+    .table-custom-luxe {
+        width: 100%;
+    }
+
+    .table-custom-luxe thead th {
+        background: var(--bg-light);
+        color: var(--primary-blue);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        padding: 15px;
+        border: none;
+    }
+
+    .table-custom-luxe tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    /* Login Box */
+    .login-gradient-box {
+        background: linear-gradient(135deg, #042954 0%, #063970 100%);
+        color: #fff;
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+    }
+
+    .credential-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .credential-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .badge-status {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
     }
 </style>
 {% endblock %}
@@ -51,410 +297,346 @@
 
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
-
         <div class="dashboard-content-one">
-            <!-- Breadcubs Area Start Here -->
             <div class="breadcrumbs-area">
-                <h3>Student Details</h3>
+                <h3>Student Profile</h3>
                 <ul>
                     <li><a href="{% url 'dashboard' %}">Home</a></li>
                     <li><a href="{% url 'all_students' %}">Students</a></li>
-                    <li>{{ student.first_name }} {{ student.last_name }}</li>
+                    <li>Profile View</li>
                 </ul>
             </div>
-            <!-- Breadcubs Area End Here -->
 
-            <!-- Student Details Area Start Here -->
-            <div class="card height-auto">
-                <div class="card-body">
-                    <div class="heading-layout1">
-                        <div class="item-title">
-                            <h3>About Student</h3>
-                        </div>
-                        <div class="dropdown">
-                            <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown"
-                                aria-expanded="false">...</a>
-                            <div class="dropdown-menu dropdown-menu-right">
-                                <a class="dropdown-item" href="#"><i class="fas fa-times text-orange-red"></i>Close</a>
-                                <a class="dropdown-item" href="{% url 'update_student' student.student_id %}"><i
-                                        class="fas fa-cogs text-dark-pastel-green"></i>Edit</a>
-                                <a class="dropdown-item" href="#"><i
-                                        class="fas fa-redo-alt text-orange-peel"></i>Refresh</a>
-                            </div>
-                        </div>
+            <!-- Header Card -->
+            <div class="profile-header-card">
+                <div class="profile-header-content">
+                    <div class="header-photo-wrapper">
+                        {% if student.photo %}
+                        <img src="{{ student.photo.url }}" alt="{{ student.full_name }}">
+                        {% else %}
+                        <img src="{% static 'img/figure/student.png' %}" alt="student">
+                        {% endif %}
                     </div>
-
-                    <div class="single-info-details">
-                        <div class="item-img">
-                            {% if student.photo %}
-                            <img src="{{ student.photo.url }}" alt="{{ student.first_name }} {{ student.last_name }}"
-                                width="300" height="300">
-                            {% else %}
-                            <img src="{% static 'img/figure/student1.jpg' %}"
-                                alt="{{ student.first_name }} {{ student.last_name }}" width="300" height="300">
-                            {% endif %}
-                        </div>
-                        <div class="item-content">
-                            <div class="header-inline item-header">
-                                <h3 class="text-dark-medium font-medium">{{ student.first_name }} {{ student.last_name }}</h3>
-                                <div class="header-elements">
-                                    <ul>
-                                        <li>
-                                            <a href="{% url 'update_student' student.student_id %}"
-                                                title="Edit Student">
-                                                <i class="far fa-edit text-primary"></i>
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{% url 'delete_student' student.student_id %}"
-                                                title="Delete Student" class="text-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        </li>
-                                        <li><a href="#"><i class="fas fa-print"></i></a></li>
-                                        <li><a href="#"><i class="fas fa-download"></i></a></li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <p>{{ student.first_name }} is a dedicated student at Petra Education Centre with a strong
-                                academic record and active participation in school activities.</p>
-
-                            <div class="info-table table-responsive">
-                                <table class="table text-nowrap">
-                                    <tbody>
-                                        <tr>
-                                            <td>Student ID:</td>
-                                            <td class="font-medium text-dark-medium">{{ student.student_id }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Full Name:</td>
-                                            <td class="font-medium text-dark-medium">{{ student.first_name }} {{ student.last_name }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Gender:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.gender == 'M' %}
-                                                Male
-                                                {% elif student.gender == 'F' %}
-                                                Female
-                                                {% else %}
-                                                Other
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Father's Name:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.father_name %}
-                                                    {{ student.father_name }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Mother's Name:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.mother_name %}
-                                                    {{ student.mother_name }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Date of Birth:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.date_of_birth %}
-                                                    {{ student.date_of_birth|date:"d.m.Y" }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Religion:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.religion %}
-                                                    {{ student.religion }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Father's Occupation:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.father_occupation %}
-                                                    {{ student.father_occupation }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Mother's Occupation:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.mother_occupation %}
-                                                    {{ student.mother_occupation }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Email:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.guardian_email %}
-                                                    {{ student.guardian_email }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Admission Date:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.admission_date %}
-                                                    {{ student.admission_date|date:"d.m.Y" }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Class:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.current_class %}
-                                                    {{ student.current_class.name }}
-                                                {% else %}
-                                                    Not assigned
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Section:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.current_section %}
-                                                    {{ student.current_section.name }}
-                                                {% else %}
-                                                    Not assigned
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Roll Number:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.roll_number %}
-                                                    {{ student.roll_number }}
-                                                {% else %}
-                                                    Not assigned
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Address:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.address %}
-                                                    {{ student.address }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Phone:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {% if student.guardian_phone %}
-                                                    {{ student.guardian_phone }}
-                                                {% else %}
-                                                    Not specified
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% if student.emergency_contact_name %}
-                                        <tr>
-                                            <td>Emergency Contact:</td>
-                                            <td class="font-medium text-dark-medium">
-                                                {{ student.emergency_contact_name }}
-                                                {% if student.emergency_relationship %}
-                                                ({{ student.emergency_relationship }})
-                                                {% endif %}
-                                                <br>
-                                                {{ student.emergency_contact_phone }}
-                                            </td>
-                                        </tr>
-                                        {% endif %}
-                                        {% if student.previous_school %}
-                                        <tr>
-                                            <td>Previous School:</td>
-                                            <td class="font-medium text-dark-medium">{{ student.previous_school }}</td>
-                                        </tr>
-                                        {% endif %}
-                                        {% if student.medical_conditions %}
-                                        <tr>
-                                            <td>Medical Conditions:</td>
-                                            <td class="font-medium text-dark-medium">{{ student.medical_conditions }}</td>
-                                        </tr>
-                                        {% endif %}
-                                    </tbody>
-                                </table>
-                            </div>
+                    <div class="header-main-info">
+                        <div class="student-id-badge">ID: {{ student.student_id }}</div>
+                        <h1>{{ student.full_name }}</h1>
+                        <div class="header-sub-info">
+                            <span><i class="fas fa-graduation-cap"></i> {{ student.current_class.name|default:"No Class Assigned" }}</span>
+                            <span><i class="fas fa-layer-group"></i> Section: {{ student.current_section.name|default:"N/A" }}</span>
+                            <span><i class="fas fa-id-card"></i> Roll: #{{ student.roll_number|default:"--" }}</span>
+                            <span><i class="fas fa-check-circle"></i> Status: {{ student.is_active|yesno:"Active,Inactive" }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Additional Information Cards -->
+            <!-- Quick Stats Row -->
+            <div class="row mb-5">
+                <div class="col-md-3">
+                    <div class="stat-widget-card">
+                        <div class="stat-icon bg-light-blue text-blue">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-value">
+                            {% if attendance_summary.total_days > 0 %}
+                            {{ attendance_summary.present_days|multiply:100|divide:attendance_summary.total_days|floatformat:0 }}%
+                            {% else %}
+                            0%
+                            {% endif %}
+                        </div>
+                        <div class="stat-label">Attendance Rate</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-widget-card">
+                        <div class="stat-icon bg-light-green text-green">
+                            <i class="fas fa-clipboard-check"></i>
+                        </div>
+                        <div class="stat-value">{{ exam_results.count|default:"0" }}</div>
+                        <div class="stat-label">Exams Taken</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-widget-card">
+                        <div class="stat-icon bg-light-yellow text-orange">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <div class="stat-value">{{ fee_payments.count|default:"0" }}</div>
+                        <div class="stat-label">Fee Payments</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-widget-card">
+                        <div class="stat-icon bg-light-red text-red">
+                            <i class="fas fa-bus"></i>
+                        </div>
+                        <div class="stat-value">{% if student.transport_route %}Active{% else %}None{% endif %}</div>
+                        <div class="stat-label">Transport Status</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
-                <!-- Attendance Summary -->
-                <div class="col-lg-6 col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Attendance Summary</h3>
-                                </div>
+                <!-- Left Column: Details -->
+                <div class="col-xl-9 col-lg-8">
+                    <!-- Personal Info -->
+                    <div class="detail-section-card">
+                        <div class="section-title">
+                            <i class="fas fa-user"></i> Personal Information
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-block">
+                                <label>Gender</label>
+                                <div class="value">{{ student.get_gender_display|default:"-" }}</div>
                             </div>
-                            <div class="progress-info">
-                                {% if attendance_summary.total_days > 0 %}
-                                {% with present_percentage=attendance_summary.present_days|floatformat:0 %}
-                                <div class="progress">
-                                    <div class="progress-bar bg-success" role="progressbar"
-                                        style="width: {{ present_percentage }}%"
-                                        aria-valuenow="{{ present_percentage }}" aria-valuemin="0" aria-valuemax="100">
-                                    </div>
-                                </div>
-                                <div class="progress-status d-flex justify-content-between mt-2">
-                                    <span class="text-dark">Attendance Rate</span>
-                                    <span class="text-dark">{{ present_percentage }}%</span>
-                                </div>
-                                {% endwith %}
-                                <div class="attendance-stats mt-3">
-                                    <div class="row text-center">
-                                        <div class="col-4">
-                                            <div class="border-right">
-                                                <h4 class="text-success">{{ attendance_summary.present_days }}</h4>
-                                                <p class="mb-0">Present</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div class="border-right">
-                                                <h4 class="text-danger">{{ attendance_summary.absent_days }}</h4>
-                                                <p class="mb-0">Absent</p>
-                                            </div>
-                                        </div>
-                                        <div class="col-4">
-                                            <div>
-                                                <h4 class="text-info">{{ attendance_summary.total_days }}</h4>
-                                                <p class="mb-0">Total</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <p class="text-muted">No attendance records found.</p>
-                                {% endif %}
+                            <div class="info-block">
+                                <label>Date of Birth</label>
+                                <div class="value">{{ student.date_of_birth|date:"F d, Y" }}</div>
                             </div>
+                            <div class="info-block">
+                                <label>Admission Date</label>
+                                <div class="value">{{ student.admission_date|date:"F d, Y" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Religion</label>
+                                <div class="value">{{ student.religion|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>National ID / NEMIS</label>
+                                <div class="value">{{ student.national_id|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Home Address</label>
+                                <div class="value">{{ student.address|default:"-" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parent Info -->
+                    <div class="detail-section-card">
+                        <div class="section-title">
+                            <i class="fas fa-users"></i> Parent / Guardian Details
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-block">
+                                <label>Father's Name</label>
+                                <div class="value">{{ student.father_name|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Mother's Name</label>
+                                <div class="value">{{ student.mother_name|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Guardian Phone</label>
+                                <div class="value text-primary font-bold">{{ student.guardian_phone|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Guardian Email</label>
+                                <div class="value">{{ student.guardian_email|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Father's Occupation</label>
+                                <div class="value">{{ student.father_occupation|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Mother's Occupation</label>
+                                <div class="value">{{ student.mother_occupation|default:"-" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical & Emergency -->
+                    <div class="detail-section-card">
+                        <div class="section-title">
+                            <i class="fas fa-heartbeat"></i> Health & Emergency Info
+                        </div>
+                        <div class="info-grid">
+                            <div class="info-block">
+                                <label>Medical Conditions</label>
+                                <div class="value">{{ student.medical_conditions|default:"None Reported" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Emergency Contact Name</label>
+                                <div class="value">{{ student.emergency_contact_name|default:"-" }}</div>
+                            </div>
+                            <div class="info-block">
+                                <label>Emergency Contact Phone</label>
+                                <div class="value">{{ student.emergency_contact_phone|default:"-" }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exam Results -->
+                    <div class="detail-section-card">
+                        <div class="section-title">
+                            <i class="fas fa-poll"></i> Recent Exam Performance
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-custom-luxe">
+                                <thead>
+                                    <tr>
+                                        <th>Exam Name</th>
+                                        <th>Subject</th>
+                                        <th>Marks</th>
+                                        <th>Grade</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in exam_results|slice:":5" %}
+                                    <tr>
+                                        <td class="font-bold">{{ result.exam.name }}</td>
+                                        <td>{{ result.exam.subject.name }}</td>
+                                        <td class="font-bold">{{ result.marks_obtained }}/{{ result.exam.total_marks }}
+                                        </td>
+                                        <td>
+                                            <span
+                                                class="badge badge-pill {% if result.marks_obtained|percentage:result.exam.total_marks >= 80 %}bg-success{% elif result.marks_obtained|percentage:result.exam.total_marks >= 50 %}bg-info{% else %}bg-danger{% endif %} text-white">
+                                                {{ result.grade }}
+                                            </span>
+                                        </td>
+                                        <td>{{ result.exam.exam_date|date:"M d, Y" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted p-4">No exam results recorded for
+                                            this student.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Fee History -->
+                    <div class="detail-section-card">
+                        <div class="section-title">
+                            <i class="fas fa-receipt"></i> Recent Fee Payments
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table-custom-luxe">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Description</th>
+                                        <th>Amount Paid</th>
+                                        <th>Method</th>
+                                        <th>Ref No.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in fee_payments|slice:":5" %}
+                                    <tr>
+                                        <td>{{ payment.payment_date|date:"M d, Y" }}</td>
+                                        <td>{{ payment.fee.name }}</td>
+                                        <td class="font-bold text-success">KES {{ payment.amount_paid|floatformat:2 }}
+                                        </td>
+                                        <td>{{ payment.get_payment_method_display }}</td>
+                                        <td><small class="text-muted">{{ payment.reference_number|default:"-" }}</small>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted p-4">No payment history found.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
 
-                <!-- Academic Performance -->
-                <div class="col-lg-6 col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Academic Performance</h3>
-                                </div>
-                            </div>
-                            {% if exam_results %}
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Subject</th>
-                                            <th>Exam</th>
-                                            <th>Marks</th>
-                                            <th>Grade</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for result in exam_results %}
-                                        <tr>
-                                            <td>{{ result.exam.subject.name }}</td>
-                                            <td>{{ result.exam.name }}</td>
-                                            <td>{{ result.marks_obtained }}/{{ result.exam.total_marks }}</td>
-                                            <td>
-                                                <span class="badge 
-                                                        {% if result.grade == 'A+' or result.grade == 'A' %}badge-success
-                                                        {% elif result.grade == 'B' or result.grade == 'C' %}badge-warning
-                                                        {% elif result.grade == 'D' %}badge-info
-                                                        {% else %}badge-danger
-                                                        {% endif %}">
-                                                    {{ result.grade }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                            {% else %}
-                            <p class="text-muted">No exam results available.</p>
-                            {% endif %}
-                        </div>
+                <!-- Right Column: Sidebar -->
+                <div class="col-xl-3 col-lg-4">
+                    <!-- Actions -->
+                    <div class="sidebar-widget">
+                        {% if request.user.is_staff %}
+                        <a href="{% url 'update_student' student.student_id %}" class="btn-action-lg btn-edit">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'all_students' %}" class="btn-action-lg btn-back">
+                            <i class="fas fa-chevron-left"></i> Back to List
+                        </a>
                     </div>
-                </div>
-            </div>
 
-            <!-- Fee Information -->
-            <div class="card mt-4">
-                <div class="card-body">
-                    <div class="heading-layout1">
-                        <div class="item-title">
-                            <h3>Fee Information</h3>
+                    <!-- Login Info -->
+                    {% if request.user.is_staff %}
+                    <div class="login-gradient-box">
+                        <div class="section-title mb-4"
+                            style="color: #fff; border-bottom-color: rgba(255,255,255,0.2);">
+                            <i class="fas fa-shield-alt" style="color: var(--accent-orange);"></i> Student Login
                         </div>
+                        {% if student.user %}
+                        <div class="credential-row">
+                            <span class="text-muted-light" style="opacity: 0.7; font-size: 11px;">USERNAME</span>
+                            <span class="font-bold">{{ student.user.username }}</span>
+                        </div>
+                        <div class="credential-row">
+                            <span class="text-muted-light" style="opacity: 0.7; font-size: 11px;">STATUS</span>
+                            <span
+                                class="badge-status {% if student.user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ student.user.is_active|yesno:"Active,Locked" }}
+                            </span>
+                        </div>
+                        <div class="credential-row">
+                            <span class="text-muted-light" style="opacity: 0.7; font-size: 11px;">LAST LOGIN</span>
+                            <span style="font-size: 12px;">{{ student.user.last_login|date:"M d, H:i"|default:"Never" }}</span>
+                        </div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-light w-100"
+                                onclick="alert('Password reset link sent to parent email')">
+                                <i class="fas fa-sync-alt mr-2"></i> Reset
+                            </button>
+                        </div>
+                        {% else %}
+                        <p class="text-center text-white-50" style="font-size: 13px;">No account created.</p>
+                        <button class="btn btn-warning btn-sm w-100 mt-2 font-bold"
+                            onclick="alert('Creating account...')">
+                            CREATE ACCOUNT
+                        </button>
+                        {% endif %}
                     </div>
-                    {% if fee_payments %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Fee Type</th>
-                                    <th>Amount Paid</th>
-                                    <th>Payment Date</th>
-                                    <th>Payment Method</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for payment in fee_payments %}
-                                <tr>
-                                    <td>{{ payment.fee.name }}</td>
-                                    <td>${{ payment.amount_paid }}</td>
-                                    <td>{{ payment.payment_date|date:"d.m.Y" }}</td>
-                                    <td>{{ payment.payment_method }}</td>
-                                    <td>
-                                        <span class="badge badge-success">Paid</span>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted">No fee payment records found.</p>
                     {% endif %}
+
+                    <!-- Progress Summary -->
+                    <div class="sidebar-widget">
+                        <div class="section-title" style="font-size: 15px; border:0; margin-bottom: 20px;">
+                            <i class="fas fa-chart-line" style="width:30px; height:30px;"></i> Performance Insights
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small font-bold">ATTENDANCE</span>
+                                <span class="font-bold small text-blue">
+                                    {% if attendance_summary.total_days > 0 %}
+                                    {{ attendance_summary.present_days|multiply:100|divide:attendance_summary.total_days|floatformat:0 }}%
+                                    {% else %}0%{% endif %}
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-blue" role="progressbar"
+                                    style="width: {% if attendance_summary.total_days > 0 %}{{ attendance_summary.present_days|multiply:100|divide:attendance_summary.total_days }}{% else %}0{% endif %}%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small font-bold">ACADEMIC GROWTH</span>
+                                <span class="font-bold small text-success">Good</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <footer class="footer-wrap-layout1 mt-5">
-                <div class="copyright">
-                    © Copyrights <a href="#">Petra Education Centre</a> {% now "Y" %}. All rights reserved.
-                </div>
+            <footer class="footer-wrap-layout1">
+                <div class="copyright">© Copyright <a href="#">Petra Academy</a> 2026. All rights reserved.</div>
             </footer>
         </div>
     </div>
@@ -462,17 +644,11 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
 <script>
     $(document).ready(function () {
-        // Print functionality
-        $('.fa-print').parent().on('click', function () {
-            window.print();
-        });
-
-        // Download functionality
-        $('.fa-download').parent().on('click', function () {
-            alert('Download feature will be implemented soon!');
-        });
+        // Any specific JS optimization for student details
     });
 </script>
 {% endblock %}

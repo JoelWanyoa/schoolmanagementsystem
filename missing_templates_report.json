@@ -1,0 +1,367 @@
+[
+  {
+    "file": "dashboard/views.py",
+    "view": "permission_denied",
+    "template": "permission_denied.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "subjects_by_class_section",
+    "template": "academic/subjects_by_class_section.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "class_section_subjects",
+    "template": "academic/class_section_subjects.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "assignment_delete",
+    "template": "teachers/assignment_confirm_delete.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "make_payment",
+    "template": "parents/make_payment.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "payment_history",
+    "template": "parents/payment_history.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "permanent_delete_student",
+    "template": "students/permanent_delete_student.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "remove_teacher_class",
+    "template": "teachers/confirm_remove_class.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "payment_summary_report",
+    "template": "teachers/payment_summary.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "buttons",
+    "template": "ui_elements/buttons.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "modals",
+    "template": "ui_elements/modals.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "class_timetable",
+    "template": "academic/class_timetable.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "create_exam_schedule",
+    "template": "examinations/exam_schedule_form.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "transport_management",
+    "template": "transport/transport_management.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "transport_routes",
+    "template": "transport/transport_routes.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "transport_vehicles",
+    "template": "transport/transport_vehicles.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "assign_transport",
+    "template": "transport/assign_transport.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "hostel_management",
+    "template": "hostel/hostel_management.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "hostel_rooms",
+    "template": "hostel/hostel_rooms.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "hostel_allocations",
+    "template": "hostel/hostel_allocations.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "allocate_hostel",
+    "template": "hostel/allocate_hostel.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "alerts",
+    "template": "ui_elements/alerts.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "grid",
+    "template": "ui_elements/grid.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "progress_bars",
+    "template": "ui_elements/progress_bars.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "update_parent",
+    "template": "parents/update_parent.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "delete_parent",
+    "template": "parents/delete_parent.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "update_teacher",
+    "template": "teachers/update_teacher.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "delete_teacher",
+    "template": "teachers/delete_teacher.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "teacher_payment_detail",
+    "template": "teachers/teacher_payment_detail.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "add_teacher_payment",
+    "template": "teachers/add_teacher_payment.html"
+  },
+  {
+    "file": "dashboard/views.py",
+    "view": "delete_exam",
+    "template": "teachers/confirm_delete_exam.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "permission_denied",
+    "template": "permission_denied.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "assignment_delete",
+    "template": "teachers/assignment_confirm_delete.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "teacher_reports",
+    "template": "teachers/reports.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "teacher_profile",
+    "template": "teachers/profile.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "teacher_notices",
+    "template": "teachers/notices.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "teacher_messages",
+    "template": "teachers/messages.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "teacher_settings",
+    "template": "teachers/settings.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_profile",
+    "template": "students/profile.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_timetable",
+    "template": "students/timetable.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_assignments",
+    "template": "students/assignments.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_exam_results",
+    "template": "students/exam_results.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_attendance",
+    "template": "students/attendance.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_fees",
+    "template": "students/fees.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_notices",
+    "template": "students/notices.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "student_messages",
+    "template": "students/messages.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "parent_dashboard",
+    "template": "parents/dashboard.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "parent_child_detail",
+    "template": "parents/child_detail.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "parent_messages",
+    "template": "parents/messages.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "parent_notices",
+    "template": "parents/notices.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "import_data",
+    "template": "admin/import_data.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "system_reports",
+    "template": "admin/system_reports.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "class_reports",
+    "template": "admin/class_reports.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "financial_reports",
+    "template": "admin/financial_reports.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "system_settings",
+    "template": "admin/system_settings.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "custom_404",
+    "template": "errors/404.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "custom_500",
+    "template": "errors/500.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "custom_403",
+    "template": "errors/403.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_academic_years",
+    "template": "admin/manage_academic_years.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_subjects",
+    "template": "admin/manage_subjects.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_notices",
+    "template": "admin/manage_notices.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_fees",
+    "template": "admin/manage_fees.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_exams",
+    "template": "admin/manage_exams.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_assignments",
+    "template": "admin/manage_assignments.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "manage_timetable",
+    "template": "admin/manage_timetable.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "generate_timetable",
+    "template": "admin/generate_timetable.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "system_logs",
+    "template": "admin/system_logs.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "database_maintenance",
+    "template": "admin/database_maintenance.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "messaging_center",
+    "template": "communication/messaging_center.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "email_notifications",
+    "template": "communication/email_notifications.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "sms_notifications",
+    "template": "communication/sms_notifications.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "help_center",
+    "template": "help/help_center.html"
+  },
+  {
+    "file": "dashboard/views2.py",
+    "view": "about_system",
+    "template": "help/about.html"
+  }
+]

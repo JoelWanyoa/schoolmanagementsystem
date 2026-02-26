@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Borrow Book{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Library</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'all_books' %}">Books</a>
+                    </li>
+                    <li>Borrow Book</li>
+                </ul>
+            </div>
+
+            <div class="card height-auto">
+                <div class="card-body">
+                    <div class="heading-layout1">
+                        <div class="item-title">
+                            <h3>Borrow a Book</h3>
+                        </div>
+                    </div>
+
+                    <form class="new-added-form" method="POST">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Select Book *</label>
+                                <select name="book_id" class="form-control select2" required>
+                                    <option value="">Search by title or author...</option>
+                                    {% for book in books %}
+                                    <option value="{{ book.id }}">
+                                        {{ book.title }} ({{ book.available_copies }} available)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Select Student *</label>
+                                <select name="student_id" class="form-control select2" required>
+                                    <option value="">Search student name or ID...</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.id }}">
+                                        {{ student.first_name }} {{ student.last_name }} ({{ student.student_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-xl-4 col-lg-6 col-12 form-group">
+                                <label>Due Date *</label>
+                                <input type="date" name="due_date" class="form-control" required
+                                    value="{{ today|date:'Y-m-d' }}">
+                            </div>
+
+                            <div class="col-12 form-group mg-t-8">
+                                <button type="submit" class="btn-fill-lg btn-gradient-yellow btn-hover-bluedark">Record
+                                    Borrowing</button>
+                                <a href="{% url 'all_books' %}"
+                                    class="btn-fill-lg bg-blue-dark btn-hover-yellow">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function () {
+        // Set default due date to 14 days from today
+        if (!$('input[name="due_date"]').val()) {
+            var date = new Date();
+            date.setDate(date.getDate() + 14);
+            var day = ("0" + date.getDate()).slice(-2);
+            var month = ("0" + (date.getMonth() + 1)).slice(-2);
+            var today = date.getFullYear() + "-" + (month) + "-" + (day);
+            $('input[name="due_date"]').val(today);
+        }
+
+        $('.select2').select2({
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %}

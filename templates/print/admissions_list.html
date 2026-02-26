@@ -1,0 +1,106 @@
+{% load static %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Admissions List</title>
+    <style>
+      @page { size: A4; margin: 18mm 14mm; }
+      body { font-family: Arial, sans-serif; color: #111827; font-size: 11px; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+      .brand h1 { margin: 0; font-size: 18px; letter-spacing: .3px; }
+      .brand .sub { margin-top: 4px; color: #6b7280; font-size: 11px; }
+      .meta { text-align: right; color: #374151; }
+      .meta .small { color: #6b7280; font-size: 10px; }
+
+      .kpis { width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+      .kpis span { display: inline-block; margin-right: 14px; }
+      .kpis b { font-size: 12px; }
+
+      table { width: 100%; border-collapse: collapse; }
+      th { text-transform: uppercase; letter-spacing: .08em; font-size: 9px; color: #6b7280; text-align: left; border-bottom: 1px solid #e5e7eb; padding: 8px 6px; }
+      td { padding: 8px 6px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+      .status { font-weight: 700; }
+      .pending { color: #92400e; }
+      .approved { color: #166534; }
+      .rejected { color: #991b1b; }
+      .muted { color: #6b7280; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="brand">
+        <h1>Petra Education Centre</h1>
+        <div class="sub">Admissions Report</div>
+      </div>
+      <div class="meta">
+        <div><b>Generated:</b> {{ generated_at|date:"M d, Y H:i" }}</div>
+        {% if status_filter %}
+          <div class="small">Filter: {{ status_filter }}</div>
+        {% else %}
+          <div class="small">Filter: All</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="kpis">
+      <span>Total: <b>{{ total_count }}</b></span>
+      <span>Pending: <b>{{ pending_count }}</b></span>
+      <span>Approved: <b>{{ approved_count }}</b></span>
+      <span>Rejected: <b>{{ rejected_count }}</b></span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 24%;">Applicant</th>
+          <th style="width: 18%;">Class / Section</th>
+          <th style="width: 22%;">Guardian</th>
+          <th style="width: 18%;">Submitted</th>
+          <th style="width: 10%;">Status</th>
+          <th style="width: 8%;">ID</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in admissions %}
+        <tr>
+          <td>
+            <b>{{ a.first_name }} {{ a.last_name }}</b><br/>
+            <span class="muted">{{ a.get_gender_display }} • DOB {{ a.date_of_birth|date:"M d, Y" }}</span>
+          </td>
+          <td>
+            <b>{{ a.class_level.name }}</b><br/>
+            <span class="muted">Section {{ a.section.name }}</span>
+          </td>
+          <td>
+            <b>{{ a.father_name|default:"Guardian" }}</b><br/>
+            <span class="muted">{{ a.guardian_phone }}</span><br/>
+            {% if a.guardian_email %}<span class="muted">{{ a.guardian_email }}</span>{% endif %}
+          </td>
+          <td>
+            <b>{{ a.submitted_date|date:"M d, Y" }}</b><br/>
+            <span class="muted">{{ a.submitted_date|time:"H:i" }}</span>
+          </td>
+          <td class="status">
+            {% if a.status == 'PENDING' %}
+              <span class="pending">PENDING</span>
+            {% elif a.status == 'APPROVED' %}
+              <span class="approved">APPROVED</span>
+            {% else %}
+              <span class="rejected">REJECTED</span>
+            {% endif %}
+          </td>
+          <td>
+            {{ a.admission_student_id|default:"-" }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="muted">No admissions found for this filter.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>
+

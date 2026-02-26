@@ -1,565 +1,1196 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Promotion History - Petra Education Centre{% endblock %}
+{% block title %}Promotion History | Executive Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4361ee;
+        --success: #2dce89;
+        --warning: #fb6340;
+        --danger: #f5365c;
+        --info: #11cdef;
+        --dark: #1e293b;
+        --card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        --glass-border: rgba(255, 255, 255, 0.18);
+    }
+
+    .dashboard-content-one {
+        background: #f8faff;
+        padding: 30px;
+    }
+
+    /* ── Toast Notification Stack ─────────────────────────────── */
+    #toastStack {
+        position: fixed;
+        top: 24px;
+        right: 24px;
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 320px;
+        max-width: 420px;
+    }
+
+    .toast-msg {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.14);
+        border-left: 5px solid var(--primary);
+        animation: toastIn 0.35s cubic-bezier(.21, 1.02, .73, 1) forwards;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .toast-msg::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: currentColor;
+        opacity: 0.25;
+        animation: toastProgress 4s linear forwards;
+        width: 100%;
+    }
+
+    @keyframes toastIn {
+        from {
+            opacity: 0;
+            transform: translateX(60px) scale(0.9);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+    }
+
+    @keyframes toastOut {
+        to {
+            opacity: 0;
+            transform: translateX(60px) scale(0.9);
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+        }
+    }
+
+    @keyframes toastProgress {
+        from {
+            width: 100%;
+        }
+
+        to {
+            width: 0%;
+        }
+    }
+
+    .toast-msg.success {
+        border-left-color: var(--success);
+        color: var(--success);
+    }
+
+    .toast-msg.error {
+        border-left-color: var(--danger);
+        color: var(--danger);
+    }
+
+    .toast-msg.warning {
+        border-left-color: var(--warning);
+        color: var(--warning);
+    }
+
+    .toast-msg.info {
+        border-left-color: var(--info);
+        color: var(--info);
+    }
+
+    .toast-icon {
+        font-size: 22px;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .toast-body {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: 700;
+        font-size: 14px;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+
+    .toast-text {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 16px;
+        cursor: pointer;
+        line-height: 1;
+        flex-shrink: 0;
+        padding: 0;
+        margin-top: 2px;
+    }
+
+    .toast-close:hover {
+        color: #1e293b;
+    }
+
+    /* ── Stat Cards ───────────────────────────────────────────── */
+    .stat-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        border: 1px solid var(--glass-border);
+        box-shadow: var(--card-shadow);
+        transition: transform .3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        opacity: 0.07;
+    }
+
+    .stat-card.blue::before {
+        background: var(--primary);
+    }
+
+    .stat-card.green::before {
+        background: var(--success);
+    }
+
+    .stat-card.orange::before {
+        background: var(--warning);
+    }
+
+    .stat-card.teal::before {
+        background: var(--info);
+    }
+
+    .stat-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-bottom: 14px;
+    }
+
+    .stat-icon.blue {
+        background: #e6f0ff;
+        color: var(--primary);
+    }
+
+    .stat-icon.green {
+        background: #d1fae5;
+        color: var(--success);
+    }
+
+    .stat-icon.orange {
+        background: #fff0e6;
+        color: var(--warning);
+    }
+
+    .stat-icon.teal {
+        background: #e0f9ff;
+        color: var(--info);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #1e293b;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 6px;
+    }
+
+    /* ── Filters Card ─────────────────────────────────────────── */
+    .filter-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 28px;
+    }
+
+    .filter-card h5 {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 18px;
+    }
+
+    /* ── History Table ────────────────────────────────────────── */
+    .history-card {
+        background: #fff;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--card-shadow);
+    }
+
+    .history-card h4 {
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .modern-table thead th {
+        background: #f1f5f9;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 1px;
+        font-weight: 700;
+        color: #64748b;
+        border: none;
+        padding: 14px 16px;
+        white-space: nowrap;
+    }
+
+    .modern-table tbody td {
+        padding: 14px 16px;
+        vertical-align: middle;
+        border-color: #f1f5f9;
+    }
+
+    .modern-table tbody tr {
+        transition: background .15s;
+    }
+
+    .modern-table tbody tr:hover {
+        background: #f8faff;
+    }
+
+    /* Student cell */
+    .student-cell {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .student-avatar-sm {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4361ee, #3a0ca3);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .student-avatar-sm img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .student-name {
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 14px;
+    }
+
+    .student-id {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+
+    /* Transition arrow */
+    .class-transition-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .class-transition {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .class-node {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .class-node:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .class-node.from {
+        background: linear-gradient(135deg, #f8faff 0%, #e0e7ff 100%);
+        border: 1px solid #c7d2fe;
+        color: #4361ee;
+    }
+
+    .class-node.to {
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        border: 1px solid #a7f3d0;
+        color: #10b981;
+    }
+
+    .node-label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        letter-spacing: 0.5px;
+        opacity: 0.7;
+    }
+
+    .node-value {
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.1;
+        max-width: 90%;
+        word-break: break-word;
+    }
+
+    .transition-arrow {
+        color: #94a3b8;
+        font-size: 20px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        animation: pulseArrow 2s infinite;
+    }
+
+    @keyframes pulseArrow {
+
+        0%,
+        100% {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        50% {
+            transform: translateX(4px);
+            opacity: 0.6;
+        }
+    }
+
+    .section-transition {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        padding: 2px 8px;
+        border-radius: 6px;
+    }
+
+    /* Type badge */
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .type-badge.manual {
+        background: rgba(17, 205, 239, .1);
+        color: #11cdef;
+        border: 1px solid rgba(17, 205, 239, .3);
+    }
+
+    .type-badge.auto {
+        background: rgba(45, 206, 137, .1);
+        color: #2dce89;
+        border: 1px solid rgba(45, 206, 137, .3);
+    }
+
+    .type-badge.reversion {
+        background: rgba(251, 99, 64, .1);
+        color: #fb6340;
+        border: 1px solid rgba(251, 99, 64, .3);
+    }
+
+    /* Reverted State */
+    .reverted-row {
+        opacity: 0.6;
+        background: #f8fafc;
+    }
+
+    .reverted-tag {
+        font-size: 10px;
+        background: #94a3b8;
+        color: white;
+        padding: 1px 6px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        margin-left: 8px;
+        font-weight: 800;
+    }
+
+    /* Promoted by */
+    .promoter-name {
+        font-weight: 600;
+        font-size: 13px;
+        color: #1e293b;
+    }
+
+    .promoter-email {
+        font-size: 11px;
+        color: #94a3b8;
+    }
+
+    /* Year badge */
+    .year-badge {
+        background: rgba(251, 99, 64, .1);
+        color: #fb6340;
+        border: 1px solid rgba(251, 99, 64, .25);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Action buttons */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: all .2s;
+        font-size: 13px;
+    }
+
+    .action-btn.view {
+        background: rgba(17, 205, 239, .12);
+        color: #11cdef;
+    }
+
+    .action-btn.revert {
+        background: rgba(251, 99, 64, .12);
+        color: #fb6340;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.12);
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 64px 24px;
+    }
+
+    .empty-icon {
+        font-size: 60px;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+
+    .empty-state h4 {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    .empty-state p {
+        color: #94a3b8;
+    }
+
+    /* Pagination */
+    .pagination .page-link {
+        border-radius: 10px !important;
+        margin: 0 3px;
+        border: none;
+        color: #4361ee;
+    }
+
+    .pagination .page-item.active .page-link {
+        background: #4361ee;
+        color: #fff;
+    }
+
+    /* Django messages area */
+    .django-messages {
+        margin-bottom: 24px;
+    }
+
+    .django-messages .alert {
+        border-radius: 14px;
+        border: none;
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .django-messages .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .django-messages .alert-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .django-messages .alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .django-messages .alert-info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    /* Details Modal */
+    #promotionDetailsModal .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, .15);
+    }
+
+    #promotionDetailsModal .modal-header {
+        background: linear-gradient(135deg, #4361ee, #3a0ca3);
+        color: #fff;
+        border-radius: 20px 20px 0 0;
+        padding: 20px 28px;
+    }
+
+    #promotionDetailsModal .modal-header .close {
+        color: rgba(255, 255, 255, .7) !important;
+        text-shadow: none;
+    }
+
+    #promotionDetailsModal .modal-body {
+        padding: 28px;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .detail-row:last-child {
+        border: none;
+    }
+
+    .detail-label {
+        font-size: 12px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: #1e293b;
+        font-weight: 600;
+        text-align: right;
+    }
+
+    /* Revert confirmation */
+    #revertModal .modal-content {
+        border-radius: 20px;
+        border: none;
+    }
+
+    #revertModal .modal-body {
+        padding: 32px;
+        text-align: center;
+    }
+
+    /* Loading spinner overlay on table */
+    .table-loading {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
+<!-- Toast Notification Stack -->
+<div id="toastStack"></div>
+
 <div id="wrapper" class="wrapper bg-ash">
     {% include 'includes/header.html' %}
-    
     <div class="dashboard-page-one">
         {% include 'includes/sidebar.html' %}
-        
         <div class="dashboard-content-one">
-            <div class="breadcrumbs-area">
-                <h3>Promotion History</h3>
-                <ul>
-                    <li><a href="{% url 'dashboard' %}">Home</a></li>
-                    <li><a href="{% url 'all_students' %}">Students</a></li>
-                    <li><a href="{% url 'student_promotion' %}">Student Promotion</a></li>
-                    <li>Promotion History</li>
-                </ul>
+
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 class="font-weight-bold text-dark mb-1">Promotion History</h2>
+                    <p class="text-muted mb-0">Full audit trail of all student academic transitions</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'student_promotion' %}" class="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-graduation-cap mr-2"></i>New Promotion
+                    </a>
+                </div>
             </div>
 
-            <!-- Display Messages -->
+            <!-- Django Messages rendered as toasts (fired on page load) -->
             {% if messages %}
-            <div class="row">
-                <div class="col-12">
-                    {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        <strong>
-                            {% if message.tags == 'error' %}
-                                <i class="fas fa-exclamation-circle"></i> Error!
-                            {% elif message.tags == 'success' %}
-                                <i class="fas fa-check-circle"></i> Success!
-                            {% elif message.tags == 'warning' %}
-                                <i class="fas fa-exclamation-triangle"></i> Warning!
-                            {% elif message.tags == 'info' %}
-                                <i class="fas fa-info-circle"></i> Info!
-                            {% endif %}
-                        </strong>
-                        {{ message }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    {% endfor %}
-                </div>
+            <div class="django-messages d-none" id="djangoMessages">
+                {% for message in messages %}
+                <div data-type="{{ message.tags }}" data-text="{{ message }}"></div>
+                {% endfor %}
             </div>
             {% endif %}
 
-            <!-- Statistics Cards -->
-<div class="row gutters-20 mb-4">
-    <div class="col-xl-3 col-sm-6 col-12">
-        <div class="card dashboard-card-seven">
-            <div class="social-media bg-fb hover-fb">
-                <div class="media media-none--lg">
-                    <div class="social-icon">
-                        <i class="fas fa-history"></i>
-                    </div>
-                    <div class="media-body space-sm">
-                        <h6 class="item-title">Total Promotions</h6>
-                    </div>
-                </div>
-                <div class="social-like">{{ total_promotions_count }}</div>
-                {% if filtered_count != total_promotions_count %}
-                <small class="filtered-text">({{ filtered_count }} filtered)</small>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-sm-6 col-12">
-        <div class="card dashboard-card-seven">
-            <div class="social-media bg-twitter hover-twitter">
-                <div class="media media-none--lg">
-                    <div class="social-icon">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <div class="media-body space-sm">
-                        <h6 class="item-title">Students Promoted</h6>
-                    </div>
-                </div>
-                <div class="social-like">{{ unique_students_count }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-sm-6 col-12">
-        <div class="card dashboard-card-seven">
-            <div class="social-media bg-gplus hover-gplus">
-                <div class="media media-none--lg">
-                    <div class="social-icon">
-                        <i class="fas fa-chalkboard"></i>
-                    </div>
-                    <div class="media-body space-sm">
-                        <h6 class="item-title">Classes Involved</h6>
-                    </div>
-                </div>
-                <div class="social-like">{{ classes_count }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-xl-3 col-sm-6 col-12">
-        <div class="card dashboard-card-seven">
-            <div class="social-media bg-linkedin hover-linkedin">
-                <div class="media media-none--lg">
-                    <div class="social-icon">
-                        <i class="fas fa-calendar"></i>
-                    </div>
-                    <div class="media-body space-sm">
-                        <h6 class="item-title">This Month</h6>
-                    </div>
-                </div>
-                <div class="social-like">{{ this_month_count }}</div>
-            </div>
-        </div>
-    </div>
-</div>
-
-            <!-- Filters -->
+            <!-- Stats Row -->
             <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <h4>Filter Promotions</h4>
-                            </div>
-                            <form method="GET" class="filter-form">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Class</label>
-                                            <select name="class" class="form-control">
-                                                <option value="">All Classes</option>
-                                                {% for class in classes %}
-                                                <option value="{{ class.id }}" {% if request.GET.class == class.id|stringformat:"i" %}selected{% endif %}>
-                                                    {{ class.name }}
-                                                </option>
-                                                {% endfor %}
-                                            </select>
+                <div class="col-xl-3 col-sm-6 mb-4">
+                    <div class="stat-card blue">
+                        <div class="stat-icon blue"><i class="fas fa-history"></i></div>
+                        <div class="stat-value">{{ total_promotions_count }}</div>
+                        <div class="stat-label">Total Promotions</div>
+                        {% if filtered_count != total_promotions_count %}
+                        <small class="text-muted">({{ filtered_count }} shown)</small>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 mb-4">
+                    <div class="stat-card green">
+                        <div class="stat-icon green"><i class="fas fa-user-graduate"></i></div>
+                        <div class="stat-value">{{ unique_students_count }}</div>
+                        <div class="stat-label">Students Promoted</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 mb-4">
+                    <div class="stat-card orange">
+                        <div class="stat-icon orange"><i class="fas fa-chalkboard"></i></div>
+                        <div class="stat-value">{{ classes_count }}</div>
+                        <div class="stat-label">Classes Involved</div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 mb-4">
+                    <div class="stat-card teal">
+                        <div class="stat-icon teal"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-value">{{ this_month_count }}</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Card -->
+            <div class="filter-card">
+                <h5><i class="fas fa-filter text-primary mr-2"></i>Filter Records</h5>
+                <form method="GET" id="filterForm">
+                    <div class="row">
+                        <div class="col-md-2 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase"
+                                style="letter-spacing:.5px;">Class</label>
+                            <select name="class" class="form-control rounded-lg">
+                                <option value="">All Classes</option>
+                                {% for class in classes %}
+                                <option value="{{ class.id }}" {% if request.GET.class==class.id|stringformat:"i" %}selected{% endif %}>{{ class.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase"
+                                style="letter-spacing:.5px;">Student</label>
+                            <input type="text" name="student" class="form-control rounded-lg"
+                                placeholder="Name or ID..." value="{{ request.GET.student }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase"
+                                style="letter-spacing:.5px;">Date</label>
+                            <input type="date" name="date" class="form-control rounded-lg"
+                                value="{{ request.GET.date }}">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="small text-muted font-weight-bold text-uppercase"
+                                style="letter-spacing:.5px;">Type</label>
+                            <select name="promotion_type" class="form-control rounded-lg">
+                                <option value="">All Types</option>
+                                {% for val, label in promotion_type_choices %}
+                                <option value="{{ val }}" {% if request.GET.promotion_type==val %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 mr-2">
+                                <i class="fas fa-search mr-1"></i>Search
+                            </button>
+                            <a href="{% url 'promotion_history' %}"
+                                class="btn btn-outline-secondary rounded-pill px-4 mr-2">
+                                <i class="fas fa-redo mr-1"></i>Reset
+                            </a>
+                            <button type="button" class="btn btn-outline-success rounded-pill px-4" id="btnExportCsv">
+                                <i class="fas fa-download mr-1"></i>CSV
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- History Table -->
+            <div class="history-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-1">Promotion Log</h4>
+                        <p class="text-muted small mb-0">{{ filtered_count }} record{% if filtered_count != 1 %}s{% endif %} found</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table modern-table" id="promotionTable">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Student</th>
+                                <th>Transition</th>
+                                <th>Academic Year</th>
+                                <th>Type</th>
+                                <th>Promoted By</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for promotion in promotions %}
+                            <tr class="{% if promotion.is_reverted %}reverted-row{% endif %}">
+                                <td>
+                                    <div class="font-weight-bold text-dark" style="font-size:13px;">{{ promotion.promotion_date|date:"M d, Y" }}</div>
+                                    <div class="text-muted" style="font-size:11px;">{{ promotion.promotion_date|date:"h:i A" }}</div>
+                                </td>
+                                <td>
+                                    <div class="student-cell">
+                                        <div class="student-avatar-sm">
+                                            {% if promotion.student.photo %}
+                                            <img src="{{ promotion.student.photo.url }}"
+                                                alt="{{ promotion.student.get_full_name }}">
+                                            {% else %}
+                                            {{ promotion.student.first_name|first }}{{ promotion.student.last_name|first }}
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="student-name">
+                                                {{ promotion.student.get_full_name }}
+                                                {% if promotion.is_reverted %}<span
+                                                    class="reverted-tag">Reverted</span>{% endif %}
+                                            </div>
+                                            <div class="student-id">{{ promotion.student.student_id }}</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Student</label>
-                                            <input type="text" name="student" class="form-control" placeholder="Search student..." value="{{ request.GET.student }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>Date</label>
-                                            <input type="date" name="date" class="form-control" value="{{ request.GET.date }}">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="form-group">
-                                            <label>&nbsp;</label>
-                                            <div class="btn-group w-100">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="fas fa-filter"></i> Filter
-                                                </button>
-                                                <a href="{% url 'promotion_history' %}" class="btn btn-secondary">
-                                                    <i class="fas fa-redo"></i> Reset
-                                                </a>
+                                </td>
+                                <td>
+                                    <div class="class-transition-container">
+                                        <div class="class-transition">
+                                            <div class="class-node from">
+                                                <span class="node-label">From</span>
+                                                <span class="node-value">{{ promotion.from_class.name }}</span>
+                                            </div>
+                                            <div class="transition-arrow">
+                                                <i class="fas fa-arrow-right"></i>
+                                            </div>
+                                            <div class="class-node to">
+                                                <span class="node-label">To</span>
+                                                <span class="node-value">{{ promotion.to_class.name }}</span>
                                             </div>
                                         </div>
+                                        {% if promotion.from_section or promotion.to_section %}
+                                        <div class="section-transition">
+                                            {{ promotion.from_section.name|default:"—" }} &rarr; {{ promotion.to_section.name|default:"—" }}
+                                        </div>
+                                        {% endif %}
                                     </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+                                </td>
+                                <td>
+                                    <span class="year-badge">{{ promotion.academic_year.name }}</span>
+                                </td>
+                                <td>
+                                    {% if promotion.promotion_type == 'manual' %}
+                                    <span class="type-badge manual"><i class="fas fa-sliders-h"></i>Manual</span>
+                                    {% elif promotion.promotion_type == 'reversion' %}
+                                    <span class="type-badge reversion"><i class="fas fa-undo"></i>Reversion</span>
+                                    {% else %}
+                                    <span class="type-badge auto"><i class="fas fa-magic"></i>Smart Auto</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="promoter-name">{{ promotion.promoted_by.get_full_name|default:promotion.promoted_by.username }}
+                                    </div>
+                                    <div class="promoter-email">{{ promotion.promoted_by.email }}</div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="action-btn view view-promotion"
+                                            data-promotion-id="{{ promotion.id }}" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        {% if not promotion.is_reverted and promotion.promotion_type != 'reversion' %}
+                                        <button class="action-btn revert revert-promotion"
+                                            data-promotion-id="{{ promotion.id }}"
+                                            data-student="{{ promotion.student.get_full_name }}"
+                                            data-from="{{ promotion.to_class.name }}"
+                                            data-to="{{ promotion.from_class.name }}" title="Revert Promotion">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <div class="empty-icon"><i class="fas fa-history"></i></div>
+                                        <h4>No Promotions Found</h4>
+                                        <p>No promotion records match your current filters.</p>
+                                        <a href="{% url 'student_promotion' %}"
+                                            class="btn btn-primary rounded-pill px-5">
+                                            <i class="fas fa-graduation-cap mr-2"></i>Promote Students
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-            </div>
 
-            <!-- Promotion History Table -->
-            <div class="row">
-                <div class="col-12">
-                    <div class="card height-auto">
-                        <div class="card-body">
-                            <div class="heading-layout1">
-                                <div class="item-title">
-                                    <h3>Promotion History</h3>
-                                </div>
-                                <div class="dropdown">
-                                    <a class="dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                                        <i class="fas fa-ellipsis-v"></i>
-                                    </a>
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        <a class="dropdown-item" href="{% url 'student_promotion' %}">
-                                            <i class="fas fa-graduation-cap"></i> New Promotion
-                                        </a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item" href="#" id="exportPromotions">
-                                            <i class="fas fa-download"></i> Export Data
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table display data-table text-nowrap" id="promotionTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Student</th>
-                                            <th>From Class</th>
-                                            <th>To Class</th>
-                                            <th>Academic Year</th>
-                                            <th>Promoted By</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for promotion in promotions %}
-                                        <tr>
-                                            <td>
-                                                <div class="promotion-date">
-                                                    <strong>{{ promotion.promotion_date|date:"M d, Y" }}</strong>
-                                                    <small class="text-muted">{{ promotion.promotion_date|date:"h:i A" }}</small>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="student-info">
-                                                    <div class="student-avatar">
-                                                        {% if promotion.student.photo %}
-                                                        <img src="{{ promotion.student.photo.url }}" alt="{{ promotion.student.get_full_name }}">
-                                                        {% else %}
-                                                        <div class="avatar-placeholder">
-                                                            <i class="fas fa-user-graduate"></i>
-                                                        </div>
-                                                        {% endif %}
-                                                    </div>
-                                                    <div class="student-details">
-                                                        <h6 class="student-name">{{ promotion.student.first_name }} {{ promotion.student.last_name }}</h6>
-                                                        <span class="student-email">{{ promotion.student.student_id }}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="class-info">
-                                                    <span class="badge badge-class">{{ promotion.from_class.name }}</span>
-                                                    {% if promotion.from_section %}
-                                                    <small class="text-muted d-block">{{ promotion.from_section.name }}</small>
-                                                    {% endif %}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="class-info">
-                                                    <span class="badge badge-success">{{ promotion.to_class.name }}</span>
-                                                    {% if promotion.to_section %}
-                                                    <small class="text-muted d-block">{{ promotion.to_section.name }}</small>
-                                                    {% endif %}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge badge-year">{{ promotion.academic_year.name }}</span>
-                                            </td>
-                                            <td>
-                                                <div class="user-info">
-                                                    <span class="user-name">{{ promotion.promoted_by.get_full_name|default:promotion.promoted_by.username }}</span>
-                                                    <small class="text-muted d-block">{{ promotion.promoted_by.email }}</small>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="btn-group btn-group-sm">
-                                                    <button type="button" class="btn btn-info view-promotion" data-toggle="tooltip" title="View Details" data-promotion-id="{{ promotion.id }}">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-warning revert-promotion" data-toggle="tooltip" title="Revert Promotion" data-promotion-id="{{ promotion.id }}">
-                                                        <i class="fas fa-undo"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5">
-                                                <div class="empty-state">
-                                                    <div class="empty-icon">
-                                                        <i class="fas fa-history"></i>
-                                                    </div>
-                                                    <h4>No Promotion History</h4>
-                                                    <p>No promotions have been recorded yet.</p>
-                                                    <a href="{% url 'student_promotion' %}" class="btn btn-primary">
-                                                        <i class="fas fa-graduation-cap"></i> Promote Students
-                                                    </a>
-                                                </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Pagination -->
-                            {% if promotions.has_other_pages %}
-                            <div class="pagination-wrapper mt-4">
-                                <nav aria-label="Page navigation">
-                                    <ul class="pagination justify-content-center">
-                                        {% if promotions.has_previous %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ promotions.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Previous">
-                                                <span aria-hidden="true">&laquo;</span>
-                                            </a>
-                                        </li>
-                                        {% endif %}
-
-                                        {% for num in promotions.paginator.page_range %}
-                                            {% if promotions.number == num %}
-                                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                                            {% else %}
-                                            <li class="page-item">
-                                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
-                                            </li>
-                                            {% endif %}
-                                        {% endfor %}
-
-                                        {% if promotions.has_next %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ promotions.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" aria-label="Next">
-                                                <span aria-hidden="true">&raquo;</span>
-                                            </a>
-                                        </li>
-                                        {% endif %}
-                                    </ul>
-                                </nav>
-                            </div>
+                <!-- Pagination -->
+                {% if promotions.has_other_pages %}
+                <div class="mt-4 d-flex justify-content-center">
+                    <ul class="pagination">
+                        {% if promotions.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?page={{ promotions.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        {% for num in promotions.paginator.page_range %}
+                        {% if promotions.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > promotions.number|add:"-3" and num < promotions.number|add:"3" %} <li
+                            class="page-item">
+                            <a class="page-link"
+                                href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
                             {% endif %}
-                        </div>
-                    </div>
+                            {% endfor %}
+                            {% if promotions.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?page={{ promotions.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                    </ul>
                 </div>
+                {% endif %}
             </div>
+
         </div>
     </div>
 </div>
 
-<!-- Promotion Details Modal -->
-<div class="modal fade" id="promotionDetailsModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+<!-- ── Promotion Details Modal ─────────────────────────── -->
+<div class="modal fade" id="promotionDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Promotion Details</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <h5 class="modal-title"><i class="fas fa-graduation-cap mr-2"></i>Promotion Details</h5>
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
             </div>
             <div class="modal-body" id="promotionDetailsContent">
-                <!-- Details will be loaded here via AJAX -->
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                    <p class="mt-2 text-muted">Loading...</p>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                    data-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ── Revert Confirmation Modal ───────────────────────── -->
+<div class="modal fade" id="revertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
+        <div class="modal-content" style="border-radius:20px;border:none;">
+            <div class="modal-body" style="padding:36px;text-align:center;">
+                <div class="mb-4"
+                    style="width:80px;height:80px;border-radius:50%;background:#fff0e6;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:32px;color:#fb6340;">
+                    <i class="fas fa-undo"></i>
+                </div>
+                <h4 class="font-weight-bold mb-3">Revert Promotion?</h4>
+                <p class="text-muted mb-1">Student: <strong id="revertStudentName"></strong></p>
+                <p class="text-muted mb-4">This will move the student from <strong id="revertFromClass"></strong> back
+                    to <strong id="revertToClass"></strong>.</p>
+                <div class="alert alert-warning text-left small">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>This action will update the student's class and
+                    cannot be undone without another promotion.
+                </div>
+                <div class="d-flex gap-3 mt-4">
+                    <button type="button" class="btn btn-light btn-block rounded-pill py-2"
+                        data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-warning btn-block rounded-pill py-2 font-weight-bold"
+                        id="confirmRevert">
+                        <i class="fas fa-undo mr-1"></i>Revert
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
-$(document).ready(function() {
-    // Initialize tooltips
-    $('[data-toggle="tooltip"]').tooltip();
+    // ── Toast Notification System ──────────────────────────────────────────────
+    const TOAST_ICONS = {
+        success: 'fas fa-check-circle',
+        error: 'fas fa-times-circle',
+        warning: 'fas fa-exclamation-triangle',
+        info: 'fas fa-info-circle',
+    };
+    const TOAST_TITLES = {
+        success: 'Success',
+        error: 'Error',
+        warning: 'Warning',
+        info: 'Info',
+    };
 
-    // View promotion details
-    $('.view-promotion').on('click', function() {
-        const promotionId = $(this).data('promotion-id');
-        
-        // Show loading state
-        $('#promotionDetailsContent').html(`
-            <div class="text-center py-4">
-                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                <p class="mt-2">Loading promotion details...</p>
-            </div>
-        `);
-        
-        $('#promotionDetailsModal').modal('show');
-        
-        // In a real implementation, you would make an AJAX call here
-        // For now, we'll just show a message
-        setTimeout(() => {
-            $('#promotionDetailsContent').html(`
-                <div class="promotion-details">
-                    <p>Promotion details would be loaded here via AJAX.</p>
-                    <p>This would include comprehensive information about the promotion.</p>
-                </div>
-            `);
-        }, 1000);
-    });
+    function showToast(message, type = 'info', duration = 4500) {
+        const stack = document.getElementById('toastStack');
+        const icon = TOAST_ICONS[type] || TOAST_ICONS.info;
+        const title = TOAST_TITLES[type] || 'Notice';
 
-    // Revert promotion
-    $('.revert-promotion').on('click', function() {
-        const promotionId = $(this).data('promotion-id');
-        
-        if (confirm('Are you sure you want to revert this promotion? This action cannot be undone.')) {
-            // Show loading
-            $(this).html('<i class="fas fa-spinner fa-spin"></i>');
-            $(this).prop('disabled', true);
-            
-            // In a real implementation, you would make an AJAX call here
-            setTimeout(() => {
-                alert('Promotion reversion would be implemented here.');
-                location.reload();
-            }, 1000);
-        }
-    });
+        const toast = document.createElement('div');
+        toast.className = `toast-msg ${type}`;
+        toast.innerHTML = `
+        <i class="${icon} toast-icon"></i>
+        <div class="toast-body">
+            <div class="toast-title">${title}</div>
+            <p class="toast-text">${message}</p>
+        </div>
+        <button class="toast-close" onclick="dismissToast(this.closest('.toast-msg'))">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+        stack.appendChild(toast);
 
-    // Export promotions
-    $('#exportPromotions').on('click', function(e) {
-        e.preventDefault();
-        
-        // Get current filters
-        const filters = new URLSearchParams(window.location.search);
-        
-        // Redirect to export URL (you would create this view)
-        window.location.href = '{% url "promotion_history" %}?export=csv&' + filters.toString();
-    });
+        // Auto-dismiss
+        setTimeout(() => dismissToast(toast), duration);
+    }
 
-    // DataTable initialization (if using DataTables)
-    if ($.fn.DataTable) {
-        $('#promotionTable').DataTable({
-            pageLength: 25,
-            order: [[0, 'desc']],
-            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            language: {
-                search: "_INPUT_",
-                searchPlaceholder: "Search promotions...",
-                lengthMenu: "_MENU_"
+    function dismissToast(el) {
+        if (!el || !el.parentNode) return;
+        el.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => el.remove(), 320);
+    }
+
+    // ── Fire Django messages as toasts on page load ────────────────────────────
+    // Format class nodes for better display
+    function formatClassNodes() {
+        $('.class-node .node-value').each(function () {
+            const text = $(this).text().trim();
+            const parts = text.split(' ');
+            if (parts.length === 2 && isNaN(parts[0]) && !isNaN(parts[1])) {
+                // It's like 'Grade 8'
+                $(this).closest('.class-node').find('.node-label').text(parts[0]);
+                $(this).text(parts[1]).css('font-size', '22px');
+            } else if (text.length > 8) {
+                $(this).css('font-size', '12px');
             }
         });
     }
-});
+
+    $(document).ready(function () {
+        formatClassNodes();
+        const djangoMsgs = document.querySelectorAll('#djangoMessages [data-text]');
+        djangoMsgs.forEach((el, i) => {
+            const rawType = el.dataset.type || 'info';
+            // Django tags: 'error'/'danger'/'success'/'warning'/'info'
+            const type = rawType === 'danger' ? 'error' : rawType;
+            setTimeout(() => showToast(el.dataset.text, type), i * 300);
+        });
+
+        // ── Initialize tooltips ────────────────────────────────────────────────
+        $('[title]').tooltip({ trigger: 'hover', placement: 'top' });
+
+        // ── Export CSV ────────────────────────────────────────────────────────
+        $('#btnExportCsv').on('click', function () {
+            const params = new URLSearchParams(window.location.search);
+            params.set('export', 'csv');
+            showToast('Preparing CSV export…', 'info');
+            window.location.href = '{% url "promotion_history" %}?' + params.toString();
+        });
+
+        // ── View promotion details ────────────────────────────────────────────
+        $(document).on('click', '.view-promotion', function () {
+            const id = $(this).data('promotion-id');
+            $('#promotionDetailsContent').html(`
+            <div class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                <p class="mt-3 text-muted">Loading details…</p>
+            </div>
+        `);
+            $('#promotionDetailsModal').modal('show');
+
+            $.ajax({
+                url: '{% url "get_promotion_details" %}',
+                type: 'GET',
+                data: { promotion_id: id },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) {
+                    if (res.success) {
+                        const p = res.promotion;
+                        const s = res.promotion.student;
+                        $('#promotionDetailsContent').html(`
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted text-uppercase small font-weight-bold mb-3">Promotion Info</h6>
+                                <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${p.date}</span></div>
+                                <div class="detail-row"><span class="detail-label">Type</span><span class="detail-value">${p.promotion_type}</span></div>
+                                <div class="detail-row"><span class="detail-label">Academic Year</span><span class="detail-value">${p.academic_year}</span></div>
+                                <div class="detail-row"><span class="detail-label">Promoted By</span><span class="detail-value">${p.promoted_by.full_name}</span></div>
+                                <div class="detail-row"><span class="detail-label">Transition</span><span class="detail-value">${p.from_class} → ${p.to_class}</span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted text-uppercase small font-weight-bold mb-3">Student Info</h6>
+                                <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${s.name}</span></div>
+                                <div class="detail-row"><span class="detail-label">Student ID</span><span class="detail-value">${s.student_id}</span></div>
+                                <div class="detail-row"><span class="detail-label">Current Class</span><span class="detail-value">${s.current_class}</span></div>
+                                ${s.email !== 'N/A' ? `<div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${s.email}</span></div>` : ''}
+                                <div class="detail-row"><span class="detail-label">Total Promotions</span><span class="detail-value">${res.student_promotion_count}</span></div>
+                            </div>
+                        </div>
+                        ${p.notes && p.notes !== 'No additional notes' ? `<div class="alert alert-info mt-3 small"><i class="fas fa-sticky-note mr-2"></i>${p.notes}</div>` : ''}
+                    `);
+                    } else {
+                        showToast('Could not load promotion details.', 'error');
+                        $('#promotionDetailsModal').modal('hide');
+                    }
+                },
+                error: function () {
+                    showToast('Network error loading promotion details.', 'error');
+                    $('#promotionDetailsModal').modal('hide');
+                }
+            });
+        });
+
+        // ── Revert promotion ──────────────────────────────────────────────────
+        let pendingRevertId = null;
+
+        $(document).on('click', '.revert-promotion', function () {
+            pendingRevertId = $(this).data('promotion-id');
+            $('#revertStudentName').text($(this).data('student'));
+            $('#revertFromClass').text($(this).data('from'));
+            $('#revertToClass').text($(this).data('to'));
+            $('#revertModal').modal('show');
+        });
+
+        $('#confirmRevert').on('click', function () {
+            if (!pendingRevertId) return;
+            const btn = $(this);
+            btn.html('<i class="fas fa-spinner fa-spin mr-1"></i>Reverting…').prop('disabled', true);
+
+            $.ajax({
+                url: '{% url "revert_promotion" %}',
+                type: 'POST',
+                data: {
+                    promotion_id: pendingRevertId,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function (res) {
+                    $('#revertModal').modal('hide');
+                    btn.html('<i class="fas fa-undo mr-1"></i>Revert').prop('disabled', false);
+                    if (res.success) {
+                        showToast(res.message || 'Promotion reverted successfully.', 'success');
+                        setTimeout(() => location.reload(), 1800);
+                    } else {
+                        showToast(res.error || 'Could not revert this promotion.', 'error');
+                    }
+                },
+                error: function (xhr) {
+                    $('#revertModal').modal('hide');
+                    btn.html('<i class="fas fa-undo mr-1"></i>Revert').prop('disabled', false);
+                    const msg = xhr.responseJSON?.error || 'An error occurred. Please try again.';
+                    showToast(msg, 'error');
+                }
+            });
+        });
+
+        // Show toast if arriving from a promotion success redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('promoted')) {
+            const count = urlParams.get('count') || '';
+            showToast(`${count ? count + ' student(s)' : 'Students'} promoted successfully!`, 'success');
+            // Clean up the URL
+            urlParams.delete('promoted');
+            urlParams.delete('count');
+            const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+            history.replaceState({}, '', newUrl);
+        }
+    });
 </script>
-
-<style>
-.promotion-date {
-    text-align: center;
-}
-
-.promotion-date strong {
-    display: block;
-    font-size: 14px;
-}
-
-.promotion-date small {
-    font-size: 12px;
-}
-
-.student-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.student-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.student-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.avatar-placeholder {
-    width: 100%;
-    height: 100%;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #6c757d;
-    font-size: 16px;
-}
-
-.student-details h6 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.student-email {
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.class-info {
-    text-align: center;
-}
-
-.user-info {
-    text-align: center;
-}
-
-.user-name {
-    font-weight: 500;
-}
-
-.badge-class {
-    background-color: rgba(67, 97, 238, 0.1);
-    color: #4361ee;
-    border: 1px solid #4361ee;
-}
-
-.badge-success {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
-    border: 1px solid #28a745;
-}
-
-.badge-year {
-    background-color: rgba(243, 156, 18, 0.1);
-    color: #f39c12;
-    border: 1px solid #f39c12;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 40px 20px;
-}
-
-.empty-icon {
-    font-size: 60px;
-    color: #bdc3c7;
-    margin-bottom: 20px;
-}
-
-.empty-state h4 {
-    color: #2c3e50;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.empty-state p {
-    color: #6c757d;
-    margin-bottom: 20px;
-}
-
-.filter-form .form-group {
-    margin-bottom: 0;
-}
-
-.pagination-wrapper .pagination {
-    margin-bottom: 0;
-}
-
-@media (max-width: 768px) {
-    .student-info {
-        flex-direction: column;
-        text-align: center;
-        gap: 5px;
-    }
-    
-    .class-info, .user-info {
-        text-align: left;
-    }
-    
-    .btn-group-sm .btn {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
-}
-</style>
 {% endblock %}

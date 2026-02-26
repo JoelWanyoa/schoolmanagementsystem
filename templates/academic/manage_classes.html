@@ -1,0 +1,951 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Class Management{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+
+    .empty-state i {
+        opacity: 0.5;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 5px 10px;
+    }
+
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+
+    .stats-icon.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .stats-icon.success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .stats-icon.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    .stats-icon.info { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+
+    .stats-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #333;
+        line-height: 1.2;
+    }
+
+    .stats-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #4b5563;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .filter-label i {
+        color: #667eea;
+        margin-right: 5px;
+    }
+
+    .filter-chip {
+        padding: 6px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid #e5e7eb;
+        background: white;
+        color: #6b7280;
+        display: inline-block;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    .filter-chip:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .filter-chip.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+    }
+
+    .class-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        border: 1px solid #e5e7eb;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .class-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+
+    .class-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .class-title h3 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 5px;
+    }
+
+    .class-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .badge-primary {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .badge-purple {
+        background: #f5f3ff;
+        color: #7c3aed;
+    }
+
+    .teacher-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .teacher-avatar-placeholder {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        border: 2px solid white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .class-stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        padding: 15px 0;
+        border-top: 1px solid #f0f1f3;
+        border-bottom: 1px solid #f0f1f3;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #333;
+        display: block;
+    }
+
+    .stat-text {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .progress-container {
+        margin: 15px 0;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .progress {
+        height: 8px;
+        border-radius: 10px;
+        background: #f0f1f3;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        height: 100%;
+        border-radius: 10px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s ease;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    .btn-action {
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .btn-view {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+
+    .btn-view:hover {
+        background: #4f46e5;
+        color: white;
+    }
+
+    .btn-edit {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .btn-edit:hover {
+        background: #e5e7eb;
+    }
+
+    .btn-delete {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+
+    .btn-delete:hover {
+        background: #dc2626;
+        color: white;
+    }
+
+    .fab-button {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 1000;
+        border: none;
+    }
+
+    .fab-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+    }
+
+    .fab-menu {
+        position: absolute;
+        bottom: 80px;
+        right: 0;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        padding: 10px;
+        min-width: 200px;
+        display: none;
+        border: 1px solid #e5e7eb;
+    }
+
+    .fab-menu.show {
+        display: block;
+        animation: slideUp 0.3s ease;
+    }
+
+    .fab-menu-item {
+        padding: 10px 15px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #333;
+        transition: all 0.2s;
+    }
+
+    .fab-menu-item:hover {
+        background: #f9fafb;
+        text-decoration: none;
+        color: #667eea;
+    }
+
+    .fab-menu-item i {
+        width: 20px;
+        color: #667eea;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Modal Styles */
+    .modal-content-luxe {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .modal-header-luxe {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+    }
+
+    .modal-title-luxe {
+        font-weight: 700;
+    }
+
+    .modal-header-luxe .close {
+        color: white;
+        opacity: 1;
+    }
+
+    .border-dashed {
+        border: 2px dashed #e5e7eb;
+        border-radius: 10px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .border-dashed:hover {
+        border-color: #667eea;
+        background: #f9fafb;
+    }
+
+    /* Pagination */
+    .pagination {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .page-link {
+        color: #667eea;
+        border: 1px solid #e5e7eb;
+        padding: 8px 15px;
+    }
+
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: transparent;
+        color: white;
+    }
+
+    .page-item.disabled .page-link {
+        color: #9ca3af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcubs Area Start Here -->
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumbs-area">
+                <h3>Class Management</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'dashboard' %}">Home</a>
+                    </li>
+                    <li>
+                        <a href="#">Academic</a>
+                    </li>
+                    <li>Classes</li>
+                </ul>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="row mb-4">
+                <div class="col-12 text-right">
+                    <button class="btn btn-fill-lg btn-gradient-yellow mr-2" onclick="showFilterModal()">
+                        <i class="fas fa-sliders-h mr-2"></i>Advanced Filters
+                    </button>
+                    <div class="btn-group">
+                        <a href="{% url 'add_class' %}" class="btn btn-info p-3 btn-gradient-dark">
+                            <i class="fas fa-plus mr-2"></i>Add New Class
+                        </a>&nbsp;
+                        <button type="button" class="btn btn-secondary p-2 dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="sr-only">Toggle Dropdown</span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="#"><i class="fas fa-layer-group text-info mr-2"></i>Add Section</a>
+                            <a class="dropdown-item" href="#"><i class="fas fa-book text-success mr-2"></i>Add Subject</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success/Error Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% else %}exclamation-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon primary">
+                            <i class="fas fa-school text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ total_classes|default:"0" }}</div>
+                            <div class="stats-label">Total Classes</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon success">
+                            <i class="fas fa-user-graduate text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ total_students|default:"0" }}</div>
+                            <div class="stats-label">Total Students</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon warning">
+                            <i class="fas fa-book-open text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ total_subjects|default:"0" }}</div>
+                            <div class="stats-label">Active Subjects</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-lg-6 col-12">
+                    <div class="stats-card d-flex align-items-center">
+                        <div class="stats-icon info">
+                            <i class="fas fa-chalkboard-teacher text-white"></i>
+                        </div>
+                        <div>
+                            <div class="stats-value">{{ total_teachers|default:"0" }}</div>
+                            <div class="stats-label">Staff Members</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filter Section -->
+            <div class="filter-card">
+                <div class="heading-layout1">
+                    <div class="item-title">
+                        <h3>Search & Filters</h3>
+                    </div>
+                </div>
+
+                <form method="GET" class="row">
+                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                        <label class="filter-label"><i class="fas fa-search"></i>Search</label>
+                        <input type="text" name="search" class="form-control" placeholder="Class name, teacher..." value="{{ request.GET.search }}">
+                    </div>
+                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                        <label class="filter-label"><i class="fas fa-layer-group"></i>Level Category</label>
+                        <select name="level" class="form-control">
+                            <option value="">All Levels</option>
+                            <option value="ECDE" {% if request.GET.level == 'ECDE' %}selected{% endif %}>ECDE</option>
+                            <option value="PRIMARY" {% if request.GET.level == 'PRIMARY' %}selected{% endif %}>Primary School</option>
+                            <option value="JUNIOR_SECONDARY" {% if request.GET.level == 'JUNIOR_SECONDARY' %}selected{% endif %}>Junior Secondary</option>
+                            <option value="SENIOR_SECONDARY" {% if request.GET.level == 'SENIOR_SECONDARY' %}selected{% endif %}>Senior Secondary</option>
+                        </select>
+                    </div>
+                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group">
+                        <label class="filter-label"><i class="fas fa-filter"></i>Quick Filters</label>
+                        <div>
+                            <span class="filter-chip {% if not request.GET.filter %}active{% endif %}" onclick="setFilter('all')">All</span>
+                            <span class="filter-chip" onclick="setFilter('full')">Full</span>
+                            <span class="filter-chip" onclick="setFilter('no-teacher')">No Mentor</span>
+                        </div>
+                    </div>
+                    <div class="col-3-xxxl col-xl-3 col-lg-3 col-12 form-group d-flex align-items-end">
+                        <button type="submit" class="fw-btn-fill btn-gradient-yellow btn-block">
+                            <i class="fas fa-filter mr-2"></i>Apply Filters
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Classes Grid -->
+            <div id="classesContainer">
+                {% if classes %}
+                <div class="row">
+                    {% for class in classes %}
+                    <div class="col-xl-4 col-lg-6 col-12 mb-4">
+                        <div class="class-card">
+                            <div class="class-header">
+                                <div class="class-title">
+                                    <div class="mb-2">
+                                        <span class="class-badge badge-primary mr-1">Grade {{ class.grade_level }}</span>
+                                        <span class="class-badge badge-purple">{{ class.get_level_category_display }}</span>
+                                    </div>
+                                    <h3>{{ class.name }}</h3>
+                                </div>
+                                <div>
+                                    {% if class.class_teacher %}
+                                        {% if class.class_teacher.photo %}
+                                        <img src="{{ class.class_teacher.photo.url }}" class="teacher-avatar" alt="{{ class.class_teacher.full_name }}" data-toggle="tooltip" title="Class Teacher: {{ class.class_teacher.full_name }}">
+                                        {% else %}
+                                        <div class="teacher-avatar-placeholder" data-toggle="tooltip" title="Class Teacher: {{ class.class_teacher.full_name }}">
+                                            {{ class.class_teacher.first_name|first }}{{ class.class_teacher.last_name|first }}
+                                        </div>
+                                        {% endif %}
+                                    {% else %}
+                                    <div class="teacher-avatar-placeholder" style="background: #e5e7eb; color: #6b7280;" data-toggle="tooltip" title="No class teacher assigned">
+                                        <i class="fas fa-user-slash"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="class-stats">
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ class.sections.count }}</span>
+                                    <span class="stat-text">Sections</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ class.subjects.count }}</span>
+                                    <span class="stat-text">Subjects</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-number">{{ class.students.count }}</span>
+                                    <span class="stat-text">Students</span>
+                                </div>
+                            </div>
+
+                            <div class="progress-container">
+                                <div class="progress-info">
+                                    <span>Capacity</span>
+                                    <span>{% widthratio class.students.count class.capacity 100 %}%</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: {% widthratio class.students.count class.capacity 100 %}%"></div>
+                                </div>
+                            </div>
+
+                            <div class="action-buttons">
+                                <a href="#" class="btn-action btn-view" onclick="viewClass('{{ class.id }}')">
+                                    <i class="fas fa-eye"></i>Details
+                                </a>
+                                <a href="{% url 'edit_class' class.id %}" class="btn-action btn-edit">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button class="btn-action btn-delete" onclick="deleteClass('{{ class.id }}', '{{ class.name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                <div class="row mg-t-30">
+                    <div class="col-12 d-flex justify-content-center">
+                        <nav>
+                            <ul class="pagination">
+                                {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.level %}&level={{ request.GET.level }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-school fa-4x text-muted mb-3"></i>
+                    <h4>No Classes Found</h4>
+                    <p class="text-muted mb-4">
+                        {% if request.GET.search %}
+                        No classes found matching your search criteria "{{ request.GET.search }}".
+                        {% else %}
+                        There are no classes in the system yet.
+                        {% endif %}
+                    </p>
+                    <a href="{% url 'add_class' %}" class="btn-fill-lg btn-gradient-yellow">
+                        <i class="fas fa-plus mr-2"></i>Add Your First Class
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Action Button -->
+<div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+    <div class="fab-menu" id="fabMenu">
+        <a href="{% url 'add_class' %}" class="fab-menu-item">
+            <i class="fas fa-chalkboard"></i>
+            <span>Create New Class</span>
+        </a>
+        <a href="{% url 'manage_subjects' %}" class="fab-menu-item">
+            <i class="fas fa-book"></i>
+            <span>Manage Subjects</span>
+        </a>
+        <div class="dropdown-divider"></div>
+        <a href="#" class="fab-menu-item" onclick="showImportModal()">
+            <i class="fas fa-file-import"></i>
+            <span>Import Classes</span>
+        </a>
+    </div>
+    <button class="fab-button" onclick="toggleFabMenu()">
+        <i class="fas fa-plus"></i>
+    </button>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-luxe">
+            <div class="modal-header modal-header-luxe">
+                <h5 class="modal-title modal-title-luxe"><i class="fas fa-sliders-h mr-2"></i>Advanced Filters</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="advancedFilterForm">
+                    <div class="form-group mb-4">
+                        <label class="filter-label"><i class="fas fa-percentage"></i>Capacity Range</label>
+                        <input type="range" class="custom-range" min="0" max="100" id="capacityRange" onchange="updateRangeVal(this.value)">
+                        <div class="text-right mt-2">
+                            <span class="badge badge-primary" id="capacityValue">50%</span>
+                        </div>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="filter-label"><i class="fas fa-user-tie"></i>Class Teacher Status</label>
+                        <select class="form-control" id="teacherStatus">
+                            <option value="">All</option>
+                            <option value="assigned">Teacher Assigned</option>
+                            <option value="unassigned">No Teacher Assigned</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-4">
+                        <label class="filter-label"><i class="fas fa-sort-amount-down"></i>Sort By</label>
+                        <select class="form-control" id="sortBy">
+                            <option value="name">Name (A-Z)</option>
+                            <option value="-name">Name (Z-A)</option>
+                            <option value="students">Students (Low to High)</option>
+                            <option value="-students">Students (High to Low)</option>
+                            <option value="capacity">Capacity Utilization</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0 p-4">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="applyAdvancedFilters()">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content modal-content-luxe">
+            <div class="modal-header modal-header-luxe">
+                <h5 class="modal-title modal-title-luxe"><i class="fas fa-file-import mr-2"></i>Import Classes</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-4">
+                    <i class="fas fa-file-csv fa-4x text-muted mb-3"></i>
+                    <p class="font-weight-bold">Upload CSV File</p>
+                    <p class="text-muted small">The file should contain class names, grade levels, and capacities.</p>
+                </div>
+                <div class="border-dashed text-center mb-3" id="dropZone" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                    <p class="mb-2">Drag and drop your file here or</p>
+                    <input type="file" id="fileInput" class="d-none" accept=".csv" onchange="handleFileSelect()">
+                    <button type="button" class="btn btn-sm btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open mr-2"></i>Browse Files
+                    </button>
+                </div>
+                <a href="#" class="text-primary small"><i class="fas fa-download mr-1"></i>Download Template</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Data Table Js -->
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        // Initialize tooltips
+        $('[data-toggle="tooltip"]').tooltip();
+
+        // Close FAB menu when clicking outside
+        $(document).on('click', function(event) {
+            if (!$(event.target).closest('.fab-button, .fab-menu').length) {
+                $('#fabMenu').removeClass('show');
+            }
+        });
+    });
+
+    // FAB Menu toggle
+    function toggleFabMenu() {
+        $('#fabMenu').toggleClass('show');
+    }
+
+    // Search with debounce
+    let searchTimeout;
+    function searchClasses(query) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const url = new URL(window.location);
+            url.searchParams.set('search', query);
+            window.location.href = url.toString();
+        }, 500);
+    }
+
+    // Filter chips
+    function setFilter(filterType) {
+        const url = new URL(window.location);
+        if (filterType === 'all') {
+            url.searchParams.delete('filter');
+        } else {
+            url.searchParams.set('filter', filterType);
+        }
+        window.location.href = url.toString();
+    }
+
+    // Update active filter chip based on URL
+    $(document).ready(function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentFilter = urlParams.get('filter');
+        
+        $('.filter-chip').removeClass('active');
+        if (currentFilter) {
+            $(`.filter-chip[onclick="setFilter('${currentFilter}')"]`).addClass('active');
+        } else {
+            $('.filter-chip[onclick="setFilter(\'all\')"]').addClass('active');
+        }
+    });
+
+    // Modal functions
+    function showFilterModal() {
+        $('#filterModal').modal('show');
+    }
+
+    function showImportModal() {
+        $('#importModal').modal('show');
+    }
+
+    // Range slider
+    function updateRangeVal(val) {
+        $('#capacityValue').text(val + '%');
+    }
+
+    function applyAdvancedFilters() {
+        const capacity = $('#capacityRange').val();
+        const teacherStatus = $('#teacherStatus').val();
+        const sortBy = $('#sortBy').val();
+        
+        // Build URL with filter parameters
+        const url = new URL(window.location);
+        if (capacity !== '50') url.searchParams.set('capacity', capacity);
+        if (teacherStatus) url.searchParams.set('teacher_status', teacherStatus);
+        if (sortBy) url.searchParams.set('sort', sortBy);
+        
+        window.location.href = url.toString();
+    }
+
+    // Class actions
+    function deleteClass(classId, className) {
+        if (confirm(`Are you sure you want to delete class "${className}"? This action cannot be undone.`)) {
+            window.location.href = `/dashboard/academic/classes/${classId}/delete/`;
+        }
+    }
+
+    // File handling for import
+    function handleDrop(event) {
+        event.preventDefault();
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            uploadFile(files[0]);
+        }
+    }
+
+    function handleFileSelect() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length > 0) {
+            uploadFile(fileInput.files[0]);
+        }
+    }
+
+    // Class actions
+    function viewClass(classId) {
+        window.location.href = `/dashboard/academic/classes/${classId}/`;
+    }
+
+    function uploadFile(file) {
+        if (file.type !== 'text/csv') {
+            alert('Please upload a CSV file');
+            return;
+        }
+
+        // Show uploading state
+        const dropZone = document.getElementById('dropZone');
+        const originalContent = dropZone.innerHTML;
+        dropZone.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x text-muted mb-3"></i><p>Uploading...</p>';
+
+        // Simulate upload (replace with actual AJAX call)
+        setTimeout(() => {
+            $('#importModal').modal('hide');
+            showToast('File uploaded successfully!', 'success');
+            dropZone.innerHTML = originalContent;
+        }, 1500);
+    }
+
+    // Toast notification
+    function showToast(message, type = 'info') {
+        const toast = $(`
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
+                ${message}
+                <button type="button" class="close" data-dismiss="alert">
+                    <span>&times;</span>
+                </button>
+            </div>
+        `);
+        
+        $('body').append(toast);
+        
+        setTimeout(() => {
+            toast.alert('close');
+        }, 3000);
+    }
+</script>
+{% endblock %}

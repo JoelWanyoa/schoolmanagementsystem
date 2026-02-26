@@ -8,6 +8,10 @@
     .fee-status-paid { color: #28a745; font-weight: bold; }
     .fee-status-unpaid { color: #dc3545; font-weight: bold; }
     .fee-amount { font-weight: bold; }
+    .reminder-overdue { background-color: #f8d7da; border-left: 4px solid #dc3545; }
+    .reminder-upcoming { background-color: #fff3cd; border-left: 4px solid #ffc107; }
+    .reminder-card { transition: transform 0.2s; }
+    .reminder-card:hover { transform: translateY(-2px); }
 </style>
 {% endblock %}
 
@@ -74,6 +78,104 @@
             </div>
         </div>
 
+        <!-- Sent Reminders Section -->
+        {% if sent_reminders %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card reminder-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell"></i>
+                            Sent Fee Reminders
+                            <span class="badge badge-light float-right">{{ sent_reminders.count }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Fee Type</th>
+                                        <th>Sent Via</th>
+                                        <th>Sent Date</th>
+                                        <th>Status</th>
+                                        <th>Notes</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reminder in sent_reminders %}
+                                    <tr class="{% if reminder.status == 'sent' %}table-primary{% endif %}">
+                                        <td>
+                                            <strong>{{ reminder.student_name }}</strong>
+                                            {% if reminder.fee.student %}
+                                            <br>
+                                            <small class="text-muted">
+                                                <a href="{% url 'student_details' reminder.fee.student.student_id %}">
+                                                    View Student
+                                                </a>
+                                            </small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ reminder.fee_type }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if reminder.sent_via == 'email' %}badge-warning
+                                                {% elif reminder.sent_via == 'sms' %}badge-info
+                                                {% elif reminder.sent_via == 'both' %}badge-primary
+                                                {% else %}badge-secondary{% endif %}">
+                                                {{ reminder.get_sent_via_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                {{ reminder.sent_date|date:"d.m.Y" }}<br>
+                                                <span class="text-muted">{{ reminder.sent_date|date:"H:i" }}</span>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if reminder.status == 'sent' %}badge-success
+                                                {% elif reminder.status == 'failed' %}badge-danger
+                                                {% else %}badge-warning{% endif %}">
+                                                {{ reminder.status|title }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if reminder.notes %}
+                                            <small class="text-muted" title="{{ reminder.notes }}">
+                                                {{ reminder.notes|truncatewords:5 }}
+                                            </small>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'fee_detail' reminder.fee.id %}" 
+                                                   class="btn btn-info" title="View Fee">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if reminder.fee.status == 'unpaid' and request.user.is_staff %}
+                                                <a href="{% url 'mark_paid' reminder.fee.id %}" 
+                                                   class="btn btn-success" title="Mark as Paid">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="card height-auto">
             <div class="card-body">
                 <!-- Filters -->
@@ -85,7 +187,17 @@
                             <button type="submit" class="btn btn-primary ml-2">Search</button>
                         </form>
                     </div>
-                    <div class="col-md-8 text-right">
+                    <div class="col-md-4">
+                        <select name="child" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Children</option>
+                            {% for child in children %}
+                            <option value="{{ child.id }}" {% if child_filter == child.id|stringformat:"i" %}selected{% endif %}>
+                                {{ child.full_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 text-right">
                         <div class="btn-group">
                             <a href="?status=paid" class="btn btn-outline-success {% if status_filter == 'paid' %}active{% endif %}">
                                 Paid
@@ -151,7 +263,7 @@
                                     <a href="{% url 'fee_detail' fee.id %}" class="btn btn-sm btn-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    {% if fee.status == 'unpaid' %}
+                                    {% if fee.status == 'unpaid' and request.user.is_staff %}
                                         <a href="{% url 'mark_paid' fee.id %}" class="btn btn-sm btn-success">
                                             <i class="fas fa-check"></i>
                                         </a>
@@ -177,7 +289,7 @@
                         <ul class="pagination">
                             {% if fees.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ fees.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                <a class="page-link" href="?page={{ fees.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if child_filter %}&child={{ child_filter }}{% endif %}">
                                     Previous
                                 </a>
                             </li>
@@ -185,7 +297,7 @@
                             
                             {% for i in fees.paginator.page_range %}
                             <li class="page-item {% if fees.number == i %}active{% endif %}">
-                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                <a class="page-link" href="?page={{ i }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if child_filter %}&child={{ child_filter }}{% endif %}">
                                     {{ i }}
                                 </a>
                             </li>
@@ -193,7 +305,7 @@
                             
                             {% if fees.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ fees.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                <a class="page-link" href="?page={{ fees.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if child_filter %}&child={{ child_filter }}{% endif %}">
                                     Next
                                 </a>
                             </li>

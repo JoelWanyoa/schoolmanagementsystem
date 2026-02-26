@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Petra Education Centre | Fee Status{% endblock %}
+
+{% block extra_css %}
+<!-- Data Table CSS -->
+<link rel="stylesheet" href="{% static 'css/jquery.dataTables.min.css' %}">
+<style>
+    .summary-card {
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .bg-light-indigo {
+        background-color: rgba(99, 102, 241, 0.1);
+        color: #6366f1;
+    }
+
+    .bg-light-success {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .bg-light-danger {
+        background-color: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .status-badge-luxe {
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+    }
+
+    .badge-paid {
+        background: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-unpaid {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-partial {
+        background: #fef9c3;
+        color: #a16207;
+    }
+
+    .payment-method-card {
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-radius: 20px;
+        padding: 25px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .method-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .method-item:last-child {
+        border-bottom: none;
+    }
+
+    .btn-pay-luxe {
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        font-weight: 800;
+        padding: 15px;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        transition: 0.3s;
+        text-transform: uppercase;
+        width: 100%;
+        margin-top: 25px;
+    }
+
+    .btn-pay-luxe:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 20px -3px rgba(99, 102, 241, 0.4);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="wrapper" class="wrapper bg-ash">
+    {% include 'includes/header.html' %}
+
+    <div class="dashboard-page-one">
+        {% include 'includes/sidebar.html' %}
+        <div class="dashboard-content-one">
+            <div class="breadcrumbs-area">
+                <h3>Financial Services</h3>
+                <ul>
+                    <li>
+                        <a href="{% url 'student_dashboard' %}">Home</a>
+                    </li>
+                    <li>Fee Status</li>
+                </ul>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="row gutters-20">
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-indigo">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Total Due</div>
+                                    <div class="item-number">KES {{ total_due|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-sm-6 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-success">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Total Paid</div>
+                                    <div class="item-number">KES {{ total_paid|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4 col-12">
+                    <div class="dashboard-summery-one summary-card">
+                        <div class="row align-items-center">
+                            <div class="col-5">
+                                <div class="item-icon bg-light-danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                            </div>
+                            <div class="col-7">
+                                <div class="item-content text-right">
+                                    <div class="item-title text-muted">Outstanding Balance</div>
+                                    <div class="item-number">KES {{ pending_amount|floatformat:0 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row gutters-20 mt-4">
+                <div class="col-xl-8 col-12">
+                    <div class="card height-auto">
+                        <div class="card-body">
+                            <div class="heading-layout1">
+                                <div class="item-title">
+                                    <h3>Fee Breakdown</h3>
+                                    <p class="text-muted small">Current Academic Session</p>
+                                </div>
+                                <a href="{% url 'student_payment_history' %}"
+                                    class="btn-fill-sml border bg-light text-muted">View History</a>
+                            </div>
+
+                            <div class="table-responsive mt-4">
+                                <table id="feesTable" class="table display text-nowrap">
+                                    <thead>
+                                        <tr>
+                                            <th>Component</th>
+                                            <th>Amount</th>
+                                            <th>Due Date</th>
+                                            <th>Status</th>
+                                            <th>Balance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for fee in fees %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="bg-light p-2 rounded mr-3">
+                                                        <i class="fas fa-receipt text-muted"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0 font-weight-bold">{{ fee.name }}</h6>
+                                                        <small class="text-muted">{{ fee.get_fee_type_display }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>KES {{ fee.amount|floatformat:0 }}</td>
+                                            <td>
+                                                <span
+                                                    class="{% if fee.is_overdue %}text-danger font-weight-bold{% endif %}">
+                                                    {{ fee.due_date|date:"M d, Y" }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="status-badge-luxe 
+                                                    {% if fee.status == 'paid' %}badge-paid
+                                                    {% elif fee.status == 'unpaid' %}badge-unpaid
+                                                    {% else %}badge-partial{% endif %}">
+                                                    {{ fee.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong
+                                                    class="{% if fee.status != 'paid' %}text-danger{% else %}text-success{% endif %}">
+                                                    {% if fee.status == 'paid' %}KES 0{% else %}KES {{
+                                                    fee.amount|floatformat:0 }}{% endif %}
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-4 col-12">
+                    <div class="payment-method-card">
+                        <h4 class="font-weight-bold mb-4">Payment Methods</h4>
+
+                        <div class="method-item">
+                            <span class="text-muted small">Bank Name</span>
+                            <span class="font-weight-bold">KCB Petra Branch</span>
+                        </div>
+                        <div class="method-item">
+                            <span class="text-muted small">Account Name</span>
+                            <span class="font-weight-bold">Petra Education Centre</span>
+                        </div>
+                        <div class="method-item">
+                            <span class="text-muted small">Account Number</span>
+                            <span class="font-weight-bold">1234 5678 90</span>
+                        </div>
+                        <div class="method-item">
+                            <span class="text-muted small">MPESA Paybill</span>
+                            <span class="font-weight-bold">888999</span>
+                        </div>
+                        <div class="method-item">
+                            <span class="text-muted small">Reference (ID)</span>
+                            <span class="text-primary font-weight-bold">{{ student.student_id }}</span>
+                        </div>
+
+                        <div class="alert bg-white border mt-4 p-3 small text-muted">
+                            <i class="fas fa-info-circle text-primary mr-2"></i>
+                            Please ensure you use your Student ID as the payment reference to avoid delays in clearance.
+                        </div>
+
+                        <button class="btn-pay-luxe" onclick="alert('Payment gateway integration placeholder')">
+                            <i class="fas fa-lock mr-2"></i>Pay Online
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer-wrap-layout1 mt-5">
+                <div class="copyright">© Copyrights <a href="#">Petra Education Centre</a> 2024. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.dataTables.min.js' %}"></script>
+<script>
+    $(document).ready(function () {
+        $('#feesTable').DataTable({
+            "paging": false,
+            "searching": false,
+            "info": false,
+            "ordering": true
+        });
+    });
+</script>
+{% endblock %}
